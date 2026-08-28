@@ -1,6 +1,4 @@
-package com.example.DA2Back.dto.usuario;
-
-import com.example.DA2Back.entites.Rol;
+package com.example.DA2Back.usuario.usuarioDTOs;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,15 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioCreateDTO {
+public class LoginDTO {
 
     private String username;
 
     private String password;
 
-    private Rol rol;
-
-    private Long comercioId;
 
     // Getters y Setters
 }

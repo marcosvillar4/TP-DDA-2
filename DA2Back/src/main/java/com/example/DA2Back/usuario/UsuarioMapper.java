@@ -1,8 +1,7 @@
-package com.example.DA2Back.mapper;
+package com.example.DA2Back.usuario;
 
-import com.example.DA2Back.dto.usuario.UsuarioCreateDTO;
-import com.example.DA2Back.dto.usuario.UsuarioResponseDTO;
-import com.example.DA2Back.entites.Usuario;
+import com.example.DA2Back.usuario.usuarioDTOs.UsuarioCreateDTO;
+import com.example.DA2Back.usuario.usuarioDTOs.UsuarioResponseDTO;
 
 public class UsuarioMapper {
 

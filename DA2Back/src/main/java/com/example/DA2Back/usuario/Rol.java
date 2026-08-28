@@ -1,4 +1,4 @@
-package com.example.DA2Back.entites;
+package com.example.DA2Back.usuario;
 
 public enum Rol {
     ADMIN,

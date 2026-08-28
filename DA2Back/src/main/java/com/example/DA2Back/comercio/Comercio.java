@@ -1,8 +1,10 @@
-package com.example.DA2Back.entites;
+package com.example.DA2Back.comercio;
 
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+
+import com.example.DA2Back.usuario.Usuario;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

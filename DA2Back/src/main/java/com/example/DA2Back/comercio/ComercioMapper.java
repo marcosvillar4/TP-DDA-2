@@ -1,11 +1,10 @@
-package com.example.DA2Back.mapper;
+package com.example.DA2Back.comercio;
 
 import java.util.stream.Collectors;
 
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
-import com.example.DA2Back.entites.Comercio;
-import com.example.DA2Back.entites.Usuario;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioCreateDTO;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
+import com.example.DA2Back.usuario.Usuario;
 
 public class ComercioMapper {
 

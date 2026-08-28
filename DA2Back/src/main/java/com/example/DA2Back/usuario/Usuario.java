@@ -1,4 +1,4 @@
-package com.example.DA2Back.entites;
+package com.example.DA2Back.usuario;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,7 +49,7 @@ public class Usuario implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "comercio_id")
-    private Comercio comercio;
+    private com.example.DA2Back.comercio.Comercio comercio;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
