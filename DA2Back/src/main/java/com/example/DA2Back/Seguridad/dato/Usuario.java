@@ -1,9 +1,8 @@
-package com.example.DA2Back.entites;
+package com.example.DA2Back.Seguridad.dato;
 
 import java.util.Collection;
 import java.util.List;
 
-import jakarta.persistence.Id;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,15 +13,13 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 
 @Getter
 @Setter
@@ -38,18 +35,21 @@ public class Usuario implements UserDetails {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String email;
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private String username;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
 
-    @ManyToOne
-    @JoinColumn(name = "comercio_id")
-    private Comercio comercio;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean activo = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -58,13 +58,17 @@ public class Usuario implements UserDetails {
         );
     }
 
-    @Override
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
     @Override
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
     }
 }

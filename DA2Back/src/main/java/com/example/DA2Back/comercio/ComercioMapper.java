@@ -1,11 +1,7 @@
-package com.example.DA2Back.mapper;
+package com.example.DA2Back.comercio;
 
-import java.util.stream.Collectors;
-
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
-import com.example.DA2Back.entites.Comercio;
-import com.example.DA2Back.entites.Usuario;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioCreateDTO;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
 
 public class ComercioMapper {
 
@@ -39,14 +35,6 @@ public class ComercioMapper {
         dto.setTelefono(comercio.getTelefono());
         dto.setEmail(comercio.getEmail());
 
-        if (comercio.getUsuarios() != null) {
-            dto.setUsuariosIds(
-                comercio.getUsuarios()
-                        .stream()
-                        .map(Usuario::getId)
-                        .collect(Collectors.toList())
-            );
-        }
 
         return dto;
     }
