@@ -1,6 +1,6 @@
-package com.example.DA2Back.usuario.usuarioDTOs;
+package com.example.DA2Back.Seguridad.dto;
 
-import com.example.DA2Back.usuario.Rol;
+import com.example.DA2Back.Seguridad.dato.Rol;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +18,4 @@ public class LoginResponseDTO {
     private String username;
 
     private Rol rol;
-
-    private Long comercioId;
 }

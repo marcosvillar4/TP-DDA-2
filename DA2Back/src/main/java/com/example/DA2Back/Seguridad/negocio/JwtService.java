@@ -1,4 +1,4 @@
-package com.example.DA2Back.Seguridad;
+package com.example.DA2Back.Seguridad.negocio;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

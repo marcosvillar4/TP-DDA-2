@@ -22,8 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.DA2Back.Seguridad.CustomUserDetailsService;
 import com.example.DA2Back.Seguridad.JwtAuthenticationFilter;
+import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
@@ -92,6 +92,9 @@ public AuthenticationProvider authenticationProvider() {
 
     .requestMatchers("/repartidor/**")
         .hasRole("REPARTIDOR")
+    
+    .requestMatchers("/deposito/**")
+        .hasRole("DEPOSITO")
 
     .anyRequest().authenticated()
 )

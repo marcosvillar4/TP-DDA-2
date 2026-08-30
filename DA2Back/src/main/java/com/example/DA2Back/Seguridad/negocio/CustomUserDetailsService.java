@@ -1,4 +1,4 @@
-package com.example.DA2Back.Seguridad;
+package com.example.DA2Back.Seguridad.negocio;
 
 import lombok.RequiredArgsConstructor;
 
@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import org.springframework.stereotype.Service;
 
-import com.example.DA2Back.usuario.UsuarioRepository;
+import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 
 @Service
 @RequiredArgsConstructor
