@@ -1,6 +1,6 @@
-package com.example.DA2Back.repository;
+package com.example.DA2Back.pedidos.dato;
 
-import com.example.DA2Back.model.Pedido;
+import com.example.DA2Back.pedidos.dato.Pedido;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

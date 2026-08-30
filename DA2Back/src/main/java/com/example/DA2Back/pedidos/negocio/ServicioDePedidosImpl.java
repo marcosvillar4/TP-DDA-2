@@ -1,12 +1,12 @@
-package com.example.DA2Back.service.impl;
+package com.example.DA2Back.pedidos.negocio;
 
-import com.example.DA2Back.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.dto.CrearPedidoDTO;
-import com.example.DA2Back.dto.PedidoResponseDTO;
-import com.example.DA2Back.model.EstadoPedido;
-import com.example.DA2Back.model.Pedido;
-import com.example.DA2Back.repository.PedidosRepository;
-import com.example.DA2Back.service.ServicioDePedidos;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
+import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.Pedido;
+import com.example.DA2Back.pedidos.dato.PedidosRepository;
+import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

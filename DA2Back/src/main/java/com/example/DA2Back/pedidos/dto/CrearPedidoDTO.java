@@ -1,4 +1,4 @@
-package com.example.DA2Back.dto;
+package com.example.DA2Back.pedidos.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

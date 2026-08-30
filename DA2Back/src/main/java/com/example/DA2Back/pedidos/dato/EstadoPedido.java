@@ -1,4 +1,4 @@
-package com.example.DA2Back.model;
+package com.example.DA2Back.pedidos.dato;
 
 /**
  * Estados posibles del ciclo de vida de un Pedido

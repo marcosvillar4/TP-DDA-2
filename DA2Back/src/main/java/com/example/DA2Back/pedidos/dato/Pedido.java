@@ -1,4 +1,4 @@
-package com.example.DA2Back.model;
+package com.example.DA2Back.pedidos.dato;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

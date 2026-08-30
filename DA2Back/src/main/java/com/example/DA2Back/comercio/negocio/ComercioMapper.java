@@ -1,7 +1,8 @@
-package com.example.DA2Back.comercio;
+package com.example.DA2Back.comercio.negocio;
 
-import com.example.DA2Back.comercio.comercioDTOs.ComercioCreateDTO;
-import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
+import com.example.DA2Back.comercio.dto.ComercioCreateDTO;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
 
 public class ComercioMapper {
 

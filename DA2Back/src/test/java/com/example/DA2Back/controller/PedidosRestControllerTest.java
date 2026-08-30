@@ -1,10 +1,11 @@
 package com.example.DA2Back.controller;
 
-import com.example.DA2Back.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.dto.CrearPedidoDTO;
-import com.example.DA2Back.dto.PedidoResponseDTO;
-import com.example.DA2Back.model.EstadoPedido;
-import com.example.DA2Back.service.ServicioDePedidos;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
+import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
+import com.example.DA2Back.pedidos.presentacion.PedidosRestController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

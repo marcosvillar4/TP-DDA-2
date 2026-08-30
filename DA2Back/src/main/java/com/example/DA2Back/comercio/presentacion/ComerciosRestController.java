@@ -1,8 +1,8 @@
-package com.example.DA2Back.controller;
+package com.example.DA2Back.comercio.presentacion;
 
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
-import com.example.DA2Back.service.ServicioDeComercios;
+import com.example.DA2Back.comercio.dto.ComercioCreateDTO;
+import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
+import com.example.DA2Back.comercio.negocio.ServicioDeComercios;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

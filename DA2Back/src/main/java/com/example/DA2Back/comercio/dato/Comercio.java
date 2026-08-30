@@ -1,4 +1,4 @@
-package com.example.DA2Back.comercio;
+package com.example.DA2Back.comercio.dato;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

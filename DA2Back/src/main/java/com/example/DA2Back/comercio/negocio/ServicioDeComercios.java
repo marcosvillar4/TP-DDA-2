@@ -1,7 +1,7 @@
-package com.example.DA2Back.service;
+package com.example.DA2Back.comercio.negocio;
 
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
+import com.example.DA2Back.comercio.dto.ComercioCreateDTO;
+import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
 
 import java.util.List;
 

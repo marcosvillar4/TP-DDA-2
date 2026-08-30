@@ -1,6 +1,6 @@
-package com.example.DA2Back.dto;
+package com.example.DA2Back.pedidos.dto;
 
-import com.example.DA2Back.model.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

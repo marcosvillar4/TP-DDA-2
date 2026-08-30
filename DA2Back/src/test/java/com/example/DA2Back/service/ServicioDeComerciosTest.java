@@ -1,10 +1,10 @@
 package com.example.DA2Back.service;
 
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
-import com.example.DA2Back.entites.Comercio;
-import com.example.DA2Back.repository.ComercioRepository;
-import com.example.DA2Back.service.impl.ServicioDeComerciosImpl;
+import com.example.DA2Back.comercio.dto.ComercioCreateDTO;
+import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.comercio.negocio.ServicioDeComerciosImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

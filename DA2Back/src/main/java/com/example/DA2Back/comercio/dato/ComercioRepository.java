@@ -1,6 +1,6 @@
-package com.example.DA2Back.repository;
+package com.example.DA2Back.comercio.dato;
 
-import com.example.DA2Back.entites.Comercio;
+import com.example.DA2Back.comercio.dato.Comercio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

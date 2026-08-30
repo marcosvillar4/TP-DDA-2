@@ -1,8 +1,8 @@
-package com.example.DA2Back.service;
+package com.example.DA2Back.pedidos.negocio;
 
-import com.example.DA2Back.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.dto.CrearPedidoDTO;
-import com.example.DA2Back.dto.PedidoResponseDTO;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 
 import java.util.List;
 

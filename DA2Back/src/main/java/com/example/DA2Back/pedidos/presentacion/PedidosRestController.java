@@ -1,9 +1,9 @@
-package com.example.DA2Back.controller;
+package com.example.DA2Back.pedidos.presentacion;
 
-import com.example.DA2Back.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.dto.CrearPedidoDTO;
-import com.example.DA2Back.dto.PedidoResponseDTO;
-import com.example.DA2Back.service.ServicioDePedidos;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
+import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

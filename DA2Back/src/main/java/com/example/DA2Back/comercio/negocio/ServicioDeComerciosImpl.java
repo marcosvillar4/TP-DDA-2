@@ -1,11 +1,11 @@
-package com.example.DA2Back.service.impl;
+package com.example.DA2Back.comercio.negocio;
 
-import com.example.DA2Back.dto.comercio.ComercioCreateDTO;
-import com.example.DA2Back.dto.comercio.ComercioResponseDTO;
-import com.example.DA2Back.entites.Comercio;
-import com.example.DA2Back.mapper.ComercioMapper;
-import com.example.DA2Back.repository.ComercioRepository;
-import com.example.DA2Back.service.ServicioDeComercios;
+import com.example.DA2Back.comercio.dto.ComercioCreateDTO;
+import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.negocio.ComercioMapper;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.comercio.negocio.ServicioDeComercios;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
