@@ -58,7 +58,7 @@ public class Usuario implements UserDetails {
         );
     }
 
-    public String getEmail() {
+    public String getUsername() {
         return email;
     }
 
@@ -67,10 +67,10 @@ public class Usuario implements UserDetails {
         return password;
     }
 
-    @Override
-    public String getUsername() {
+    public String getNombreUsuario() {
         return username;
     }
+
 
     @Override
     public boolean isEnabled() {

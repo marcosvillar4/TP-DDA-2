@@ -44,7 +44,7 @@ public class AuthServiceImpl implements IAuthService {
         return new LoginResponseDTO(
                 token,
                 usuario.getId(),
-                usuario.getEmail(),
+                usuario.getUsername(),
                 usuario.getRol()
         );
     }
