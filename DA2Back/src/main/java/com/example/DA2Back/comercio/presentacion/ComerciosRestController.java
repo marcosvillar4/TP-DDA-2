@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Controlador REST para el recurso Comercio (ComerciosView).
+ * Controlador REST de la capa de Presentacion para el recurso Comercio.
+ * Mapeado a /api/comercios. Inyecta la interfaz ServicioDeComercios (IoC).
  */
 @RestController
 @RequestMapping("/api/comercios")
@@ -26,25 +27,29 @@ public class ComerciosRestController {
 
     private final ServicioDeComercios servicioDeComercios;
 
+    /** POST /api/comercios — registra un nuevo comercio */
     @PostMapping
-    public ResponseEntity<ComercioResponseDTO> crearComercio(@RequestBody ComercioCreateDTO dto) {
-        ComercioResponseDTO respuesta = servicioDeComercios.crearComercio(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+    public ResponseEntity<ComercioResponseDTO> registrar(@RequestBody ComercioCreateDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(servicioDeComercios.registrar(dto));
     }
 
+    /** GET /api/comercios — lista todos los comercios */
     @GetMapping
-    public ResponseEntity<List<ComercioResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(servicioDeComercios.listarTodos());
+    public ResponseEntity<List<ComercioResponseDTO>> listar() {
+        return ResponseEntity.ok(servicioDeComercios.listar());
     }
 
+    /** GET /api/comercios/{id} — obtiene un comercio por ID */
     @GetMapping("/{id}")
     public ResponseEntity<ComercioResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDeComercios.obtenerPorId(id));
     }
 
+    /** DELETE /api/comercios/{id} — elimina un comercio */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarComercio(@PathVariable Long id) {
-        servicioDeComercios.eliminarComercio(id);
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        servicioDeComercios.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }

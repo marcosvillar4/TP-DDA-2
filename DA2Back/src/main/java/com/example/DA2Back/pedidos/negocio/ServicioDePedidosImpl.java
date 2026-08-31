@@ -1,12 +1,11 @@
 package com.example.DA2Back.pedidos.negocio;
 
-import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
-import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
-import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +15,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
- * Implementación de la interfaz ServicioDePedidos.
+ * Implementacion de la interfaz ServicioDePedidos.
  * Componente de la capa de Negocio del sistema LogiRed.
  */
 @Service
@@ -57,6 +56,24 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarPorComercio(Long comercioId) {
+        return pedidosRepository.findByComercioId(comercioId)
+                .stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarPorEstado(EstadoPedido estado) {
+        return pedidosRepository.findByEstado(estado)
+                .stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public PedidoResponseDTO actualizarEstado(Long id, ActualizarEstadoDTO dto) {
         Pedido pedido = pedidosRepository.findById(id)
@@ -67,6 +84,26 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         Pedido actualizado = pedidosRepository.save(pedido);
         return toResponseDTO(actualizado);
     }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO cancelar(Long id) {
+        Pedido pedido = pedidosRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Pedido con id=" + id + " no encontrado"));
+
+        if (EstadoPedido.ENTREGADO.equals(pedido.getEstado())) {
+            throw new IllegalStateException(
+                    "No se puede cancelar un pedido ya entregado (id=" + id + ")");
+        }
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
+        return toResponseDTO(pedidosRepository.save(pedido));
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers privados
+    // -------------------------------------------------------------------------
 
     private PedidoResponseDTO toResponseDTO(Pedido pedido) {
         return PedidoResponseDTO.builder()

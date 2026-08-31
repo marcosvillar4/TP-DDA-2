@@ -6,16 +6,25 @@ import com.example.DA2Back.comercio.dto.ComercioResponseDTO;
 import java.util.List;
 
 /**
- * Interfaz del componente de negocio ServicioDeComercios
+ * Contrato de negocio del componente ServicioDeComercios,
  * segun el diagrama de arquitectura LogiRed.
+ *
+ * Los controladores dependen de esta interfaz (Inversion de Control).
  */
 public interface ServicioDeComercios {
 
-    ComercioResponseDTO crearComercio(ComercioCreateDTO dto);
+    /** Registra un nuevo comercio en el sistema. */
+    ComercioResponseDTO registrar(ComercioCreateDTO dto);
 
+    /** Retorna un comercio por su identificador unico. */
     ComercioResponseDTO obtenerPorId(Long id);
 
-    List<ComercioResponseDTO> listarTodos();
+    /** Retorna un comercio por su email (util para el DataInitializer y lookups internos). */
+    ComercioResponseDTO obtenerPorEmail(String email);
 
-    void eliminarComercio(Long id);
+    /** Retorna todos los comercios registrados. */
+    List<ComercioResponseDTO> listar();
+
+    /** Elimina un comercio por su identificador. */
+    void eliminar(Long id);
 }

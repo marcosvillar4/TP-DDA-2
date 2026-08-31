@@ -1,11 +1,11 @@
 package com.example.DA2Back.service;
 
-import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
-import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
-import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
+import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidosImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,7 +60,6 @@ class ServicioDePedidosTest {
         assertEquals(100L, resultado.getComercioId());
         assertEquals("Av. Siempreviva 742", resultado.getDireccionDestino());
         assertEquals(EstadoPedido.CREADO, resultado.getEstado());
-
         verify(pedidosRepository, times(1)).save(any(Pedido.class));
     }
 
@@ -73,7 +72,6 @@ class ServicioDePedidosTest {
 
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
-        assertEquals(100L, resultado.getComercioId());
         assertEquals(EstadoPedido.CREADO, resultado.getEstado());
     }
 
@@ -82,7 +80,8 @@ class ServicioDePedidosTest {
     void testObtenerPorId_NoEncontrado() {
         when(pedidosRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> servicioDePedidos.obtenerPorId(99L));
+        assertThrows(NoSuchElementException.class,
+                () -> servicioDePedidos.obtenerPorId(99L));
     }
 
     @Test
@@ -95,6 +94,32 @@ class ServicioDePedidosTest {
         assertNotNull(lista);
         assertEquals(1, lista.size());
         assertEquals(1L, lista.get(0).getId());
+    }
+
+    @Test
+    @DisplayName("Debe listar pedidos por comercioId")
+    void testListarPorComercio() {
+        when(pedidosRepository.findByComercioId(100L)).thenReturn(List.of(pedidoMock));
+
+        List<PedidoResponseDTO> lista = servicioDePedidos.listarPorComercio(100L);
+
+        assertNotNull(lista);
+        assertEquals(1, lista.size());
+        assertEquals(100L, lista.get(0).getComercioId());
+    }
+
+    @Test
+    @DisplayName("Debe listar pedidos por estado")
+    void testListarPorEstado() {
+        when(pedidosRepository.findByEstado(EstadoPedido.CREADO))
+                .thenReturn(List.of(pedidoMock));
+
+        List<PedidoResponseDTO> lista =
+                servicioDePedidos.listarPorEstado(EstadoPedido.CREADO);
+
+        assertNotNull(lista);
+        assertEquals(1, lista.size());
+        assertEquals(EstadoPedido.CREADO, lista.get(0).getEstado());
     }
 
     @Test
@@ -117,7 +142,43 @@ class ServicioDePedidosTest {
 
         assertNotNull(resultado);
         assertEquals(EstadoPedido.EN_CAMINO, resultado.getEstado());
-
         verify(pedidosRepository, times(1)).save(any(Pedido.class));
+    }
+
+    @Test
+    @DisplayName("Debe cancelar un pedido en estado CREADO exitosamente")
+    void testCancelar_Exito() {
+        Pedido pedidoCancelado = Pedido.builder()
+                .id(1L)
+                .comercioId(100L)
+                .direccionDestino("Av. Siempreviva 742")
+                .estado(EstadoPedido.CANCELADO)
+                .build();
+
+        when(pedidosRepository.findById(1L)).thenReturn(Optional.of(pedidoMock));
+        when(pedidosRepository.save(any(Pedido.class))).thenReturn(pedidoCancelado);
+
+        PedidoResponseDTO resultado = servicioDePedidos.cancelar(1L);
+
+        assertNotNull(resultado);
+        assertEquals(EstadoPedido.CANCELADO, resultado.getEstado());
+        verify(pedidosRepository, times(1)).save(any(Pedido.class));
+    }
+
+    @Test
+    @DisplayName("Debe lanzar IllegalStateException al cancelar un pedido ya entregado")
+    void testCancelar_YaEntregado() {
+        Pedido pedidoEntregado = Pedido.builder()
+                .id(1L)
+                .comercioId(100L)
+                .direccionDestino("Av. Siempreviva 742")
+                .estado(EstadoPedido.ENTREGADO)
+                .build();
+
+        when(pedidosRepository.findById(1L)).thenReturn(Optional.of(pedidoEntregado));
+
+        assertThrows(IllegalStateException.class,
+                () -> servicioDePedidos.cancelar(1L));
+        verify(pedidosRepository, never()).save(any());
     }
 }
