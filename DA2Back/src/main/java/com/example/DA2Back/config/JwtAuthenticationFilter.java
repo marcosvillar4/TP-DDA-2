@@ -1,4 +1,4 @@
-package com.example.DA2Back.Seguridad;
+package com.example.DA2Back.config;
 
 import java.io.IOException;
 

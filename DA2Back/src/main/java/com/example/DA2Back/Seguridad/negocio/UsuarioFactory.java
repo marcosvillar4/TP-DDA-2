@@ -16,7 +16,7 @@ public class UsuarioFactory {
                     "El rol ADMINISTRADOR no puede crearse por auto-registro"
             );
             case COMERCIO, REPARTIDOR, DEPOSITO -> {
-                // No se requiere acción adicional para estos roles
+                // No se requiere acción adicional para estos roles, por ahora. Se podrían agregar validaciones específicas si es necesario.
             }
         }
         return Usuario.builder()

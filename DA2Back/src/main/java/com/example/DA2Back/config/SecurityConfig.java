@@ -22,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.DA2Back.Seguridad.JwtAuthenticationFilter;
 import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
 
 @Configuration
@@ -39,15 +38,15 @@ public class SecurityConfig {
     }
 
     @Bean
-public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider() {
 
-    DaoAuthenticationProvider provider =
-            new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService);
 
-    provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder());
 
-    return provider;
-}
+        return provider;
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(
@@ -84,7 +83,7 @@ public AuthenticationProvider authenticationProvider() {
 
     .requestMatchers("/auth/**").permitAll()
 
-    .requestMatchers("/admin/**")
+    .requestMatchers("/usuarios/admin/**")
         .hasRole("ADMIN")
 
     .requestMatchers("/comercio/**")
