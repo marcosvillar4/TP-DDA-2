@@ -1,0 +1,197 @@
+### ============================================================
+### LogiRed API — Pruebas funcionales interactivas
+### Compatible con: IntelliJ HTTP Client / VS Code REST Client
+### ============================================================
+### USO:
+###   1. Levantar la app localmente (./mvnw spring-boot:run)
+###   2. Ejecutar cada request en orden
+###   3. El token JWT se captura automaticamente tras el login
+### ============================================================
+
+# Variables globales
+@baseUrl       = http://localhost:8080
+@adminEmail    = admin@logired.com
+@adminPassword = Admin1234!
+@authToken     = <PENDIENTE — ejecutar "1. Login Admin" primero>
+
+
+### ============================================================
+### SEGURIDAD — Autenticacion
+### ============================================================
+
+### 1. Login de Administrador (captura el token JWT)
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### — IntelliJ: descomenta el bloque siguiente para captura automatica de token
+# > {%
+#   client.global.set("authToken", response.body.token);
+#   client.log("Token JWT capturado: " + response.body.token);
+# %}
+
+
+### ============================================================
+### SEGURIDAD — Registro de usuarios
+### ============================================================
+
+### 2a. Registro de usuario con rol COMERCIO
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "Comercio Nuevo",
+  "email": "nuevocomer@logired.com",
+  "password": "Comercio1234!",
+  "rol": "COMERCIO"
+}
+
+###
+
+### 2b. Registro de usuario con rol REPARTIDOR
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "Repartidor Test",
+  "email": "repartidor@logired.com",
+  "password": "Repartidor1234!",
+  "rol": "REPARTIDOR"
+}
+
+###
+
+### 3. Login de Comercio (obtener token propio)
+# @name loginComercio
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "comercio@logired.com",
+  "password": "Comercio1234!"
+}
+
+### — IntelliJ: descomenta para captura automatica
+# > {%
+#   client.global.set("authToken", response.body.token);
+# %}
+
+
+### ============================================================
+### COMERCIOS — CRUD (requiere JWT)
+### ============================================================
+
+### 4. Listar todos los comercios
+GET {{baseUrl}}/api/comercios
+Authorization: Bearer {{authToken}}
+
+###
+
+### 4b. Obtener comercio por ID
+GET {{baseUrl}}/api/comercios/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### 4c. Registrar un nuevo Comercio
+POST {{baseUrl}}/api/comercios
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "nombre": "Sushi Express",
+  "direccion": "Av. Santa Fe 3000, CABA",
+  "telefono": "1198765432",
+  "email": "sushi@logired.com"
+}
+
+###
+
+### 4d. Eliminar un comercio
+DELETE {{baseUrl}}/api/comercios/99
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================
+### PEDIDOS — CRUD completo (requiere JWT)
+### ============================================================
+
+### 5. Crear un nuevo Pedido
+POST {{baseUrl}}/api/pedidos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "comercioId": 1,
+  "direccionDestino": "Av. Rivadavia 5000, CABA"
+}
+
+###
+
+### 6a. Listar todos los pedidos
+GET {{baseUrl}}/api/pedidos
+Authorization: Bearer {{authToken}}
+
+###
+
+### 6b. Obtener pedido por ID
+GET {{baseUrl}}/api/pedidos/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### 6c. Listar pedidos por comercio
+GET {{baseUrl}}/api/pedidos/comercio/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### 6d. Listar pedidos por estado
+GET {{baseUrl}}/api/pedidos/estado/CREADO
+Authorization: Bearer {{authToken}}
+
+###
+
+### 7. Actualizar estado de un pedido (CREADO → EN_CAMINO)
+PATCH {{baseUrl}}/api/pedidos/1/estado
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "estado": "EN_CAMINO"
+}
+
+###
+
+### 8. Cancelar un pedido
+DELETE {{baseUrl}}/api/pedidos/1/cancelar
+Authorization: Bearer {{authToken}}
+
+
+### ============================================================
+### PRUEBAS DE SEGURIDAD — Acceso sin token (deben dar 401/403)
+### ============================================================
+
+### 9a. GET /api/pedidos sin token → debe dar 401
+GET {{baseUrl}}/api/pedidos
+
+###
+
+### 9b. POST /api/pedidos sin token → debe dar 401
+POST {{baseUrl}}/api/pedidos
+Content-Type: application/json
+
+{
+  "comercioId": 1,
+  "direccionDestino": "Test sin auth"
+}
+
+###
+
+### 9c. GET /api/comercios sin token → debe dar 401
+GET {{baseUrl}}/api/comercios

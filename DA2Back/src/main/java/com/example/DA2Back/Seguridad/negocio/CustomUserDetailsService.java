@@ -10,6 +10,12 @@ import org.springframework.stereotype.Service;
 
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 
+/**
+ * Implementacion de UserDetailsService que carga un usuario por su email.
+ *
+ * El campo "username" de Spring Security se mapea al email del usuario
+ * ya que es el identificador unico utilizado en el login JWT.
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -17,13 +23,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username)
+    public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        return usuarioRepository.findByUsername(username)
+        return usuarioRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new UsernameNotFoundException(
-                                "Usuario no encontrado"
+                                "Usuario no encontrado con email: " + email
                         )
                 );
     }

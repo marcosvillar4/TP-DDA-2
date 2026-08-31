@@ -58,17 +58,19 @@ public class Usuario implements UserDetails {
         );
     }
 
-    public String getEmail() {
-        return email;
-    }
 
     @Override
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Retorna el email como identificador principal de Spring Security.
+     * El JWT usa este valor como subject, y CustomUserDetailsService
+     * lo usa para cargar el usuario (findByEmail).
+     */
     @Override
     public String getUsername() {
-        return username;
+        return email;
     }
 }

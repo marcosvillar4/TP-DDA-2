@@ -82,7 +82,7 @@ public class DataInitializer implements CommandLineRunner {
             Usuario usuarioComercio = Usuario.builder()
                     .username("Comercio Central")
                     .email("comercio@logired.com")
-                    .password(passwordEncoder.encode("Comercio1234!"))
+                    .password(passwordEncoder.encode("Admin1234!"))
                     .rol(Rol.COMERCIO)
                     .activo(true)
                     .build();
