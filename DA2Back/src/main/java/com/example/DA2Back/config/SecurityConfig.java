@@ -20,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.DA2Back.Seguridad.JwtAuthenticationFilter;
 import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
 
 /**
@@ -28,6 +27,7 @@ import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
  *
  * Endpoints publicos:
  *   - /api/auth/**       → registro e inicio de sesion
+ *   - /auth/**           → compatibilidad con AdminSeeder/compañeros
  *   - /actuator/**       → health checks y monitoreo
  *   - /v3/api-docs/**    → documentacion OpenAPI
  *   - /swagger-ui/**     → UI de Swagger
@@ -68,30 +68,25 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // Delega CORS a CorsConfig
             .cors(cors -> {})
-
-            // CSRF deshabilitado: usamos JWT sin sesion
             .csrf(csrf -> csrf.disable())
-
-            // Sin sesion HTTP — completamente stateless
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-            // Proveedor de autenticacion DAO + BCrypt
             .authenticationProvider(authenticationProvider())
-
-            // Reglas de autorizacion
             .authorizeHttpRequests(auth -> auth
 
-                // Publicos — autenticacion y documentacion
+                // Publicos — autenticacion (ambos prefijos para compatibilidad)
                 .requestMatchers(
                         "/api/auth/**",
+                        "/auth/**",
                         "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html"
                 ).permitAll()
+
+                // Admin
+                .requestMatchers("/usuarios/admin/**").hasRole("ADMIN")
 
                 // Protegidos — requieren JWT valido
                 .requestMatchers("/api/pedidos/**").authenticated()
@@ -100,8 +95,6 @@ public class SecurityConfig {
                 // Cualquier otro endpoint tambien requiere autenticacion
                 .anyRequest().authenticated()
             )
-
-            // Filtro JWT antes del filtro de usuario/contrasena estandar
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class

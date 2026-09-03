@@ -25,9 +25,14 @@ public class AuthController {
 
     /** POST /api/auth/register — registra un nuevo usuario */
     @PostMapping("/register")
-    public ResponseEntity<UsuarioResponseDTO> register(@RequestBody RegisterDTO registerDTO) {
+    public ResponseEntity<UsuarioResponseDTO> register(
+        @RequestBody RegisterDTO registerDTO
+    ) {
         UsuarioResponseDTO creado = authService.registrar(registerDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
+        
+        return ResponseEntity.status(
+            HttpStatus.CREATED).body(creado
+        );
     }
 
     /** POST /api/auth/login — autentica y devuelve token JWT */
