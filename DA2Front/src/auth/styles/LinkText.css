@@ -1,0 +1,14 @@
+.link-text {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-navy);
+  cursor: pointer;
+}
+
+.link-text:hover {
+  color: var(--color-red);
+  text-decoration: underline;
+}

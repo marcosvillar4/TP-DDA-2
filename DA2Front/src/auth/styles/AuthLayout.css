@@ -1,0 +1,38 @@
+.auth-layout {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--color-slate-100);
+  padding: 2.5rem 1rem;
+}
+
+.auth-layout-circle-left,
+.auth-layout-circle-right {
+  position: absolute;
+  height: 18rem;
+  width: 18rem;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.auth-layout-circle-left {
+  left: -6rem;
+  bottom: -6rem;
+  background-color: rgba(255, 228, 230, 0.7);
+}
+
+.auth-layout-circle-right {
+  right: -6rem;
+  top: -6rem;
+  background-color: rgba(226, 232, 240, 0.8);
+}
+
+.auth-layout-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 28rem;
+}

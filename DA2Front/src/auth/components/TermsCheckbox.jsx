@@ -1,15 +1,14 @@
+import "..styles/TermsCheckbox.css";
+
 export function TermsCheckbox({ id, checked, onChange, onTermsClick }) {
   return (
-    <label
-      htmlFor={id}
-      className="flex items-start gap-2 text-sm text-slate-600"
-    >
+    <label htmlFor={id} className="terms-checkbox">
       <input
         id={id}
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#16223f] focus:ring-[#16223f]/30"
+        className="terms-checkbox-input"
       />
       <span>
         Leí y estoy de acuerdo con los{" "}
@@ -20,7 +19,7 @@ export function TermsCheckbox({ id, checked, onChange, onTermsClick }) {
             e.stopPropagation();
             onTermsClick?.();
           }}
-          className="font-medium text-[#16223f] hover:text-[#d6273c] hover:underline"
+          className="terms-checkbox-link"
         >
           términos y condiciones
         </button>

@@ -4,7 +4,8 @@ import { TextField } from "./components/TextField";
 import { PasswordField } from "./components/PasswordField";
 import { LinkText } from "./components/LinkText";
 import { Logo } from "./components/Logo";
-
+import "./styles/LoginForm.css";
+ 
 export function LoginForm() {
   const {
     email,
@@ -18,11 +19,11 @@ export function LoginForm() {
  
   if (user) {
     return (
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div className="login-form-success">
         <Logo />
-        <p className="text-sm text-slate-600">
+        <p className="login-form-success-text">
           Sesión iniciada como{" "}
-          <span className="font-semibold text-[#16223f]">{user.username}</span>{" "}
+          <span className="login-form-success-highlight">{user.username}</span>{" "}
           ({user.rol}).
         </p>
       </div>
@@ -30,10 +31,10 @@ export function LoginForm() {
   }
  
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="login-form">
       <Logo />
  
-      <div className="flex flex-col gap-4">
+      <div className="login-form-fields">
         <TextField
           id="email"
           label="Correo electrónico"
@@ -52,7 +53,7 @@ export function LoginForm() {
         />
       </div>
  
-      <div className="flex justify-end">
+      <div className="login-form-link-row">
         <LinkText onClick={() => {}}>¿Olvidaste tu contraseña?</LinkText>
       </div>
  
@@ -60,9 +61,10 @@ export function LoginForm() {
         Iniciar sesión
       </Button>
  
-      <p className="text-center text-sm text-slate-500">
+      <p className="login-form-footer-text">
         ¿Necesitás acceso? Contactá al administrador del sistema.
       </p>
     </form>
   );
 }
+ 
