@@ -19,5 +19,7 @@ public class DepositoResponseDTO {
 
     private Long comercioId;
 
+    private Long usuarioId;
+
     private List<Long> itemsIds;
 }

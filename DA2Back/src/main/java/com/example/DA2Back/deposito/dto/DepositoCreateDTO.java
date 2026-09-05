@@ -14,4 +14,6 @@ public class DepositoCreateDTO {
     private String direccion;
 
     private Long comercioId;
+
+    private Long usuarioId;
 }

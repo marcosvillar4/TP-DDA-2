@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.inventario.dato.ItemInventario;
 
@@ -30,6 +31,10 @@ public class Deposito {
     @ManyToOne
     @JoinColumn(name = "comercio_id", nullable = false)
     private Comercio comercio;
+
+    @OneToOne
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
+    private Usuario usuario;
 
     @OneToMany(mappedBy = "deposito")
     private List<ItemInventario> items;

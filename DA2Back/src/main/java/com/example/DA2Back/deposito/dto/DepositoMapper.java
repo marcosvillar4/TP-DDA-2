@@ -36,6 +36,10 @@ public class DepositoMapper {
             dto.setComercioId(deposito.getComercio().getId());
         }
 
+        if (deposito.getUsuario() != null) {
+            dto.setUsuarioId(deposito.getUsuario().getId());
+        }
+
         if (deposito.getItems() != null) {
             dto.setItemsIds(
                 deposito.getItems()
