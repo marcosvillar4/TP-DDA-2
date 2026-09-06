@@ -1,0 +1,47 @@
+.inventario-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.inventario-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inventario-button-primary {
+  background-color: var(--color-navy);
+  color: #fff;
+}
+
+.inventario-button-primary:hover:not(:disabled) {
+  background-color: var(--color-navy-dark);
+}
+
+.inventario-button-danger {
+  background-color: transparent;
+  color: var(--color-red);
+  border: 1px solid var(--color-red);
+}
+
+.inventario-button-danger:hover:not(:disabled) {
+  background-color: rgba(214, 39, 60, 0.08);
+}
+
+.inventario-button-ghost {
+  background-color: transparent;
+  color: var(--color-navy);
+  border: 1px solid var(--color-slate-200);
+}
+
+.inventario-button-ghost:hover:not(:disabled) {
+  border-color: var(--color-navy);
+}

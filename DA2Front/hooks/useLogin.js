@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { loginRequest } from "../api/authApi";
 
@@ -7,6 +8,7 @@ export function useLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -40,6 +42,7 @@ export function useLogin() {
         showConfirmButton: false,
       });
 
+      navigate("/inventario");
     } catch (err) {
       Swal.fire({
         icon: "error",

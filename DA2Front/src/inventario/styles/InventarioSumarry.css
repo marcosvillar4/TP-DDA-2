@@ -1,0 +1,13 @@
+.inventario-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.inventario-summary-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-slate-600);
+}
