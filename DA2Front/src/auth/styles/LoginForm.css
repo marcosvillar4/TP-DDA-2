@@ -38,3 +38,14 @@
   font-weight: 600;
   color: var(--color-navy);
 }
+
+.login-form-register-link {
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.login-form-register-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}

@@ -1,0 +1,404 @@
+/* ============================================================
+   RegisterForm.css — Estilos del formulario de registro
+   Sigue el mismo patrón de CSS plano que LoginForm.css
+   ============================================================ */
+
+/* Layout principal */
+.register-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* ── Panel izquierdo (branding) ── */
+.register-branding {
+  display: none; /* oculto en móvil */
+  flex-direction: column;
+  justify-content: space-between;
+  width: 33.333%;
+  padding: 3rem;
+  background-color: #16233b;
+  color: #ffffff;
+}
+
+@media (min-width: 1024px) {
+  .register-branding {
+    display: flex;
+  }
+}
+
+.register-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.register-brand-logo-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #ef4444;
+}
+
+.register-brand-logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.register-brand-heading {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+.register-brand-subtitle {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.register-trust-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.register-trust-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.register-trust-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #34d399;
+}
+
+.register-trust-title {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.register-trust-desc {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+/* ── Panel derecho (formulario) ── */
+.register-form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .register-form-panel {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .register-form-panel {
+    padding: 3rem 5rem;
+  }
+}
+
+.register-form-container {
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+/* Logo móvil */
+.register-mobile-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .register-mobile-logo {
+    display: none;
+  }
+}
+
+.register-mobile-logo-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #dc2626;
+}
+
+.register-mobile-logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #16233b;
+}
+
+/* Encabezado del formulario */
+.register-heading {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.register-subheading {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+/* ── Formulario ── */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.register-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  margin-bottom: 1rem;
+}
+
+.register-fields-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .register-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Campos ── */
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.register-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.register-input-wrapper {
+  position: relative;
+}
+
+.register-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  width: 1.125rem;
+  height: 1.125rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.register-input {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.register-input.has-icon {
+  padding-left: 2.5rem;
+}
+
+.register-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.register-select {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.register-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ── Divisor ── */
+.register-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+/* ── Tarjetas de rol ── */
+.register-role-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .register-role-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.register-role-card {
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.register-role-card:hover {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+}
+
+.register-role-card.active {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.register-role-icon {
+  margin-bottom: 0.75rem;
+  color: #94a3b8;
+}
+
+.register-role-card.active .register-role-icon {
+  color: #2563eb;
+}
+
+.register-role-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.register-role-card.active .register-role-title {
+  color: #1e3a8a;
+}
+
+.register-role-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.register-role-card.active .register-role-desc {
+  color: #1d4ed8;
+}
+
+/* ── Sección de datos extra ── */
+.register-extra-section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-extra-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Botón submit ── */
+.register-submit-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #2563eb;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.register-submit-btn:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.register-submit-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.register-submit-btn:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* ── Footer ── */
+.register-footer {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #475569;
+  margin-top: 1.5rem;
+}
+
+.register-footer a {
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.register-footer a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
