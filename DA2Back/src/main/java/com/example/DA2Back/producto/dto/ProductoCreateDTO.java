@@ -13,5 +13,4 @@ public class ProductoCreateDTO {
 
     private String descripcion;
 
-    private Double precio;
 }

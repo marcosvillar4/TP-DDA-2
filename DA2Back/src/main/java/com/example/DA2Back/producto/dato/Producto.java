@@ -12,6 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Producto {
 
+    public Producto(String nombre, String descripcion) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,6 +26,5 @@ public class Producto {
 
     private String descripcion;
 
-    @Column(nullable = false)
-    private Double precio;
+
 }
