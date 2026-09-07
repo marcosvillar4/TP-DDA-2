@@ -3,6 +3,18 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { registerRequest } from "../api/authApi";
 
+/**
+ * Hook de registro de usuario.
+ *
+ * Mapea los datos del formulario al RegisterDTO del backend:
+ *   { username, email, password, rol }
+ *
+ * El campo "username" se construye a partir de los datos extra
+ * según el rol elegido:
+ *   - COMERCIO   → razón social
+ *   - REPARTIDOR → nombre + apellido
+ *   - DEPOSITO   → nombre del nodo
+ */
 export function useRegister() {
   const navigate = useNavigate();
 
@@ -24,6 +36,7 @@ export function useRegister() {
     setExtraData({ ...extraData, [e.target.name]: e.target.value });
   }
 
+  /** Deriva el username display según el rol y los datos extra */
   function resolveUsername() {
     switch (userType) {
       case "COMERCIO":
@@ -40,6 +53,7 @@ export function useRegister() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    // Validación: rol seleccionado
     if (!userType) {
       Swal.fire({
         icon: "warning",
@@ -50,6 +64,7 @@ export function useRegister() {
       return;
     }
 
+    // Validación: contraseñas coinciden
     if (baseData.password !== baseData.confirmPassword) {
       Swal.fire({
         icon: "warning",

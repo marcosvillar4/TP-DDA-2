@@ -26,7 +26,10 @@ export async function loginRequest({ email, password }) {
 
 /**
  * Registro de usuario nuevo.
- * El backend espera: { username, password, email, rol }
+ *
+ * El backend espera:  { username, password, email, rol }
+ *   - username: nombre display del usuario (razón social, nombre completo, etc.)
+ *   - rol: uno de "COMERCIO" | "REPARTIDOR" | "DEPOSITO"
  */
 export async function registerRequest({ username, email, password, rol }) {
   let response;

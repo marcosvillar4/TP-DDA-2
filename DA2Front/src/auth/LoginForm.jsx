@@ -64,7 +64,7 @@ export function LoginForm() {
  
       <p className="login-form-footer-text">
         ¿No tenés cuenta?{" "}
-        <Link to="/register" style={{ color: "var(--color-navy)", fontWeight: 600, textDecoration: "none" }}>
+        <Link to="/register" className="login-form-register-link">
           Registrate aquí
         </Link>
       </p>
