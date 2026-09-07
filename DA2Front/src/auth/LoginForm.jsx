@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useLogin } from "../../hooks/useLogin";
 import { Button } from "./components/Button";
 import { TextField } from "./components/TextField";
@@ -62,7 +63,10 @@ export function LoginForm() {
       </Button>
  
       <p className="login-form-footer-text">
-        ¿Necesitás acceso? Contactá al administrador del sistema.
+        ¿No tenés cuenta?{" "}
+        <Link to="/register" style={{ color: "var(--color-navy)", fontWeight: 600, textDecoration: "none" }}>
+          Registrate aquí
+        </Link>
       </p>
     </form>
   );

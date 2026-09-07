@@ -1,0 +1,295 @@
+/* ============================================================
+   RegisterForm.css — Estilos del formulario de registro
+   Paleta y convenciones idénticas a AuthLayout, AuthCard,
+   InventarioPage y Button del resto de la app.
+   ============================================================ */
+
+/* ── Página completa ── */
+.register-page {
+  min-height: 100vh;
+  background-color: var(--color-slate-100);
+}
+
+/* ── TopBar (mismo aspecto que inventario-topbar) ── */
+.register-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  background-color: var(--color-navy);
+  color: #fff;
+  border-bottom: 0.25rem solid var(--color-red);
+}
+
+.register-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.register-topbar-logo {
+  height: 2.5rem;
+  width: auto;
+}
+
+.register-topbar-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-slate-200);
+}
+
+/* ── Contenido principal ── */
+.register-content {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Encabezado ── */
+.register-header-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
+.register-header-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-slate-500);
+}
+
+/* ── Panel (tarjeta blanca, mismo estilo que inventario-panel) ── */
+.register-panel {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow:
+    0 20px 25px -5px rgba(15, 23, 42, 0.05),
+    0 8px 10px -6px rgba(15, 23, 42, 0.05);
+}
+
+.register-panel-bar {
+  height: 0.375rem;
+  background: linear-gradient(to right, var(--color-navy), #5a1f33, var(--color-red));
+  border-radius: 1rem 1rem 0 0;
+  margin: -1.75rem -1.75rem 1.5rem;
+}
+
+.register-panel-title {
+  margin: 0 0 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-slate-500);
+}
+
+/* ── Divisor ── */
+.register-divider {
+  border: none;
+  border-top: 1px solid var(--color-slate-200);
+  margin: 0;
+}
+
+/* ── Campos de formulario ── */
+.register-fields-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .register-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.register-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-slate-700);
+}
+
+.register-input-wrapper {
+  position: relative;
+}
+
+.register-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--color-slate-400);
+  pointer-events: none;
+}
+
+.register-input {
+  width: 100%;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  background-color: var(--color-slate-50);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-800);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-input::placeholder {
+  color: var(--color-slate-400);
+}
+
+.register-input:focus {
+  border-color: var(--color-navy);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
+}
+
+.register-input.has-icon {
+  padding-left: 2.5rem;
+}
+
+.register-select {
+  width: 100%;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  background-color: var(--color-slate-50);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-800);
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-select:focus {
+  border-color: var(--color-navy);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
+}
+
+/* ── Tarjetas de selección de rol ── */
+.register-role-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .register-role-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.register-role-card {
+  padding: 1rem;
+  border: 2px solid var(--color-slate-200);
+  border-radius: 0.75rem;
+  background-color: var(--color-slate-50);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-role-card:hover {
+  border-color: var(--color-navy);
+  background-color: #fff;
+}
+
+.register-role-card.active {
+  border-color: var(--color-navy);
+  background-color: #fff;
+  box-shadow: 0 0 0 1px var(--color-navy);
+}
+
+.register-role-icon {
+  margin-bottom: 0.75rem;
+  color: var(--color-slate-400);
+}
+
+.register-role-card.active .register-role-icon {
+  color: var(--color-navy);
+}
+
+.register-role-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+  margin-bottom: 0.25rem;
+}
+
+.register-role-card.active .register-role-title {
+  color: var(--color-navy);
+}
+
+.register-role-desc {
+  font-size: 0.75rem;
+  color: var(--color-slate-500);
+  line-height: 1.4;
+}
+
+/* ── Botón submit (idéntico a .button) ── */
+.register-submit-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--color-navy);
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.register-submit-btn:hover:not(:disabled) {
+  background-color: var(--color-navy-dark);
+}
+
+.register-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Footer con link al login ── */
+.register-footer {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-slate-500);
+}
+
+.register-footer a {
+  font-weight: 600;
+  color: var(--color-navy);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.register-footer a:hover {
+  color: var(--color-navy-dark);
+  text-decoration: underline;
+}
