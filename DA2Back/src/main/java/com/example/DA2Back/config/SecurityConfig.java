@@ -93,7 +93,7 @@ public class SecurityConfig {
         .hasRole("REPARTIDOR")
     
     .requestMatchers("/deposito/**")
-        .hasRole("DEPOSITO")
+        .hasAnyRole("DEPOSITO", "ADMIN", "COMERCIO")
 
     .anyRequest().authenticated()
 )

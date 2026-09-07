@@ -1,0 +1,16 @@
+.item-inventario-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.item-inventario-form-submit {
+  height: fit-content;
+}
+
+@media (max-width: 768px) {
+  .item-inventario-form {
+    grid-template-columns: 1fr;
+  }
+}

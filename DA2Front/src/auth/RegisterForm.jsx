@@ -1,3 +1,6 @@
+import { Building2, Navigation, Package, Mail, Lock, User, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import logo from '../assets/Logo.png';
 import { Building2, Navigation, Package, Mail, Lock, User, Phone, MapPin, Truck, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRegister } from '../../hooks/useRegister';
