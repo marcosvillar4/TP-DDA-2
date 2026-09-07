@@ -50,12 +50,37 @@ export function useRegister() {
     }
   }
 
+  /** Valida la contraseña y devuelve un array con mensajes de error (vacío si pasa) */
+  function validatePassword(password) {
+    const errors = [];
+    if (!password || password.length < 8) {
+      errors.push("Al menos 8 caracteres.");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Al menos una letra mayúscula.");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("Al menos una letra minúscula.");
+    }
+    if (!/\d/.test(password)) {
+      errors.push("Al menos un número.");
+    }
+    if (!/[\W_]/.test(password)) {
+      errors.push("Al menos un carácter especial (por ejemplo: !@#$%^&*).");
+    }
+    return errors;
+  }
+
+  // Estado derivado: errores y flag de validez para feedback en vivo
+  const passwordErrors = validatePassword(baseData.password);
+  const passwordValid = passwordErrors.length === 0;
+
   async function handleSubmit(e) {
     e.preventDefault();
 
     // Validación: rol seleccionado
     if (!userType) {
-      Swal.fire({
+      await Swal.fire({
         icon: "warning",
         title: "Falta el perfil",
         text: "Seleccioná un tipo de cuenta antes de continuar.",
@@ -66,10 +91,25 @@ export function useRegister() {
 
     // Validación: contraseñas coinciden
     if (baseData.password !== baseData.confirmPassword) {
-      Swal.fire({
+      await Swal.fire({
         icon: "warning",
         title: "Contraseñas distintas",
         text: "Las contraseñas no coinciden. Verificalas e intentá de nuevo.",
+        confirmButtonColor: "#16223f",
+      });
+      return;
+    }
+
+    // Validación: reglas de contraseña (cliente) -> mostrar con Swal si hay errores
+    const pwdErrors = validatePassword(baseData.password);
+    if (pwdErrors.length > 0) {
+      const htmlList = `<ul style="text-align: left; margin: 0; padding-left: 1.25rem;">${pwdErrors
+        .map((e) => `<li>${e}</li>`)
+        .join("")}</ul>`;
+      await Swal.fire({
+        icon: "warning",
+        title: "Contraseña inválida",
+        html: `<p>La contraseña debe cumplir con los siguientes requisitos:</p>${htmlList}`,
         confirmButtonColor: "#16223f",
       });
       return;
@@ -94,7 +134,7 @@ export function useRegister() {
 
       navigate("/");
     } catch (err) {
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Error al registrarse",
         text: err.message,
@@ -110,6 +150,8 @@ export function useRegister() {
     userType,
     extraData,
     loading,
+    passwordErrors,
+    passwordValid,
     setUserType,
     setExtraData,
     handleBaseChange,

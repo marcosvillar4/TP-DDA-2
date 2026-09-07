@@ -34,9 +34,21 @@ export default function RegisterForm() {
     handleBaseChange,
     handleExtraChange,
     handleSubmit,
+    passwordErrors,
+    passwordValid,
   } = useRegister();
 
   const activeRole = roles.find((r) => r.id === userType);
+
+  // Derivar checks para feedback en vivo
+  const pwd = baseData.password || "";
+  const checks = {
+    length: pwd.length >= 8,
+    upper: /[A-Z]/.test(pwd),
+    lower: /[a-z]/.test(pwd),
+    number: /\d/.test(pwd),
+    special: /[\W_]/.test(pwd),
+  };
 
   return (
     <div className="register-page">
@@ -121,6 +133,18 @@ export default function RegisterForm() {
                         onChange={handleBaseChange}
                       />
                     </div>
+                    {/* Feedback en vivo de reglas de contraseña */}
+                    {pwd && (
+                      <div className="register-password-feedback" style={{ marginTop: 6 }}>
+                        <ul style={{ margin: 0, paddingLeft: '1rem', fontSize: '0.875rem', color: '#374151' }}>
+                          <li style={{ color: checks.length ? '#16a34a' : '#d97706' }}>{checks.length ? '✓' : '·'} Al menos 8 caracteres</li>
+                          <li style={{ color: checks.upper ? '#16a34a' : '#d97706' }}>{checks.upper ? '✓' : '·'} Una letra mayúscula</li>
+                          <li style={{ color: checks.lower ? '#16a34a' : '#d97706' }}>{checks.lower ? '✓' : '·'} Una letra minúscula</li>
+                          <li style={{ color: checks.number ? '#16a34a' : '#d97706' }}>{checks.number ? '✓' : '·'} Al menos un número</li>
+                          <li style={{ color: checks.special ? '#16a34a' : '#d97706' }}>{checks.special ? '✓' : '·'} Un carácter especial (ej: !@#$%)</li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   <div className="register-field">
                     <label className="register-label">Confirmar Contraseña</label>
