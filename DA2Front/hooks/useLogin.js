@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { loginRequest } from "../api/authApi";
 
 export function useLogin() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +41,9 @@ export function useLogin() {
         timer: 1600,
         showConfirmButton: false,
       });
+
+      // Redirigir al dashboard después del login exitoso
+      navigate("/dashboard");
 
     } catch (err) {
       Swal.fire({
