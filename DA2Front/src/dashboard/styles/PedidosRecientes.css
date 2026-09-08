@@ -1,0 +1,121 @@
+.pedidos-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+}
+
+.pedidos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.pedidos-title {
+  margin: 0 0 0.125rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}
+
+.pedidos-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+}
+
+.pedidos-ver-btn {
+  background-color: var(--color-slate-100);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-slate-600);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.pedidos-ver-btn:hover {
+  background-color: var(--color-slate-200);
+}
+
+.pedidos-table-wrapper {
+  overflow-x: auto;
+}
+
+.pedidos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 580px;
+}
+
+.pedidos-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-slate-500);
+  border-bottom: 1px solid var(--color-slate-200);
+  white-space: nowrap;
+}
+
+.pedidos-table td {
+  padding: 0.75rem;
+  color: var(--color-slate-700);
+  border-bottom: 1px solid var(--color-slate-100);
+  white-space: nowrap;
+}
+
+.pedidos-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pedidos-table tbody tr:hover td {
+  background-color: var(--color-slate-50);
+}
+
+.pedido-id {
+  font-weight: 600;
+  color: var(--color-navy) !important;
+  font-size: 0.8125rem;
+  font-family: 'Courier New', monospace;
+}
+
+.pedido-fecha {
+  color: var(--color-slate-400) !important;
+  font-size: 0.8125rem;
+}
+
+.pedido-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pedido-badge::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background-color: currentColor;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.badge-transito  { background-color: var(--color-violet-light); color: var(--color-violet); }
+.badge-entregado { background-color: var(--color-green-light);  color: var(--color-green); }
+.badge-pendiente { background-color: var(--color-amber-light);  color: var(--color-amber-dark); }
+.badge-preparando{ background-color: var(--color-orange-light); color: var(--color-orange); }
+.badge-cancelado { background-color: var(--color-red-light);    color: var(--color-red); }

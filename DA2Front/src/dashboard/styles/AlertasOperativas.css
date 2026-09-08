@@ -1,0 +1,144 @@
+.alertas-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+}
+
+.alertas-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.alertas-title {
+  margin: 0 0 0.125rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}
+
+.alertas-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+}
+
+.alertas-critico-count {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+.alertas-ver-btn {
+  background: none;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-navy);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.alertas-ver-btn:hover {
+  color: var(--color-navy-dark);
+  text-decoration: underline;
+}
+
+.alertas-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.alerta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--color-slate-100);
+}
+
+.alerta-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.alerta-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.alerta-critico .alerta-icon {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+.alerta-advertencia .alerta-icon {
+  background-color: var(--color-amber-light);
+  color: var(--color-amber);
+}
+
+.alerta-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.alerta-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.alerta-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.alerta-badge-critico {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+.alerta-badge-advertencia {
+  background-color: var(--color-amber-light);
+  color: var(--color-amber-dark);
+}
+
+.alerta-titulo {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}
+
+.alerta-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alerta-tiempo {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-slate-400);
+  white-space: nowrap;
+  padding-top: 0.25rem;
+}
