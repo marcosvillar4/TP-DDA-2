@@ -41,11 +41,11 @@
 
 .login-form-register-link {
   font-weight: 600;
-  color: #2563eb;
+  color: var(--color-navy);
   text-decoration: none;
 }
 
 .login-form-register-link:hover {
-  color: #1d4ed8;
+  color: var(--color-navy-dark);
   text-decoration: underline;
 }
