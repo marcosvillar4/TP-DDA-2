@@ -42,7 +42,7 @@ export function useLogin() {
         showConfirmButton: false,
       });
 
-      navigate("/inventario");
+      navigate("/dashboard");
     } catch (err) {
       Swal.fire({
         icon: "error",

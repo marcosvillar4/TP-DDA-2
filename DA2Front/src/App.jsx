@@ -1,14 +1,27 @@
 import { Routes, Route } from "react-router-dom";
 import LoginPage from "./auth/LoginPage";
 import RegisterForm from "./auth/RegisterForm";
-import InventarioPage from "./inventario/InventarioPage";
+import DashboardLayout from "./layout/DashboardLayout";
+import { EnTrabajoPage } from "./layout/components/EnTrabajoPage";
+import { NAV_ITEMS } from "./layout/navConfig";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterForm />} />
-      <Route path="/inventario" element={<InventarioPage />} />
+
+      <Route element={<DashboardLayout />}>
+        {NAV_ITEMS.map((item) => (
+          <Route
+            key={item.key}
+            path={item.path}
+            element={
+              item.element ? <item.element /> : <EnTrabajoPage titulo={item.label} />
+            }
+          />
+        ))}
+      </Route>
     </Routes>
   );
 }
