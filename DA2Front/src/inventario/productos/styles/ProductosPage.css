@@ -1,0 +1,46 @@
+.productos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.productos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.productos-title {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.productos-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.productos-new-button {
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.productos-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .productos-header {
+    flex-direction: column;
+  }
+
+  .productos-kpis {
+    grid-template-columns: 1fr;
+  }
+}
