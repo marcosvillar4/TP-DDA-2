@@ -9,6 +9,7 @@ import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.inventario.dato.Inventario;
 import com.example.DA2Back.inventario.dato.InventarioRepository;
+import com.example.DA2Back.producto.dato.EstadoProducto;
 import com.example.DA2Back.producto.dato.Producto;
 import com.example.DA2Back.producto.dato.ProductoRepository;
 import lombok.RequiredArgsConstructor;
@@ -86,9 +87,33 @@ public class DevDataSeeder implements CommandLineRunner {
 
             log.info("Depósitos sembrados para {}", c1.getNombre());
 
-            Producto p1 = new Producto(null, "Zapatillas Running X", "Calzado deportivo talle 42", 85000.0);
-            Producto p2 = new Producto(null, "Mochila Urbana Tech", "Mochila impermeable porta notebook", 45000.0);
-            Producto p3 = new Producto(null, "Auriculares Bluetooth Pro", "Cancelación de ruido activa", 62000.0);
+            Producto p1 = new Producto(
+                    null,
+                    "US-001",
+                    "Zapatillas Running X",
+                    "Calzado deportivo talle 42",
+                    "Calzado",
+                    EstadoProducto.ACTIVO,
+                    c1
+            );
+            Producto p2 = new Producto(
+                    null,
+                    "US-002",
+                    "Mochila Urbana Tech",
+                    "Mochila impermeable porta notebook",
+                    "Accesorios",
+                    EstadoProducto.ACTIVO,
+                    c1
+            );
+            Producto p3 = new Producto(
+                    null,
+                    "ET-001",
+                    "Auriculares Bluetooth Pro",
+                    "Cancelación de ruido activa",
+                    "Electrónica",
+                    EstadoProducto.ACTIVO,
+                    c2
+            );
 
             productoRepository.save(p1);
             productoRepository.save(p2);

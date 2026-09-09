@@ -7,10 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.DA2Back.producto.dato.EstadoProducto;
 import com.example.DA2Back.producto.dato.Producto;
 import com.example.DA2Back.producto.dto.ProductoCreateDTO;
 import com.example.DA2Back.producto.dto.ProductoMapper;
 import com.example.DA2Back.producto.dto.ProductoResponseDTO;
+import com.example.DA2Back.producto.dto.ProductoUpdateDTO;
 import com.example.DA2Back.producto.negocio.IProductoService;
 
 @RestController
@@ -24,10 +26,27 @@ public class ProductoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> obtenerTodos() {
+    public ResponseEntity<List<ProductoResponseDTO>> buscar(
+            @RequestParam(required = false) Long comercioId,
+            @RequestParam(required = false) EstadoProducto estado,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String buscar) {
 
         List<ProductoResponseDTO> productos =
-                productoService.obtenerTodos()
+                productoService.buscar(comercioId, estado, categoria, buscar)
+                        .stream()
+                        .map(ProductoMapper::toResponseDTO)
+                        .collect(Collectors.toList());
+
+        return ResponseEntity.ok(productos);
+    }
+
+    @GetMapping("/comercio/{comercioId}")
+    public ResponseEntity<List<ProductoResponseDTO>> obtenerPorComercio(
+            @PathVariable Long comercioId) {
+
+        List<ProductoResponseDTO> productos =
+                productoService.obtenerPorComercio(comercioId)
                         .stream()
                         .map(ProductoMapper::toResponseDTO)
                         .collect(Collectors.toList());
@@ -62,7 +81,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> actualizar(
             @PathVariable Long id,
-            @RequestBody ProductoCreateDTO dto) {
+            @RequestBody ProductoUpdateDTO dto) {
 
         Producto producto = ProductoMapper.toEntity(dto);
 
@@ -74,13 +93,28 @@ public class ProductoController {
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
+    @PatchMapping("/{id}/activar")
+    public ResponseEntity<ProductoResponseDTO> activar(
             @PathVariable Long id) {
 
-        productoService.eliminar(id);
+        Producto actualizado =
+                productoService.activar(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(
+                ProductoMapper.toResponseDTO(actualizado)
+        );
+    }
+
+    @PatchMapping("/{id}/desactivar")
+    public ResponseEntity<ProductoResponseDTO> desactivar(
+            @PathVariable Long id) {
+
+        Producto desactivado =
+                productoService.desactivar(id);
+
+        return ResponseEntity.ok(
+                ProductoMapper.toResponseDTO(desactivado)
+        );
     }
 }
 
