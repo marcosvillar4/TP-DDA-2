@@ -1,0 +1,49 @@
+.badge-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-estado::before {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.badge-violet {
+  background-color: var(--color-violet-light);
+  color: var(--color-violet);
+}
+
+.badge-green {
+  background-color: var(--color-green-light);
+  color: var(--color-green);
+}
+
+.badge-amber {
+  background-color: var(--color-amber-light);
+  color: var(--color-amber-dark);
+}
+
+.badge-blue {
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.badge-red {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+.badge-default {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+}

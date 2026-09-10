@@ -8,6 +8,7 @@ import { NAV_ITEMS } from "./layout/navConfig";
 function App() {
   return (
     <Routes>
+      {/* Rutas públicas */}
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterForm />} />
 

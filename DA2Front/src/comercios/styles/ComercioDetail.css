@@ -1,0 +1,245 @@
+.comercio-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comercio-btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  align-self: flex-start;
+}
+
+.comercio-btn-volver:hover {
+  color: var(--color-slate-800);
+}
+
+.comercio-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.comercio-detail-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comercio-detail-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
+.comercio-detail-cuit {
+  font-size: 0.875rem;
+  color: var(--color-slate-400);
+  font-family: 'Courier New', monospace;
+}
+
+.comercio-btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fff;
+  color: var(--color-slate-700);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comercio-btn-outline:hover {
+  background-color: var(--color-slate-50);
+  border-color: var(--color-slate-300);
+  color: var(--color-slate-900);
+}
+
+.comercio-detail-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .comercio-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comercio-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comercio-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comercio-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.comercio-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.comercio-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+  margin-bottom: 1.5rem;
+}
+.comercio-card-header .comercio-card-title {
+  margin-bottom: 0.25rem;
+}
+
+.comercio-card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-slate-400);
+}
+
+/* Contact Info List */
+.comercio-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.comercio-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.info-icon {
+  color: var(--color-slate-400);
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-slate-400);
+}
+
+.info-value {
+  font-size: 0.875rem;
+  color: var(--color-slate-800);
+  line-height: 1.4;
+}
+
+/* KPIs */
+.comercio-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .comercio-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comercio-kpi-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+  margin-bottom: 0.25rem;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  color: var(--color-slate-500);
+}
+
+/* Recent Orders Table */
+.comercio-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.comercio-pedidos-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.comercio-pedidos-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-slate-400);
+  border-bottom: 1px solid var(--color-slate-100);
+  white-space: nowrap;
+}
+
+.comercio-pedidos-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-700);
+  border-bottom: 1px solid var(--color-slate-50);
+}
+
+.comercio-pedidos-table tr:last-child td {
+  border-bottom: none;
+}
+
+.col-id-small {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.col-fecha {
+  color: var(--color-slate-500);
+}

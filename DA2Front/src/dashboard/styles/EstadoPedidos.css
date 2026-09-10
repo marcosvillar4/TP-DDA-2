@@ -1,0 +1,89 @@
+.estado-card {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+}
+
+.estado-header {
+  margin-bottom: 1.5rem;
+}
+
+.estado-title {
+  margin: 0 0 0.125rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}
+
+.estado-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+}
+
+.estado-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-bottom: 0.375rem;
+}
+
+.estado-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.estado-row-label {
+  font-size: 0.8125rem;
+  color: var(--color-slate-600);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.estado-track {
+  height: 1.125rem;
+  background-color: var(--color-slate-100);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.estado-fill {
+  height: 100%;
+  border-radius: 9999px;
+  min-width: 4px;
+}
+
+.estado-axis {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 112px;
+  font-size: 0.6875rem;
+  color: var(--color-slate-400);
+  margin-bottom: 1.25rem;
+}
+
+.estado-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-slate-100);
+}
+
+.estado-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-slate-600);
+}
+
+.estado-legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
