@@ -103,5 +103,26 @@ export const pedidosMock = [
       { estado: 'Pedido recibido', fecha: '22/08/2026 11:00', ubicacion: 'Sistema central', status: 'completed' },
       { estado: 'Cancelado', fecha: '22/08/2026 12:30', ubicacion: 'Sistema central', status: 'current' }
     ]
+  },
+  {
+    id: 'LOG-0023',
+    comercio: { nombre: 'Urban Shoes', rubro: 'Calzado' },
+    destinatario: 'Carolina Vega',
+    direccion: 'Av. Corrientes 3456, Villa Crespo, CABA',
+    estado: 'Pendiente',
+    repartidor: '—',
+    fecha: '20/08/2026',
+    deposito: 'Dep. Caballito',
+    productos: [
+      { nombre: 'Botas Negras Clásicas', cantidad: 1, pesoUnitario: '1.8 kg' }
+    ],
+    observaciones: '',
+    historial: [
+      { estado: 'Pedido recibido', fecha: '20/08/2026 16:30', ubicacion: 'Dep. Caballito', status: 'current' },
+      { estado: 'En preparación', fecha: '', ubicacion: '', status: 'pending' },
+      { estado: 'Listo para despacho', fecha: '', ubicacion: '', status: 'pending' },
+      { estado: 'En tránsito', fecha: '', ubicacion: '', status: 'pending' },
+      { estado: 'Entregado', fecha: '', ubicacion: '', status: 'pending' }
+    ]
   }
 ];
