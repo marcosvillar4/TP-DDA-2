@@ -72,9 +72,11 @@ export default function PedidoDetail() {
               </div>
             )}
           </div>
-          <button className="pedido-btn-asignar">
-            <UserPlus size={16} /> Asignar repartidor
-          </button>
+          {userRole === 'ADMIN' && (
+            <button className="pedido-btn-asignar">
+              <UserPlus size={16} /> Asignar repartidor
+            </button>
+          )}
         </div>
       </div>
 
