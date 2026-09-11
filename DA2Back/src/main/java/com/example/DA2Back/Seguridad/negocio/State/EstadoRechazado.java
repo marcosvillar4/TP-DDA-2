@@ -1,8 +1,11 @@
 package com.example.DA2Back.Seguridad.negocio.State;
 
+import org.springframework.stereotype.Component;
+
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.excepcion.TransicionInvalidaException;
 
+@Component
 public class EstadoRechazado implements IEstadoUsuario {
 
     @Override
