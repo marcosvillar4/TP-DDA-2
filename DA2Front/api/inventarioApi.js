@@ -48,11 +48,11 @@ export function getProductos() {
 }
 
 export function getDepositos() {
-  return request("/deposito");
+  return request("/depositos");
 }
 
 export function getDepositosPorComercio(comercioId) {
-  return request(`/deposito/comercio/${comercioId}`);
+  return request(`/depositos/comercio/${comercioId}`);
 }
 
 export async function getInventarioPorComercio(comercioId) {

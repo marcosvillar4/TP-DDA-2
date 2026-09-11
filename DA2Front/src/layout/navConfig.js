@@ -16,6 +16,9 @@ import {
 
 import DashboardPage from "../dashboard/DashboardPage";
 import InventarioPage from "../inventario/InventarioPage";
+import ComerciosList from "../comercios/ComerciosList";
+import PedidosList from "../pedidos/PedidosList";
+import SeguimientoPage from "../seguimiento/SeguimientoPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -36,6 +39,9 @@ const TODOS = [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO, ROLES.REPARTIDOR];
  *
  * Para agregar una pantalla nueva más adelante: crearla y asignarla acá
  * en `element`. No hace falta tocar App.jsx ni el Sidebar.
+ *
+ * Las sub-rutas de detalle/alta (ej. /comercios/:id) NO van acá porque
+ * no son ítems de menú — se agregan en App.jsx como EXTRA_ROUTES.
  */
 export const NAV_ITEMS = [
   {
@@ -52,6 +58,7 @@ export const NAV_ITEMS = [
     path: "/pedidos",
     icon: ClipboardList,
     roles: [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO],
+    element: PedidosList,
   },
   {
     key: "mis-pedidos",
@@ -66,6 +73,7 @@ export const NAV_ITEMS = [
     path: "/seguimiento",
     icon: MapPin,
     roles: TODOS,
+    element: SeguimientoPage,
   },
   {
     key: "comercios",
@@ -73,6 +81,7 @@ export const NAV_ITEMS = [
     path: "/comercios",
     icon: Building2,
     roles: [ROLES.ADMIN],
+    element: ComerciosList,
   },
   {
     key: "inventario",

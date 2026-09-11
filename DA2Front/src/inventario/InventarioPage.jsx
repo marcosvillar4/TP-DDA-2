@@ -40,9 +40,9 @@ export default function InventarioPage() {
           <option value="">
             {loadingComercios ? "Cargando comercios..." : "Elegí un comercio"}
           </option>
-          {comercios.map((comercio) => (
+                    {comercios.map((comercio) => (
             <option key={comercio.id} value={comercio.id}>
-              {comercio.nombre}
+              {comercio.nombreComercial}
             </option>
           ))}
         </Select>
