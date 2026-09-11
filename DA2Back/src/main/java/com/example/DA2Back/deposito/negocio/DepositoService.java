@@ -5,144 +5,137 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.DA2Back.comercio.dato.Comercio;
-import com.example.DA2Back.comercio.negocio.IComercio;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
 import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.dato.DepositoRepository;
+import com.example.DA2Back.deposito.dto.DepositoCreateDTO;
+import com.example.DA2Back.deposito.dto.DepositoMapper;
+import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
+import com.example.DA2Back.deposito.excepcion.*;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
-import com.example.DA2Back.Seguridad.dato.Usuario;
-import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 
 @Service
 @RequiredArgsConstructor 
 public class DepositoService implements IDeposito {
 
     private final DepositoRepository depositoRepository;
-    private final IComercio comercioService;
-    private final UsuarioRepository usuarioRepository;
+    private final ComercioRepository comercioRepository;
 
     @Override
-    public Deposito obtenerPorId(Long id) {
-
+    public DepositoResponseDTO obtenerPorId(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException(
-                    "El ID del depósito no puede ser null"
-            );
+            throw new IllegalArgumentException("El ID del depósito no puede ser null");
+        }
+
+        Deposito deposito = depositoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el depósito con ID: " + id));
+
+        return DepositoMapper.toResponseDTO(deposito);
+    }
+
+    @Override
+    public List<DepositoResponseDTO> obtenerTodos() {
+        return depositoRepository.findAll().stream()
+                .map(DepositoMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public List<DepositoResponseDTO> obtenerPorComercio(Long comercioId) {
+        if (comercioId == null) {
+            throw new IllegalArgumentException("El ID del comercio no puede ser null");
+        }
+
+        return depositoRepository.findByComercioId(comercioId).stream()
+                .map(DepositoMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public DepositoResponseDTO crear(DepositoCreateDTO dto, Long usuarioId) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos del depósito no pueden ser null");
+        }
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("El ID del usuario no puede ser null");
+        }
+
+        Deposito deposito = DepositoMapper.toEntity(dto, usuarioId);
+        Deposito guardado = depositoRepository.save(deposito);
+
+        return DepositoMapper.toResponseDTO(guardado);
+    }
+
+    @Override
+    @Transactional
+    public DepositoResponseDTO actualizar(Long id, DepositoCreateDTO dto) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID del depósito no puede ser null");
+        }
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos del depósito no pueden ser null");
+        }
+
+        Deposito deposito = depositoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el depósito con ID: " + id));
+
+        deposito.setNombre(dto.getNombre());
+        deposito.setDireccion(dto.getDireccion());
+
+        return DepositoMapper.toResponseDTO(depositoRepository.save(deposito));
+    }
+
+    @Override
+    @Transactional
+    public void asociarAComercio(Long depositoId, Long comercioId) {
+        if (depositoId == null || comercioId == null) {
+            throw new IllegalArgumentException("El ID del depósito y del comercio no pueden ser null");
+        }
+
+        Deposito deposito = depositoRepository.findById(depositoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el depósito con ID: " + depositoId));
+
+        if (deposito.getComercio() != null) {
+            throw new AsociacionInvalidaException("El depósito ya está asociado a un comercio");
+        }
+
+        Comercio comercio = comercioRepository.findById(comercioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el comercio con ID: " + comercioId));
+
+        deposito.setComercio(comercio);
+        depositoRepository.save(deposito);
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID del depósito no puede ser null");
+        }
+
+        Deposito deposito = depositoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el depósito con ID: " + id));
+
+        depositoRepository.delete(deposito);
+    }
+
+    @Override
+    public Deposito obtenerEntidadPorId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID del depósito no puede ser null");
         }
 
         return depositoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "No se encontró el depósito con ID: " + id
-                ));
-    }
-
-    @Override
-    public List<Deposito> obtenerTodos() {
-        return depositoRepository.findAll();
-    }
-
-    @Override
-    public List<Deposito> obtenerPorComercio(Long comercioId) {
-
-        if (comercioId == null) {
-            throw new IllegalArgumentException(
-                    "El ID del comercio no puede ser null"
-            );
-        }
-
-        return depositoRepository.findByComercioId(comercioId);
-    }
-
-    @Override
-    public Deposito crear(
-            String nombre,
-            String direccion,
-            Long comercioId,
-            Long usuarioId) {
-
-        if (nombre == null || direccion == null) {
-            throw new IllegalArgumentException(
-                    "El nombre y la dirección son obligatorios"
-            );
-        }
-
-        if (comercioId == null) {
-            throw new IllegalArgumentException(
-                    "El ID del comercio no puede ser null"
-            );
-        }
-
-        if (usuarioId == null) {
-            throw new IllegalArgumentException(
-                    "El ID del usuario no puede ser null"
-            );
-        }
-
-        Comercio comercio = comercioService.obtenerPorId(comercioId);
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-        .orElseThrow(() -> new RuntimeException(
-                "No se encontró el usuario con ID: " + usuarioId
-        ));
-
-        Deposito deposito = new Deposito();
-
-        deposito.setNombre(nombre);
-        deposito.setDireccion(direccion);
-        deposito.setComercio(comercio);
-        deposito.setUsuario(usuario);
-
-        return depositoRepository.save(deposito);
-    }
-
-    @Override
-    public Deposito actualizar(
-            Long id,
-            String nombre,
-            String direccion,
-            Long comercioId,
-            Long usuarioId) {
-
-        Deposito deposito = obtenerPorId(id);
-
-        if (nombre == null || direccion == null) {
-            throw new IllegalArgumentException(
-                    "El nombre y la dirección son obligatorios"
-            );
-        }
-
-        if (comercioId == null) {
-            throw new IllegalArgumentException(
-                    "El ID del comercio no puede ser null"
-            );
-        }
-
-        if (usuarioId == null) {
-            throw new IllegalArgumentException(
-                    "El ID del usuario no puede ser null"
-            );
-        }
-
-        Comercio comercio = comercioService.obtenerPorId(comercioId);
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-        .orElseThrow(() -> new RuntimeException(
-                "No se encontró el usuario con ID: " + usuarioId
-        ));
-
-        deposito.setNombre(nombre);
-        deposito.setDireccion(direccion);
-        deposito.setComercio(comercio);
-        deposito.setUsuario(usuario);
-
-        return depositoRepository.save(deposito);
-    }
-
-    @Override
-    public void eliminar(Long id) {
-
-        Deposito deposito = obtenerPorId(id);
-
-        depositoRepository.delete(deposito);
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el depósito con ID: " + id));
     }
 }
 

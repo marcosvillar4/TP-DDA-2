@@ -24,15 +24,24 @@ public class Comercio {
     private Long id;
 
     @Column(nullable = false)
-    private String nombre;
+    private String nombreComercial;
+
+    @Column (nullable = false)
+    private String razonSocial;
 
     @Column(nullable = false)
     private String direccion;
+
+    @Column (nullable = false, unique = true)
+    private String CUIT;
 
     @Column(nullable = false)
     private String telefono;
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(name = "usuario_id", nullable = false, unique = true)
+    private Long usuarioId; 
 
 }

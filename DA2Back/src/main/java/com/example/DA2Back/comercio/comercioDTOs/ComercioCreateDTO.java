@@ -9,11 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ComercioCreateDTO {
 
-    private String nombre;
-
-    private String direccion;
-
-    private String telefono;
-
-    private String email;
+   private String nombreComercial;
+   private String razonSocial;
+   private String direccion;
+   private String cuit;
+   private String telefono;
+   private String email;
 }

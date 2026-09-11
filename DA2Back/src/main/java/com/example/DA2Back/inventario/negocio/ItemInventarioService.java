@@ -132,7 +132,7 @@ public class ItemInventarioService implements IItemInventario {
                 productoService.obtenerPorId(productoId);
 
         Deposito deposito =
-                depositoService.obtenerPorId(depositoId);
+                depositoService.obtenerEntidadPorId(depositoId);
 
         return itemInventarioRepository
                 .findByInventarioIdAndProductoIdAndDepositoId(

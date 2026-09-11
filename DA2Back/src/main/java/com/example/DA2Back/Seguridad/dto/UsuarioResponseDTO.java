@@ -1,6 +1,7 @@
 package com.example.DA2Back.Seguridad.dto;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,14 +15,10 @@ import lombok.NoArgsConstructor;
 public class UsuarioResponseDTO {
 
     private Long id;
-
+    private String nombre;
+    private String apellido;
     private String email;
-
-    private String username;
-
+    private String telefono;
     private Rol rol;
-
-    private boolean activo;
-
-    // Getters y Setters
+    private EstadoUsuario estado;
 }

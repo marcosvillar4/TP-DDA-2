@@ -3,6 +3,7 @@ package com.example.DA2Back.integration;
 import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
+import com.example.DA2Back.Seguridad.negocio.UsuarioFactory;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
@@ -19,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -54,10 +54,10 @@ class LogiRedIntegrationTest {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private PedidosRepository pedidosRepository;
+    private UsuarioFactory usuarioFactory;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private PedidosRepository pedidosRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -66,21 +66,32 @@ class LogiRedIntegrationTest {
     private Long pedidoId;
     private final Long COMERCIO_ID = 1L; // ID referencial, no FK real
 
+    private static final String ADMIN_EMAIL = "admin@logired.com";
+    private static final String ADMIN_PASSWORD = "Admin1234!";
     // ------------------------------------------------------------------
     // Semilla de datos (una vez antes de todos los tests)
     // ------------------------------------------------------------------
 
     @BeforeAll
     void sembrarDatos() {
-        if (!usuarioRepository.existsByEmail("admin@logired.com")) {
-            usuarioRepository.save(Usuario.builder()
-                    .username("Administrador LogiRed")
-                    .email("admin@logired.com")
-                    .password(passwordEncoder.encode("Admin1234!"))
-                    .rol(Rol.ADMIN)
-                    .activo(true)
-                    .build());
+        boolean existeAdmin = usuarioRepository.findAll().stream()
+                .anyMatch(u -> u.getRol() == Rol.ADMIN);
+
+        if (existeAdmin || usuarioRepository.existsByEmail(ADMIN_EMAIL)) {
+            return;
         }
+
+        Usuario admin = usuarioFactory.crearAdministrador(
+                ADMIN_EMAIL,
+                ADMIN_PASSWORD,
+                "Administrador",
+                "LogiRed",
+                "00000000",
+                "0000000000"
+        );
+
+        usuarioRepository.save(admin);
+    
     }
 
     // ==================================================================

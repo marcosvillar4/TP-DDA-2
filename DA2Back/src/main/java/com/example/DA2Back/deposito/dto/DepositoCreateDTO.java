@@ -10,10 +10,5 @@ import lombok.NoArgsConstructor;
 public class DepositoCreateDTO {
 
     private String nombre;
-
     private String direccion;
-
-    private Long comercioId;
-
-    private Long usuarioId;
 }

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.inventario.dato.ItemInventario;
 
@@ -29,12 +28,11 @@ public class Deposito {
     private String direccion;
 
     @ManyToOne
-    @JoinColumn(name = "comercio_id", nullable = false)
+    @JoinColumn(name = "comercio_id")
     private Comercio comercio;
 
-    @OneToOne
-    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
-    private Usuario usuario;
+    @Column(name = "usuario_id", nullable = false, unique = true)
+    private Long usuarioId;
 
     @OneToMany(mappedBy = "deposito")
     private List<ItemInventario> items;

@@ -11,12 +11,14 @@ public class UsuarioMapper {
             return null;
         }
 
-        UsuarioResponseDTO dto = new UsuarioResponseDTO();
-
-        dto.setId(usuario.getId());
-        dto.setUsername(usuario.getEmail());
-        dto.setRol(usuario.getRol());
-
-        return dto;
+        return UsuarioResponseDTO.builder()
+                .id(usuario.getId())
+                .nombre(usuario.getNombre())
+                .apellido(usuario.getApellido())
+                .email(usuario.getEmail())
+                .telefono(usuario.getTelefono())
+                .rol(usuario.getRol())
+                .estado(usuario.getEstado())
+                .build();
     }
 }

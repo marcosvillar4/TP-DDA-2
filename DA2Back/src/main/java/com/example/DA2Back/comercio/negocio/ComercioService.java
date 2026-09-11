@@ -6,7 +6,12 @@ import org.springframework.stereotype.Service;
 
 import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.comercio.excepcion.*;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioCreateDTO;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioMapper;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -16,71 +21,91 @@ public class ComercioService implements IComercio {
     private final ComercioRepository comercioRepository;
 
     @Override
-    public Comercio obtenerPorId(Long id) {
-
+    public ComercioResponseDTO obtenerPorId(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("El ID del comercio no puede ser null");
         }
 
-        return comercioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "No se encontró el comercio con ID: " + id
-                ));
+        Comercio comercio = comercioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el comercio con ID: " + id));
+
+        return ComercioMapper.toResponseDTO(comercio);
     }
 
     @Override
-    public List<Comercio> obtenerTodos() {
-        return comercioRepository.findAll();
+    public List<ComercioResponseDTO> obtenerTodos() {
+        return comercioRepository.findAll().stream()
+                .map(ComercioMapper::toResponseDTO)
+                .toList();
     }
 
     @Override
-    public Comercio crear(Comercio comercio) {
-
-        if (comercio == null) {
-            throw new IllegalArgumentException(
-                    "El comercio no puede ser null"
-            );
+    @Transactional
+    public ComercioResponseDTO crear(ComercioCreateDTO dto, Long usuarioId) {
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos del comercio no pueden ser null");
+        }
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("El ID del usuario no puede ser null");
         }
 
-        return comercioRepository.save(comercio);
+        Comercio comercio = ComercioMapper.toEntity(dto, usuarioId);
+        Comercio guardado = comercioRepository.save(comercio);
+
+        return ComercioMapper.toResponseDTO(guardado);
     }
 
     @Override
-    public Comercio actualizar(Long id, Comercio comercio) {
-
+    @Transactional
+    public ComercioResponseDTO actualizar(Long id, ComercioCreateDTO dto) {
         if (id == null) {
-            throw new IllegalArgumentException(
-                    "El ID del comercio no puede ser null"
-            );
+            throw new IllegalArgumentException("El ID del comercio no puede ser null");
+        }
+        if (dto == null) {
+            throw new IllegalArgumentException("Los datos del comercio no pueden ser null");
         }
 
-        if (comercio == null) {
-            throw new IllegalArgumentException(
-                    "El comercio no puede ser null"
-            );
-        }
+        Comercio comercioExistente = comercioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el comercio con ID: " + id));
 
-        Comercio comercioExistente = obtenerPorId(id);
+        comercioExistente.setNombreComercial(dto.getNombreComercial());
+        comercioExistente.setRazonSocial(dto.getRazonSocial());
+        comercioExistente.setDireccion(dto.getDireccion());
+        comercioExistente.setCUIT(dto.getCuit());
+        comercioExistente.setTelefono(dto.getTelefono());
+        comercioExistente.setEmail(dto.getEmail());
 
-        comercioExistente.setNombre(comercio.getNombre());
-        comercioExistente.setDireccion(comercio.getDireccion());
-        comercioExistente.setTelefono(comercio.getTelefono());
-        comercioExistente.setEmail(comercio.getEmail());
-
-        return comercioRepository.save(comercioExistente);
+        return ComercioMapper.toResponseDTO(comercioRepository.save(comercioExistente));
     }
 
     @Override
+    @Transactional
     public void eliminar(Long id) {
-
         if (id == null) {
-            throw new IllegalArgumentException(
-                    "El ID del comercio no puede ser null"
-            );
+            throw new IllegalArgumentException("El ID del comercio no puede ser null");
         }
 
-        Comercio comercio = obtenerPorId(id);
+        Comercio comercio = comercioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el comercio con ID: " + id));
 
         comercioRepository.delete(comercio);
+    }
+
+    @Override
+    public Comercio obtenerEntidadPorId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("El ID del comercio no puede ser null");
+        }
+        return comercioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontró el comercio con ID: " + id));
+    }
+
+    @Override
+    public boolean existePorId(Long id) {
+        return id != null && comercioRepository.existsById(id);
     }
 }

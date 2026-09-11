@@ -1,25 +1,22 @@
 package com.example.DA2Back.comercio.comercioDTOs;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ComercioResponseDTO {
 
     private Long id;
-
-    private String nombre;
-
+    private String nombreComercial;
+    private String razonSocial;
     private String direccion;
-
+    private String cuit;
     private String telefono;
-
     private String email;
-
-    private List<Long> usuariosIds;
+    private Long usuarioId;
 }

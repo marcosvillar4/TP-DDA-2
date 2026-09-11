@@ -41,15 +41,26 @@ public class Usuario implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    private String username;
+    private String nombre;
+
+    @Column(nullable = false)
+    private String apellido;
+
+    @Column (nullable = false, unique = true)
+    private String DNI;
+
+    @Column(nullable = false)
+    private String telefono;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private boolean activo = true;
+    private EstadoUsuario estado = EstadoUsuario.EN_EVALUACION;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -68,12 +79,16 @@ public class Usuario implements UserDetails {
     }
 
     public String getNombreUsuario() {
-        return username;
+        return nombre;
     }
-
 
     @Override
     public boolean isEnabled() {
-        return activo;
+        return estado == EstadoUsuario.VALIDADO;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return estado != EstadoUsuario.BLOQUEADO;
     }
 }

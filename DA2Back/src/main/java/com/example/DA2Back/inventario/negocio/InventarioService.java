@@ -74,7 +74,7 @@ public class InventarioService implements IInventario {
             );
         }
 
-        Comercio comercio = comercioService.obtenerPorId(comercioId);
+        Comercio comercio = comercioService.obtenerEntidadPorId(comercioId);
 
         Inventario inventario = new Inventario();
         inventario.setComercio(comercio);
