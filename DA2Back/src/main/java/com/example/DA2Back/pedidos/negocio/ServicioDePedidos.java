@@ -31,6 +31,9 @@ public interface ServicioDePedidos {
     /** Retorna todos los pedidos que se encuentren en un estado determinado. */
     List<PedidoResponseDTO> listarPorEstado(EstadoPedido estado);
 
+    /** Retorna pedidos CREADO sin repartidor asignado. */
+    List<PedidoResponseDTO> listarPendientesAsignables();
+
     /** Actualiza el estado de un pedido existente. */
     PedidoResponseDTO actualizarEstado(Long id, ActualizarEstadoDTO dto);
 

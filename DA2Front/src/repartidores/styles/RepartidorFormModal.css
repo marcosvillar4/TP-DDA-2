@@ -1,0 +1,162 @@
+.repartidor-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(15, 23, 42, 0.45);
+}
+
+.repartidor-modal {
+  width: min(720px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+}
+
+.repartidor-modal-small {
+  width: min(520px, 100%);
+}
+
+.repartidor-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-slate-100);
+}
+
+.repartidor-modal-header h2 {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.125rem;
+}
+
+.repartidor-modal-header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.repartidor-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-600);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.repartidor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.repartidor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.repartidor-field-full,
+.repartidor-readonly-block,
+.repartidor-form-actions {
+  grid-column: 1 / -1;
+}
+
+.repartidor-field span,
+.repartidor-readonly-block span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-slate-500);
+}
+
+.repartidor-field input,
+.repartidor-field select {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  font: inherit;
+  color: var(--color-slate-800);
+  background-color: #fff;
+  outline: none;
+}
+
+.repartidor-field input:focus,
+.repartidor-field select:focus {
+  border-color: var(--color-navy);
+  box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
+}
+
+.repartidor-field small {
+  color: var(--color-slate-500);
+  font-size: 0.75rem;
+}
+
+.repartidor-readonly-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background-color: var(--color-slate-50);
+  border: 1px solid var(--color-slate-100);
+  border-radius: 0.5rem;
+}
+
+.repartidor-readonly-block strong {
+  color: var(--color-slate-800);
+  font-size: 0.875rem;
+}
+
+.repartidor-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.repartidor-btn-primary,
+.repartidor-btn-secondary {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.repartidor-btn-primary {
+  color: #fff;
+  background-color: var(--color-navy);
+}
+
+.repartidor-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.repartidor-btn-secondary {
+  color: var(--color-slate-600);
+  background-color: var(--color-slate-100);
+}
+
+@media (max-width: 640px) {
+  .repartidor-form {
+    grid-template-columns: 1fr;
+  }
+}

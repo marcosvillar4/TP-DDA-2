@@ -7,6 +7,9 @@ import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidosImpl;
+import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
+import com.example.DA2Back.repartidor.dato.Repartidor;
+import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,13 +32,25 @@ class ServicioDePedidosTest {
     @Mock
     private PedidosRepository pedidosRepository;
 
+    @Mock
+    private RepartidorRepository repartidorRepository;
+
     @InjectMocks
     private ServicioDePedidosImpl servicioDePedidos;
 
     private Pedido pedidoMock;
+    private Repartidor repartidor;
 
     @BeforeEach
     void setUp() {
+        repartidor = Repartidor.builder()
+                .id(10L)
+                .nombre("Carlos")
+                .apellido("Ruiz")
+                .estado(EstadoRepartidor.EN_ENTREGA)
+                .activo(true)
+                .build();
+
         pedidoMock = Pedido.builder()
                 .id(1L)
                 .comercioId(100L)
@@ -180,5 +195,57 @@ class ServicioDePedidosTest {
         assertThrows(IllegalStateException.class,
                 () -> servicioDePedidos.cancelar(1L));
         verify(pedidosRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Debe liberar repartidor activo cuando pedido asignado pasa a ENTREGADO")
+    void actualizarEstado_entregadoLiberaRepartidor() {
+        ActualizarEstadoDTO dto = new ActualizarEstadoDTO();
+        dto.setEstado(EstadoPedido.ENTREGADO);
+        Pedido pedidoAsignado = Pedido.builder()
+                .id(1L)
+                .comercioId(100L)
+                .direccionDestino("Av. Siempreviva 742")
+                .estado(EstadoPedido.ASIGNADO)
+                .repartidor(repartidor)
+                .build();
+
+        when(pedidosRepository.findById(1L)).thenReturn(Optional.of(pedidoAsignado));
+        when(pedidosRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
+                10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO)
+        )).thenReturn(false);
+
+        PedidoResponseDTO resultado = servicioDePedidos.actualizarEstado(1L, dto);
+
+        assertEquals(EstadoPedido.ENTREGADO, resultado.getEstado());
+        assertEquals(EstadoRepartidor.DISPONIBLE, repartidor.getEstado());
+        verify(repartidorRepository).save(repartidor);
+    }
+
+    @Test
+    @DisplayName("Debe liberar repartidor activo cuando pedido asignado pasa a CANCELADO")
+    void cancelar_liberaRepartidor() {
+        Pedido pedidoAsignado = Pedido.builder()
+                .id(1L)
+                .comercioId(100L)
+                .direccionDestino("Av. Siempreviva 742")
+                .estado(EstadoPedido.ASIGNADO)
+                .repartidor(repartidor)
+                .build();
+
+        when(pedidosRepository.findById(1L)).thenReturn(Optional.of(pedidoAsignado));
+        when(pedidosRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
+                10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO)
+        )).thenReturn(false);
+
+        PedidoResponseDTO resultado = servicioDePedidos.cancelar(1L);
+
+        assertEquals(EstadoPedido.CANCELADO, resultado.getEstado());
+        assertEquals(EstadoRepartidor.DISPONIBLE, repartidor.getEstado());
+        verify(repartidorRepository).save(repartidor);
     }
 }

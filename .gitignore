@@ -33,3 +33,7 @@ build/
 .vscode/
 
 DA2Back/src/main/resources/application.properties
+
+# JVM crash/replay logs
+hs_err_pid*.log
+replay_pid*.log

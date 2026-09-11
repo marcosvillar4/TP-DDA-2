@@ -10,6 +10,8 @@ import SeguimientoPage from "./seguimiento/SeguimientoPage";
 import ComerciosList from "./comercios/ComerciosList";
 import ComercioForm from "./comercios/ComercioForm";
 import ComercioDetail from "./comercios/ComercioDetail";
+import RepartidoresPage from "./repartidores/RepartidoresPage";
+import RepartidorDetail from "./repartidores/RepartidorDetail";
 
 function App() {
   return (
@@ -31,7 +33,8 @@ function App() {
         <Route path="/comercios/:id/editar" element={<ComercioForm />} />
         <Route path="/inventario" element={<InventarioPage />} />
         <Route path="/depositos" element={<div style={{padding: '2rem'}}>Página de Depósitos en construcción</div>} />
-        <Route path="/repartidores" element={<div style={{padding: '2rem'}}>Página de Repartidores en construcción</div>} />
+        <Route path="/repartidores" element={<RepartidoresPage />} />
+        <Route path="/repartidores/:id" element={<RepartidorDetail />} />
         <Route path="/pagos" element={<div style={{padding: '2rem'}}>Página de Pagos y Cobranzas en construcción</div>} />
         <Route path="/alertas" element={<div style={{padding: '2rem'}}>Página de Alertas en construcción</div>} />
         <Route path="/transportistas" element={<div style={{padding: '2rem'}}>Página de Transportistas en construcción</div>} />
