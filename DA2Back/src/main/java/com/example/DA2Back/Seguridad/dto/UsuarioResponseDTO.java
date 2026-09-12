@@ -19,6 +19,7 @@ public class UsuarioResponseDTO {
     private String apellido;
     private String email;
     private String telefono;
+    private String vehiculo;
     private Rol rol;
     private EstadoUsuario estado;
 }

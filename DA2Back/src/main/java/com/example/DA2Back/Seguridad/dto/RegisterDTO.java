@@ -13,8 +13,8 @@ import lombok.Setter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "rol")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = RegistroComercioDTO.class, name = "COMERCIO"),
-    @JsonSubTypes.Type(value = RegistroDepositoDTO.class, name = "DEPOSITO")
-    // REPARTIDOR pendiente
+    @JsonSubTypes.Type(value = RegistroDepositoDTO.class, name = "DEPOSITO"),
+    @JsonSubTypes.Type(value = RegistroRepartidorDTO.class, name = "REPARTIDOR")
 })
 @Getter
 @Setter

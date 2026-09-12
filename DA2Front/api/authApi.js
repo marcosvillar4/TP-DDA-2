@@ -27,17 +27,22 @@ export async function loginRequest({ email, password }) {
 /**
  * Registro de usuario nuevo.
  *
- * El backend espera:  { username, password, email, rol }
- *   - username: nombre display del usuario (razón social, nombre completo, etc.)
- *   - rol: uno de "COMERCIO" | "REPARTIDOR" | "DEPOSITO"
+ * El backend espera un RegisterDTO polimórfico (discriminado por "rol"):
+ *   Base:       { email, password, nombre, apellido, dni, telefono, rol }
+ *   COMERCIO:   + { nombreComercial, razonSocial, cuit, direccion }
+ *   DEPOSITO:   + { nombreDeposito, direccionDeposito }
+ *   REPARTIDOR: + { vehiculo }
+ *
+ * useRegister.js arma el objeto plano combinando los datos base con los
+ * específicos del rol elegido; acá simplemente se reenvía tal cual.
  */
-export async function registerRequest({ username, email, password, rol }) {
+export async function registerRequest(payload) {
   let response;
   try {
     response = await fetch(`${AUTH_API_BASE_URL}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, rol }),
+      body: JSON.stringify(payload),
     });
   } catch {
     throw new Error(

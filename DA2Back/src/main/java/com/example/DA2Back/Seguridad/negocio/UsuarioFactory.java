@@ -14,6 +14,7 @@ import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.RegistroComercioDTO;
 import com.example.DA2Back.Seguridad.dto.RegistroDepositoDTO;
+import com.example.DA2Back.Seguridad.dto.RegistroRepartidorDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +31,7 @@ public class UsuarioFactory {
             throw new IllegalArgumentException("El rol ADMIN no puede crearse por auto-registro");
         }
 
-        return Usuario.builder()
+        Usuario.UsuarioBuilder builder = Usuario.builder()
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .nombre(dto.getNombre())
@@ -38,8 +39,13 @@ public class UsuarioFactory {
                 .DNI(dto.getDni())
                 .telefono(dto.getTelefono())
                 .rol(dto.getRol())
-                .estado(EstadoUsuario.EN_EVALUACION)
-                .build();
+                .estado(EstadoUsuario.EN_EVALUACION);
+
+        if (dto instanceof RegistroRepartidorDTO repartidorDTO) {
+            builder.vehiculo(repartidorDTO.getVehiculo());
+        }
+
+        return builder.build();
     }
 
     public Usuario crearAdministrador(String email, String rawPassword, String nombre,
@@ -56,6 +62,11 @@ public class UsuarioFactory {
                 .build();
     }
 
+    /**
+     * Crea la entidad de dominio asociada al usuario recién registrado
+     * (Comercio o Deposito). REPARTIDOR no necesita una entidad aparte:
+     * su único dato extra (vehiculo) ya se guardó directo en el Usuario.
+     */
     public void crearEntidadRelacionada(RegisterDTO dto, Long usuarioId) {
         if (dto instanceof RegistroComercioDTO comercioDTO) {
             comercioService.crear(mapearComercio(comercioDTO), usuarioId);
@@ -63,7 +74,6 @@ public class UsuarioFactory {
         } else if (dto instanceof RegistroDepositoDTO depositoDTO) {
             depositoService.crear(mapearDeposito(depositoDTO), usuarioId);
         }
-        // REPARTIDOR: pendiente
     }
 
     private ComercioCreateDTO mapearComercio(RegistroComercioDTO dto) {

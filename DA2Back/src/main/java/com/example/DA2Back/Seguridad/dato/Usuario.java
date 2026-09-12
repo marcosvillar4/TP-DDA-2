@@ -52,6 +52,10 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String telefono;
 
+    /** Solo aplica a usuarios con rol REPARTIDOR. Null para el resto. */
+    @Column
+    private String vehiculo;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
