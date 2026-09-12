@@ -20,13 +20,6 @@ function contarPorEstado(pedidos) {
     { ...ESTADOS_INICIALES }
   );
 }
-
-/**
- * Trae las métricas reales del Dashboard según el rol del usuario logueado.
- * Cada rol solo pide lo que realmente puede/necesita ver.
- * Si más adelante hay más endpoints disponibles, este es el único lugar
- * que hay que tocar para "activar" un widget nuevo.
- */
 export function useDashboardMetrics(user) {
   const [metrics, setMetrics] = useState({});
   const [loading, setLoading] = useState(true);
@@ -57,22 +50,27 @@ export function useDashboardMetrics(user) {
         nuevasMetricas.pedidosPorEstado = contarPorEstado(pedidos);
       }
 
-      if (user.rol === "COMERCIO" && user.comercioId) {
-        const pedidos = await getPedidosPorComercio(user.comercioId).catch(() => []);
-        nuevasMetricas.totalPedidos = pedidos.length;
-        nuevasMetricas.pedidosPorEstado = contarPorEstado(pedidos);
+      if (user.rol === "COMERCIO") {
+        const comercios = await getComercios().catch(() => []);
+        const miComercio = comercios.find((c) => c.usuarioId === user.id);
 
-        const inventario = await getInventarioPorComercio(user.comercioId).catch(() => null);
-        if (inventario) {
-          const items = await getItemsPorInventario(inventario.id).catch(() => []);
-          nuevasMetricas.totalItemsInventario = items.length;
-          nuevasMetricas.stockTotal = items.reduce(
-            (acc, it) => acc + (it.cantidad ?? 0),
-            0
-          );
-        } else {
-          nuevasMetricas.totalItemsInventario = 0;
-          nuevasMetricas.stockTotal = 0;
+        if (miComercio) {
+          const pedidos = await getPedidosPorComercio(miComercio.id).catch(() => []);
+          nuevasMetricas.totalPedidos = pedidos.length;
+          nuevasMetricas.pedidosPorEstado = contarPorEstado(pedidos);
+
+          const inventario = await getInventarioPorComercio(miComercio.id).catch(() => null);
+          if (inventario) {
+            const items = await getItemsPorInventario(inventario.id).catch(() => []);
+            nuevasMetricas.totalItemsInventario = items.length;
+            nuevasMetricas.stockTotal = items.reduce(
+              (acc, it) => acc + (it.cantidad ?? 0),
+              0
+            );
+          } else {
+            nuevasMetricas.totalItemsInventario = 0;
+            nuevasMetricas.stockTotal = 0;
+          }
         }
       }
 
@@ -87,7 +85,7 @@ export function useDashboardMetrics(user) {
     return () => {
       cancelado = true;
     };
-  }, [user?.rol, user?.comercioId]);
+  }, [user?.rol, user?.id]);
 
   return { metrics, loading };
 }
