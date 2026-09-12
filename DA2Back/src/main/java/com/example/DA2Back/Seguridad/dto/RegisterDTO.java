@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "rol")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "rol",visible = true)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = RegistroComercioDTO.class, name = "COMERCIO"),
     @JsonSubTypes.Type(value = RegistroDepositoDTO.class, name = "DEPOSITO"),
