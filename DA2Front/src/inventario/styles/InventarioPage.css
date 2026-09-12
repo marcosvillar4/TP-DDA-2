@@ -35,3 +35,10 @@
   color: var(--color-slate-500);
   font-size: 0.875rem;
 }
+
+.inventario-comercio-fijo {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}

@@ -17,6 +17,7 @@ public class UsuarioMapper {
                 .apellido(usuario.getApellido())
                 .email(usuario.getEmail())
                 .telefono(usuario.getTelefono())
+                .vehiculo(usuario.getVehiculo())
                 .rol(usuario.getRol())
                 .estado(usuario.getEstado())
                 .build();

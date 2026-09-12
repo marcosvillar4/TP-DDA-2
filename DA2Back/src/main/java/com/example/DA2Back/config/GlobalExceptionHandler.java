@@ -2,12 +2,14 @@ package com.example.DA2Back.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 /**
  * Manejador global de excepciones de la capa de presentacion.
@@ -17,6 +19,23 @@ import java.util.NoSuchElementException;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Falla de @Valid en el body (ej. registro con campos faltantes) → 400.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(
+            MethodArgumentNotValidException ex) {
+
+        String mensaje = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                mensaje.isBlank() ? "Datos inválidos" : mensaje
+        );
+    }
 
     /**
      * IllegalArgumentException → 400 Bad Request

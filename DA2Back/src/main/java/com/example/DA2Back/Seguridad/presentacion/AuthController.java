@@ -1,5 +1,6 @@
 package com.example.DA2Back.Seguridad.presentacion;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -21,10 +22,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UsuarioResponseDTO> register(
-        @RequestBody RegisterDTO registerDTO
+        @Valid @RequestBody RegisterDTO registerDTO
     ) {
         UsuarioResponseDTO creado = authService.registrar(registerDTO);
-        
+
         return ResponseEntity.status(
             HttpStatus.CREATED).body(creado
         );

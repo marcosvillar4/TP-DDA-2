@@ -141,12 +141,80 @@ export default function RegisterForm() {
             </div>
           </div>
 
-          {/* ── Panel 3: Datos específicos por rol ── */}
+          {/* ── Panel 3: Datos personales (comunes a cualquier rol) ── */}
+          {userType && (
+            <div className="register-panel">
+              <div className="register-panel-bar" />
+              <h2 className="register-panel-title">3. Tus datos personales</h2>
+              <div className="register-fields-group">
+                <div className="register-grid-2">
+                  <div className="register-field">
+                    <label className="register-label">Nombre</label>
+                    <div className="register-input-wrapper">
+                      <User className="register-input-icon" size={16} />
+                      <input
+                        type="text"
+                        name="nombre"
+                        required
+                        className="register-input has-icon"
+                        placeholder="Carlos"
+                        value={baseData.nombre}
+                        onChange={handleBaseChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="register-field">
+                    <label className="register-label">Apellido</label>
+                    <input
+                      type="text"
+                      name="apellido"
+                      required
+                      className="register-input"
+                      placeholder="Ruiz"
+                      value={baseData.apellido}
+                      onChange={handleBaseChange}
+                    />
+                  </div>
+                </div>
+                <div className="register-grid-2">
+                  <div className="register-field">
+                    <label className="register-label">DNI</label>
+                    <input
+                      type="text"
+                      name="dni"
+                      required
+                      className="register-input"
+                      placeholder="XX.XXX.XXX"
+                      value={baseData.dni}
+                      onChange={handleBaseChange}
+                    />
+                  </div>
+                  <div className="register-field">
+                    <label className="register-label">Teléfono</label>
+                    <div className="register-input-wrapper">
+                      <Phone className="register-input-icon" size={16} />
+                      <input
+                        type="tel"
+                        name="telefono"
+                        required
+                        className="register-input has-icon"
+                        placeholder="+54 11 XXXX-XXXX"
+                        value={baseData.telefono}
+                        onChange={handleBaseChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Panel 4: Datos específicos por rol ── */}
           {userType && (
             <div className="register-panel">
               <div className="register-panel-bar" />
               <h2 className="register-panel-title">
-                3. Datos de {activeRole?.title}
+                4. Datos de {activeRole?.title}
               </h2>
 
               {/* COMERCIO */}
@@ -154,13 +222,17 @@ export default function RegisterForm() {
                 <div className="register-fields-group">
                   <div className="register-grid-2">
                     <div className="register-field">
-                      <label className="register-label">Razón Social / Nombre</label>
-                      <input type="text" name="razonSocial" required className="register-input" placeholder="Ej: Urban Shoes S.A." onChange={handleExtraChange} />
+                      <label className="register-label">Nombre Comercial</label>
+                      <input type="text" name="nombreComercial" required className="register-input" placeholder="Ej: Urban Shoes" onChange={handleExtraChange} />
                     </div>
                     <div className="register-field">
-                      <label className="register-label">CUIT</label>
-                      <input type="text" name="cuit" required className="register-input" placeholder="30-XXXXXXXX-X" onChange={handleExtraChange} />
+                      <label className="register-label">Razón Social</label>
+                      <input type="text" name="razonSocial" required className="register-input" placeholder="Ej: Urban Shoes S.A." onChange={handleExtraChange} />
                     </div>
+                  </div>
+                  <div className="register-field">
+                    <label className="register-label">CUIT</label>
+                    <input type="text" name="cuit" required className="register-input" placeholder="30-XXXXXXXX-X" onChange={handleExtraChange} />
                   </div>
                   <div className="register-field">
                     <label className="register-label">Dirección de Retiro</label>
@@ -169,46 +241,20 @@ export default function RegisterForm() {
                       <input type="text" name="direccion" required className="register-input has-icon" placeholder="Av. Principal 123, Ciudad" onChange={handleExtraChange} />
                     </div>
                   </div>
-                  <div className="register-field">
-                    <label className="register-label">Teléfono de Contacto</label>
-                    <div className="register-input-wrapper">
-                      <Phone className="register-input-icon" size={16} />
-                      <input type="tel" name="telefono" required className="register-input has-icon" placeholder="+54 11 XXXX-XXXX" onChange={handleExtraChange} />
-                    </div>
-                  </div>
                 </div>
               )}
 
               {/* REPARTIDOR */}
               {userType === 'REPARTIDOR' && (
                 <div className="register-fields-group">
-                  <div className="register-grid-2">
-                    <div className="register-field">
-                      <label className="register-label">Nombre</label>
-                      <div className="register-input-wrapper">
-                        <User className="register-input-icon" size={16} />
-                        <input type="text" name="nombre" required className="register-input has-icon" placeholder="Carlos" onChange={handleExtraChange} />
-                      </div>
-                    </div>
-                    <div className="register-field">
-                      <label className="register-label">Apellido</label>
-                      <input type="text" name="apellido" required className="register-input" placeholder="Ruiz" onChange={handleExtraChange} />
-                    </div>
-                  </div>
-                  <div className="register-grid-2">
-                    <div className="register-field">
-                      <label className="register-label">DNI</label>
-                      <input type="text" name="dni" required className="register-input" placeholder="XX.XXX.XXX" onChange={handleExtraChange} />
-                    </div>
-                    <div className="register-field">
-                      <label className="register-label">Tipo de Vehículo</label>
-                      <select name="vehiculo" required className="register-select" onChange={handleExtraChange} defaultValue="">
-                        <option value="" disabled>Seleccione...</option>
-                        <option value="MOTO">Moto</option>
-                        <option value="AUTO">Auto / Utilitario</option>
-                        <option value="BICI">Bicicleta</option>
-                      </select>
-                    </div>
+                  <div className="register-field">
+                    <label className="register-label">Tipo de Vehículo</label>
+                    <select name="vehiculo" required className="register-select" onChange={handleExtraChange} defaultValue="">
+                      <option value="" disabled>Seleccione...</option>
+                      <option value="MOTO">Moto</option>
+                      <option value="AUTO">Auto / Utilitario</option>
+                      <option value="BICI">Bicicleta</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -217,23 +263,17 @@ export default function RegisterForm() {
               {userType === 'DEPOSITO' && (
                 <div className="register-fields-group">
                   <div className="register-field">
-                    <label className="register-label">Nombre del Nodo / Sucursal</label>
+                    <label className="register-label">Nombre del Depósito</label>
                     <div className="register-input-wrapper">
                       <Building2 className="register-input-icon" size={16} />
-                      <input type="text" name="nombreNodo" required className="register-input has-icon" placeholder="Depósito Palermo Central" onChange={handleExtraChange} />
+                      <input type="text" name="nombreDeposito" required className="register-input has-icon" placeholder="Depósito Palermo Central" onChange={handleExtraChange} />
                     </div>
                   </div>
-                  <div className="register-grid-2">
-                    <div className="register-field">
-                      <label className="register-label">Ubicación / Zona</label>
-                      <div className="register-input-wrapper">
-                        <MapPin className="register-input-icon" size={16} />
-                        <input type="text" name="zona" required className="register-input has-icon" placeholder="CABA - Norte" onChange={handleExtraChange} />
-                      </div>
-                    </div>
-                    <div className="register-field">
-                      <label className="register-label">Capacidad Máx. (Paquetes)</label>
-                      <input type="number" name="capacidad" required min="1" className="register-input" placeholder="Ej: 5000" onChange={handleExtraChange} />
+                  <div className="register-field">
+                    <label className="register-label">Dirección del Depósito</label>
+                    <div className="register-input-wrapper">
+                      <MapPin className="register-input-icon" size={16} />
+                      <input type="text" name="direccionDeposito" required className="register-input has-icon" placeholder="Av. Siempre Viva 742, CABA" onChange={handleExtraChange} />
                     </div>
                   </div>
                 </div>

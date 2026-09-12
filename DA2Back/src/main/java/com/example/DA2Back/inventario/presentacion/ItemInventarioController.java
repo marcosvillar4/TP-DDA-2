@@ -132,4 +132,21 @@ public class ItemInventarioController {
 
         return ResponseEntity.noContent().build();
     }
+        @PutMapping("/{id}")
+    public ResponseEntity<ItemInventarioResponseDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody ItemInventarioCreateDTO dto) {
+
+        ItemInventario actualizado =
+                itemInventarioService.actualizar(
+                        id,
+                        dto.getProductoId(),
+                        dto.getDepositoId(),
+                        dto.getCantidad()
+                );
+
+        return ResponseEntity.ok(
+                ItemInventarioMapper.toResponseDTO(actualizado)
+        );
+    }
 }

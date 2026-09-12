@@ -6,14 +6,16 @@ import { registerRequest } from "../api/authApi";
 /**
  * Hook de registro de usuario.
  *
- * Mapea los datos del formulario al RegisterDTO del backend:
- *   { username, email, password, rol }
+ * Arma el RegisterDTO polimórfico que espera el backend:
+ *   - baseData: campos comunes a cualquier rol
+ *     (email, password, nombre, apellido, dni, telefono)
+ *   - extraData: campos específicos del rol elegido
+ *     COMERCIO   → nombreComercial, razonSocial, cuit, direccion
+ *     DEPOSITO   → nombreDeposito, direccionDeposito
+ *     REPARTIDOR → vehiculo
  *
- * El campo "username" se construye a partir de los datos extra
- * según el rol elegido:
- *   - COMERCIO   → razón social
- *   - REPARTIDOR → nombre + apellido
- *   - DEPOSITO   → nombre del nodo
+ * El JSON final es un único objeto plano con "rol" como discriminador,
+ * tal como lo requiere @JsonTypeInfo del lado del backend.
  */
 export function useRegister() {
   const navigate = useNavigate();
@@ -22,6 +24,10 @@ export function useRegister() {
     email: "",
     password: "",
     confirmPassword: "",
+    nombre: "",
+    apellido: "",
+    dni: "",
+    telefono: "",
   });
 
   const [userType, setUserType] = useState("");
@@ -36,24 +42,9 @@ export function useRegister() {
     setExtraData({ ...extraData, [e.target.name]: e.target.value });
   }
 
-  /** Deriva el username display según el rol y los datos extra */
-  function resolveUsername() {
-    switch (userType) {
-      case "COMERCIO":
-        return extraData.razonSocial || baseData.email;
-      case "REPARTIDOR":
-        return `${extraData.nombre || ""} ${extraData.apellido || ""}`.trim() || baseData.email;
-      case "DEPOSITO":
-        return extraData.nombreNodo || baseData.email;
-      default:
-        return baseData.email;
-    }
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
 
-    // Validación: rol seleccionado
     if (!userType) {
       Swal.fire({
         icon: "warning",
@@ -64,7 +55,6 @@ export function useRegister() {
       return;
     }
 
-    // Validación: contraseñas coinciden
     if (baseData.password !== baseData.confirmPassword) {
       Swal.fire({
         icon: "warning",
@@ -78,16 +68,20 @@ export function useRegister() {
     setLoading(true);
     try {
       await registerRequest({
-        username: resolveUsername(),
         email: baseData.email,
         password: baseData.password,
+        nombre: baseData.nombre,
+        apellido: baseData.apellido,
+        dni: baseData.dni,
+        telefono: baseData.telefono,
         rol: userType,
+        ...extraData,
       });
 
       await Swal.fire({
         icon: "success",
         title: "¡Cuenta creada!",
-        text: `Tu cuenta de ${userType.charAt(0) + userType.slice(1).toLowerCase()} fue registrada correctamente.`,
+        text: `Tu cuenta de ${userType.charAt(0) + userType.slice(1).toLowerCase()} fue registrada correctamente. Un administrador va a validarla antes de que puedas ingresar.`,
         confirmButtonColor: "#16223f",
         confirmButtonText: "Iniciar sesión",
       });
