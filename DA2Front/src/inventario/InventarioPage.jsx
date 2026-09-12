@@ -1,3 +1,4 @@
+import { useAuthUser } from "../../hooks/useAuthUser";
 import { useInventario } from "../../hooks/useInventario";
 import { Select } from "./components/Select";
 import { InventarioButton } from "./components/InventarioButton";
@@ -7,6 +8,9 @@ import { ItemInventarioTable } from "./components/ItemInventarioTable";
 import "./styles/InventarioPage.css";
 
 export default function InventarioPage() {
+  const authUser = useAuthUser();
+  const esComercio = authUser?.rol === "COMERCIO";
+
   const {
     comercios,
     productos,
@@ -22,31 +26,57 @@ export default function InventarioPage() {
     handleCrearInventario,
     handleEliminarInventario,
     handleAgregarItem,
-    handleActualizarCantidad,
+    handleEditarItem,
     handleEliminarItem,
-  } = useInventario();
+  } = useInventario(esComercio ? { soloUsuarioId: authUser.id } : undefined);
+
+  const comercioActual = comercios.find(
+    (c) => String(c.id) === String(comercioId)
+  );
+
+  if (esComercio && !loadingComercios && !comercioId) {
+    return (
+      <div className="inventario-content">
+        <section className="inventario-panel">
+          <p>
+            Tu usuario todavía no tiene un comercio asociado. Pedile a un
+            administrador que lo revise.
+          </p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="inventario-content">
-      <section className="inventario-panel">
-        <h2 className="inventario-panel-title">Comercio</h2>
-        <Select
-          id="comercio"
-          label="Seleccioná un comercio"
-          value={comercioId}
-          onChange={(e) => handleSelectComercio(e.target.value)}
-          disabled={loadingComercios}
-        >
-          <option value="">
-            {loadingComercios ? "Cargando comercios..." : "Elegí un comercio"}
-          </option>
-                    {comercios.map((comercio) => (
-            <option key={comercio.id} value={comercio.id}>
-              {comercio.nombreComercial}
+      {esComercio ? (
+        <section className="inventario-panel">
+          <h2 className="inventario-panel-title">Comercio</h2>
+          <p className="inventario-comercio-fijo">
+            {loadingComercios ? "Cargando..." : comercioActual?.nombreComercial}
+          </p>
+        </section>
+      ) : (
+        <section className="inventario-panel">
+          <h2 className="inventario-panel-title">Comercio</h2>
+          <Select
+            id="comercio"
+            label="Seleccioná un comercio"
+            value={comercioId}
+            onChange={(e) => handleSelectComercio(e.target.value)}
+            disabled={loadingComercios}
+          >
+            <option value="">
+              {loadingComercios ? "Cargando comercios..." : "Elegí un comercio"}
             </option>
-          ))}
-        </Select>
-      </section>
+            {comercios.map((comercio) => (
+              <option key={comercio.id} value={comercio.id}>
+                {comercio.nombreComercial}
+              </option>
+            ))}
+          </Select>
+        </section>
+      )}
 
       {comercioId && loadingInventario && (
         <p className="inventario-loading-text">Cargando inventario...</p>
@@ -88,7 +118,7 @@ export default function InventarioPage() {
               items={items}
               productos={productos}
               depositos={depositos}
-              onActualizarCantidad={handleActualizarCantidad}
+              onEditar={handleEditarItem}
               onEliminar={handleEliminarItem}
             />
           </section>

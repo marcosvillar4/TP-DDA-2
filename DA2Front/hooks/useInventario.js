@@ -9,14 +9,22 @@ import {
   eliminarInventario,
   getItemsPorInventario,
   crearItemInventario,
-  actualizarCantidadItem,
+  actualizarItemInventario,
   eliminarItemInventario,
 } from "../api/inventarioApi";
 
 const CONFIRM_COLOR = "#16223f";
 const DANGER_COLOR = "#d6273c";
 
-export function useInventario() {
+/**
+ * @param {{ soloUsuarioId?: number }} [options] - si se pasa soloUsuarioId,
+ * apenas se cargan los comercios se busca el que tiene ese usuarioId y se
+ * selecciona automáticamente (usado para el rol COMERCIO, que solo debe
+ * ver y operar su propio comercio).
+ */
+export function useInventario(options = {}) {
+  const { soloUsuarioId } = options;
+
   const [comercios, setComercios] = useState([]);
   const [productos, setProductos] = useState([]);
   const [depositos, setDepositos] = useState([]);
@@ -38,6 +46,15 @@ export function useInventario() {
         ]);
         setComercios(comerciosData ?? []);
         setProductos(productosData ?? []);
+
+        if (soloUsuarioId) {
+          const propio = (comerciosData ?? []).find(
+            (c) => c.usuarioId === soloUsuarioId
+          );
+          if (propio) {
+            handleSelectComercio(String(propio.id));
+          }
+        }
       } catch (err) {
         Swal.fire({
           icon: "error",
@@ -51,6 +68,7 @@ export function useInventario() {
     }
 
     cargarDatosIniciales();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function cargarInventario(idComercio) {
@@ -82,8 +100,6 @@ export function useInventario() {
       const depositosData = await getDepositosPorComercio(idComercio);
       setDepositos(depositosData ?? []);
     } catch {
-      // El usuario logueado puede no tener el rol DEPOSITO, requerido
-      // por /deposito/**. Se deja la lista vacía sin bloquear la pantalla.
       setDepositos([]);
     }
   }
@@ -208,22 +224,44 @@ export function useInventario() {
     }
   }
 
-  async function handleActualizarCantidad(itemId, cantidad) {
+  async function handleEditarItem(itemId, { productoId, depositoId, cantidad }) {
+    if (!productoId || !depositoId || cantidad === "" || cantidad === null) {
+      Swal.fire({
+        icon: "warning",
+        title: "Faltan datos",
+        text: "Completá producto, depósito y cantidad para continuar.",
+        confirmButtonColor: CONFIRM_COLOR,
+      });
+      return false;
+    }
+
     try {
-      const itemActualizado = await actualizarCantidadItem(
-        itemId,
-        Number(cantidad)
-      );
+      const itemActualizado = await actualizarItemInventario(itemId, {
+        productoId: Number(productoId),
+        depositoId: Number(depositoId),
+        cantidad: Number(cantidad),
+      });
+
       setItems((prev) =>
         prev.map((item) => (item.id === itemId ? itemActualizado : item))
       );
+
+      Swal.fire({
+        icon: "success",
+        title: "Ítem actualizado",
+        timer: 1300,
+        showConfirmButton: false,
+      });
+
+      return true;
     } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "No se pudo actualizar la cantidad",
+        title: "No se pudo actualizar el ítem",
         text: err.message,
         confirmButtonColor: CONFIRM_COLOR,
       });
+      return false;
     }
   }
 
@@ -268,7 +306,7 @@ export function useInventario() {
     handleCrearInventario,
     handleEliminarInventario,
     handleAgregarItem,
-    handleActualizarCantidad,
+    handleEditarItem,
     handleEliminarItem,
   };
 }

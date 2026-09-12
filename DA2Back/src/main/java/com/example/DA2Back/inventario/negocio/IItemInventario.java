@@ -24,5 +24,8 @@ public interface IItemInventario {
 
     ItemInventario actualizarCantidad(Long id, Integer cantidad);
 
+    /** Edita producto, depósito y cantidad de un ítem existente. */
+    ItemInventario actualizar(Long id, Long productoId, Long depositoId, Integer cantidad);
+
     void eliminar(Long id);
 }

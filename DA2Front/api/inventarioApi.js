@@ -1,43 +1,4 @@
-const API_BASE_URL = "http://localhost:8081";
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("logired_token");
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-async function request(path, options = {}) {
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      ...options,
-      headers: {
-        ...getAuthHeaders(),
-        ...(options.headers || {}),
-      },
-    });
-  } catch {
-    throw new Error(
-      "No se pudo conectar con el servidor. Verificá que el backend esté corriendo en localhost:8081."
-    );
-  }
-
-  if (!response.ok) {
-    let message = "Ocurrió un error inesperado. Intentá nuevamente.";
-    try {
-      const body = await response.json();
-      if (body?.message) message = body.message;
-    } catch {
-      // La respuesta no trae un cuerpo JSON con detalle del error.
-    }
-    throw new Error(message);
-  }
-
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
-}
+import { request } from "./httpClient";
 
 export function getComercios() {
   return request("/comercios");
@@ -92,9 +53,10 @@ export function crearItemInventario({
   });
 }
 
-export function actualizarCantidadItem(id, cantidad) {
-  return request(`/items-inventario/${id}/cantidad?cantidad=${cantidad}`, {
+export function actualizarItemInventario(id, { productoId, depositoId, cantidad }) {
+  return request(`/items-inventario/${id}`, {
     method: "PUT",
+    body: JSON.stringify({ productoId, depositoId, cantidad }),
   });
 }
 

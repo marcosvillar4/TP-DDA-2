@@ -24,6 +24,13 @@
   color: var(--color-slate-800);
 }
 
+.dashboard-widget-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
 .dashboard-widget-badge {
   font-size: 0.6875rem;
   font-weight: 700;

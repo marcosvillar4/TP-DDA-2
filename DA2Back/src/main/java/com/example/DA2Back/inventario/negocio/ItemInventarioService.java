@@ -204,5 +204,39 @@ public class ItemInventarioService implements IItemInventario {
 
         itemInventarioRepository.delete(item);
     }
+
+        @Override
+    public ItemInventario actualizar(
+            Long id,
+            Long productoId,
+            Long depositoId,
+            Integer cantidad) {
+
+        if (cantidad == null) {
+            throw new IllegalArgumentException(
+                    "La cantidad no puede ser nula"
+            );
+        }
+
+        if (cantidad < 0) {
+            throw new IllegalArgumentException(
+                    "La cantidad no puede ser negativa"
+            );
+        }
+
+        ItemInventario item = obtenerPorId(id);
+
+        if (productoId != null) {
+            item.setProducto(productoService.obtenerPorId(productoId));
+        }
+
+        if (depositoId != null) {
+            item.setDeposito(depositoService.obtenerEntidadPorId(depositoId));
+        }
+
+        item.setCantidad(cantidad);
+
+        return itemInventarioRepository.save(item);
+    }
 }
 
