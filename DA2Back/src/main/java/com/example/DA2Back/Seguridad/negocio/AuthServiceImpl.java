@@ -3,6 +3,9 @@ package com.example.DA2Back.Seguridad.negocio;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
@@ -13,6 +16,7 @@ import com.example.DA2Back.Seguridad.dto.LoginDTO;
 import com.example.DA2Back.Seguridad.dto.LoginResponseDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
+import com.example.DA2Back.Seguridad.excepcion.CredencialesInvalidasException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,33 +25,54 @@ public class AuthServiceImpl implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final IUsuarioService usuarioService;
+    private final ControlIntentosLoginService controlIntentosLoginService;
 
     @Override
     public UsuarioResponseDTO registrar(RegisterDTO dto) {
         return usuarioService.registrar(dto);
     }
 
-     public LoginResponseDTO login(LoginDTO loginDTO) {
+    public LoginResponseDTO login(LoginDTO loginDTO) {
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                loginDTO.getEmail(),
-                                loginDTO.getPassword()
-                        )
-                );
+        String email = loginDTO.getEmail();
 
-        Usuario usuario = (Usuario) authentication.getPrincipal();
+        try {
+            Authentication authentication =
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    loginDTO.getPassword()
+                            )
+                    );
 
-        String token = jwtService.generateToken(usuario);
+            Usuario usuario = (Usuario) authentication.getPrincipal();
 
-        return new LoginResponseDTO(
-                token,
-                usuario.getId(),
-                usuario.getNombre(),
-                usuario.getApellido(),
-                usuario.getEmail(),
-                usuario.getRol()
-        );
+            // Login exitoso: se resetea el contador en memoria de intentos fallidos.
+            controlIntentosLoginService.registrarLoginExitoso(email);
+
+            String token = jwtService.generateToken(usuario);
+
+            return new LoginResponseDTO(
+                    token,
+                    usuario.getId(),
+                    usuario.getNombre(),
+                    usuario.getApellido(),
+                    usuario.getEmail(),
+                    usuario.getRol()
+            );
+
+        } catch (BadCredentialsException ex) {
+            // Contraseña incorrecta: cuenta como intento fallido.
+            controlIntentosLoginService.registrarIntentoFallido(email);
+            throw new CredencialesInvalidasException("Email o contraseña incorrectos");
+
+        } catch (LockedException ex) {
+            // Cuenta ya bloqueada (estado BLOQUEADO): no suma intento nuevo.
+            throw new CredencialesInvalidasException("La cuenta se encuentra bloqueada");
+
+        } catch (DisabledException ex) {
+            // Cuenta aun no validada (estado != VALIDADO): no suma intento nuevo.
+            throw new CredencialesInvalidasException("La cuenta aún no fue validada");
+        }
     }
 }
