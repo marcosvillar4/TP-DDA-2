@@ -20,6 +20,7 @@ import ComerciosList from "../comercios/ComerciosList";
 import PedidosList from "../pedidos/PedidosList";
 import SeguimientoPage from "../seguimiento/SeguimientoPage";
 import ProductosPage from "../productos/ProductosPage";
+import RepartidoresPage from "../repartidores/RepartidoresPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -113,6 +114,7 @@ export const NAV_ITEMS = [
     path: "/repartidores",
     icon: Navigation,
     roles: [ROLES.ADMIN],
+    element: RepartidoresPage,
   },
   {
     key: "transportistas",

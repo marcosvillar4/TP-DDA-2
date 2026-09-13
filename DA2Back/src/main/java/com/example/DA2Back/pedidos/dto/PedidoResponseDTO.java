@@ -20,4 +20,6 @@ public class PedidoResponseDTO {
     private Long comercioId;
     private String direccionDestino;
     private EstadoPedido estado;
+    private Long repartidorId;
+    private String repartidorNombre;
 }

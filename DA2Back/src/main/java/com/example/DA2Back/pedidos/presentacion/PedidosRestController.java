@@ -63,6 +63,12 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado));
     }
 
+    /** GET /api/pedidos/pendientes — pedidos CREADO sin repartidor */
+    @GetMapping("/pendientes")
+    public ResponseEntity<List<PedidoResponseDTO>> listarPendientesAsignables() {
+        return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables());
+    }
+
     /** PATCH /api/pedidos/{id}/estado — actualiza el estado de un pedido */
     @PatchMapping("/{id}/estado")
     public ResponseEntity<PedidoResponseDTO> actualizarEstado(
