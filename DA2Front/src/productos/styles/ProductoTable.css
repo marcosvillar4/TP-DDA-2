@@ -1,0 +1,135 @@
+.productos-table-card {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  overflow: visible;
+}
+
+.productos-table-state {
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.productos-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.productos-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.productos-table th {
+  background-color: var(--color-slate-50);
+  border-bottom: 1px solid var(--color-slate-200);
+  color: var(--color-slate-500);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.productos-table td {
+  border-bottom: 1px solid var(--color-slate-100);
+  color: var(--color-slate-700);
+  font-size: 0.875rem;
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.productos-table tbody tr:hover td {
+  background-color: var(--color-slate-50);
+}
+
+.producto-table-name {
+  display: block;
+  color: var(--color-slate-800);
+  font-weight: 700;
+}
+
+.producto-table-description {
+  display: block;
+  max-width: 18rem;
+  overflow: hidden;
+  color: var(--color-slate-500);
+  font-size: 0.75rem;
+  margin-top: 0.125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.producto-table-sku {
+  color: var(--color-navy) !important;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
+
+.producto-actions-cell {
+  position: relative;
+  width: 1%;
+}
+
+.producto-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-slate-500);
+  cursor: pointer;
+}
+
+.producto-menu-trigger:hover {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-800);
+}
+
+.producto-actions-menu {
+  position: absolute;
+  top: 2.75rem;
+  right: 1rem;
+  z-index: 20;
+  min-width: 10rem;
+  overflow: hidden;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  background-color: #fff;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
+}
+
+.producto-actions-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-slate-700);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.producto-actions-menu button:hover {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+.producto-actions-menu .producto-menu-danger {
+  color: var(--color-red);
+}
+
+.productos-table-empty {
+  color: var(--color-slate-500) !important;
+  padding: 3rem !important;
+  text-align: center;
+}

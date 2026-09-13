@@ -66,8 +66,8 @@ class LogiRedIntegrationTest {
     private Long pedidoId;
     private final Long COMERCIO_ID = 1L; // ID referencial, no FK real
 
-    private static final String ADMIN_EMAIL = "admin@logired.com";
-    private static final String ADMIN_PASSWORD = "Admin1234!";
+    private static final String ADMIN_EMAIL = "admin@da2back.com";
+    private static final String ADMIN_PASSWORD = "admin123";
     // ------------------------------------------------------------------
     // Semilla de datos (una vez antes de todos los tests)
     // ------------------------------------------------------------------
@@ -126,8 +126,8 @@ class LogiRedIntegrationTest {
     void login_credencialesCorrectas_devuelveToken() throws Exception {
         String body = """
                 {
-                  "email": "admin@logired.com",
-                  "password": "Admin1234!"
+                  "email": "admin@da2back.com",
+                  "password": "admin123"
                 }
                 """;
 
@@ -151,7 +151,7 @@ class LogiRedIntegrationTest {
     void login_credencialesIncorrectas_devuelveError() throws Exception {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"admin@logired.com\",\"password\":\"mal\"}"))
+                        .content("{\"email\":\"admin@da2back.com\",\"password\":\"mal\"}"))
                 .andExpect(status().is4xxClientError());
     }
 

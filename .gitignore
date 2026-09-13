@@ -33,3 +33,6 @@ build/
 .vscode/
 
 DA2Back/src/main/resources/application.properties
+
+hs_err_pid*.log
+replay_pid*.log

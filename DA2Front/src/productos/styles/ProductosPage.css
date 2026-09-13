@@ -1,0 +1,90 @@
+.productos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.productos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.productos-title {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.productos-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.productos-new-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.producto-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.producto-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.producto-button-primary {
+  background-color: var(--color-navy);
+  color: #fff;
+}
+
+.producto-button-primary:hover:not(:disabled) {
+  background-color: #24385f;
+  box-shadow: 0 10px 18px rgba(22, 34, 63, 0.18);
+}
+
+.producto-button-ghost {
+  border-color: var(--color-slate-200);
+  background-color: #fff;
+  color: var(--color-slate-700);
+}
+
+.producto-button-ghost:hover:not(:disabled) {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+.productos-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .productos-header {
+    flex-direction: column;
+  }
+
+  .productos-kpis {
+    grid-template-columns: 1fr;
+  }
+}

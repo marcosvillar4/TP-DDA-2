@@ -95,6 +95,9 @@ public class SecurityConfig {
     .requestMatchers("/deposito/**")
         .hasAnyRole("DEPOSITO", "ADMIN", "COMERCIO")
 
+    .requestMatchers("/productos", "/productos/**")
+        .hasAnyRole("ADMIN", "COMERCIO")
+
     .anyRequest().authenticated()
 )
 
