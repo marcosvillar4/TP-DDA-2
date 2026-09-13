@@ -8,12 +8,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
+import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 import com.example.DA2Back.Seguridad.negocio.IUsuarioService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -37,6 +41,21 @@ public class UsuarioController {
     @GetMapping("/admin/{id}")
     public ResponseEntity<UsuarioResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
+    }
+
+    @PatchMapping("/admin/{id}")
+    public ResponseEntity<UsuarioResponseDTO> actualizarUsuarioAdmin(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarUsuarioAdminDTO dto) {
+        return ResponseEntity.ok(usuarioService.actualizarUsuarioAdmin(id, dto));
+    }
+
+    @PatchMapping("/admin/{id}/password")
+    public ResponseEntity<Void> resetearPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody CambiarPasswordAdminDTO dto) {
+        usuarioService.resetearPasswordAdmin(id, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/admin/{id}/validar")

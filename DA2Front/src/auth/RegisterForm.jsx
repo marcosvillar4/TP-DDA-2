@@ -45,7 +45,9 @@ export default function RegisterForm() {
       {/* ── TopBar (mismo estilo que InventarioTopBar) ── */}
       <header className="register-topbar">
         <div className="register-topbar-brand">
-          <img src={logo} alt="LogiRed" className="register-topbar-logo" />
+          <span clasesName="register-brand-mark"> 
+            Logi<span className="text-red">Red</span> 
+          </span>
         </div>
         <p className="register-topbar-title">Crear una cuenta nueva</p>
       </header>

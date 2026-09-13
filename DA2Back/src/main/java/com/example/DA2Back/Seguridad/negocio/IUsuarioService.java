@@ -3,6 +3,8 @@ package com.example.DA2Back.Seguridad.negocio;
 import java.util.List;
 
 import com.example.DA2Back.deposito.dto.AsociarDepositoDTO;
+import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
+import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 
@@ -11,6 +13,8 @@ public interface IUsuarioService {
     List<UsuarioResponseDTO> listarTodos();
     UsuarioResponseDTO obtenerPorId(Long id);
     UsuarioResponseDTO obtenerPorEmail(String email);
+    UsuarioResponseDTO actualizarUsuarioAdmin(Long id, ActualizarUsuarioAdminDTO dto);
+    void resetearPasswordAdmin(Long id, CambiarPasswordAdminDTO dto);
     UsuarioResponseDTO validar(Long id);
     UsuarioResponseDTO rechazar(Long id);
     UsuarioResponseDTO bloquear(Long id);

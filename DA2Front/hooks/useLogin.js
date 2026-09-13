@@ -30,16 +30,28 @@ export function useLogin() {
       localStorage.setItem("logired_token", data.token);
       localStorage.setItem(
         "logired_user",
-        JSON.stringify({ id: data.id, username: data.username, rol: data.rol })
+        JSON.stringify({
+          id: data.id,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          email: data.email,
+          rol: data.rol,
+        })
       );
 
       setUser(data);
-
+      
       await Swal.fire({
         icon: "success",
-        title: `¡Bienvenido, ${data.username}!`,
+        title: `<span style="font-size: 1.4rem; font-weight: 700; color: #16223f;">¡Bienvenido de nuevo!</span>`,
+        html: `<p style="font-size: 1rem; color: #475569; margin-top: 0.25rem;"><b>${data.nombre} ${data.apellido}</b></p>`,
         timer: 1600,
+        timerProgressBar: true, // Muestra una barra de carga sutil abajo
         showConfirmButton: false,
+        background: "#ffffff",
+        customClass: {
+          popup: 'swal-custom-popup',
+        },
       });
 
       navigate("/dashboard");

@@ -9,6 +9,7 @@ import ComercioForm from "./comercios/ComercioForm";
 import PedidoDetail from "./pedidos/PedidoDetail";
 import SeguimientoPage from "./seguimiento/SeguimientoPage";
 import RepartidorDetail from "./repartidores/RepartidorDetail";
+import UsuarioDetailPage from "./usuarios/UsuarioDetailPage";
 
 /**
  * Rutas "hijas" que no son ítems de sidebar (detalle, alta, edición),
@@ -23,6 +24,7 @@ const EXTRA_ROUTES = [
   { path: "/pedidos/:id", element: PedidoDetail },
   { path: "/repartidores/:id", element: RepartidorDetail },
   { path: "/seguimiento/:id", element: SeguimientoPage },
+  { path: "/usuarios/:id", element: UsuarioDetailPage},
 ];
 
 function App() {
@@ -47,6 +49,8 @@ function App() {
           <Route key={route.path} path={route.path} element={<route.element />} />
         ))}
       </Route>
+
+
     </Routes>
   );
 }

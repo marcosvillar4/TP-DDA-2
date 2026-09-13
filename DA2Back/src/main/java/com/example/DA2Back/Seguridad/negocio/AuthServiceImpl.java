@@ -27,7 +27,7 @@ public class AuthServiceImpl implements IAuthService {
         return usuarioService.registrar(dto);
     }
 
-    public LoginResponseDTO login(LoginDTO loginDTO) {
+     public LoginResponseDTO login(LoginDTO loginDTO) {
 
         Authentication authentication =
                 authenticationManager.authenticate(
@@ -44,7 +44,9 @@ public class AuthServiceImpl implements IAuthService {
         return new LoginResponseDTO(
                 token,
                 usuario.getId(),
-                usuario.getUsername(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getEmail(),
                 usuario.getRol()
         );
     }

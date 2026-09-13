@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.example.DA2Back.Seguridad.excepcion.*;
+
 import java.time.Instant;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -90,6 +92,35 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "No se pudo guardar el registro por una inconsistencia de integridad en la base de datos"
         );
+    }
+
+    // -------------------------------------------------------------------------
+    /*
+     * Excepciones de Seguridad
+     */
+
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handleNoEncontrado(RecursoNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UsuarioYaExisteException.class)
+    public ResponseEntity<Map<String, String>> handleYaExiste(UsuarioYaExisteException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(TransicionInvalidaException.class)
+    public ResponseEntity<Map<String, String>> handleTransicionInvalida(TransicionInvalidaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<Map<String, String>> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", ex.getMessage()));
     }
 
     // -------------------------------------------------------------------------

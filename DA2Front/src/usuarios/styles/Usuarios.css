@@ -1,0 +1,398 @@
+/* ============================
+   Usuarios.css
+   ============================ */
+
+.usuarios-page {
+  padding: 24px;
+}
+
+.usuarios-header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--color-navy);
+}
+
+.usuarios-subtitulo {
+  color: var(--color-slate-500);
+  margin: 4px 0 20px;
+}
+
+.usuarios-error {
+  color: var(--color-red);
+}
+
+/* ============================
+   Stats
+   ============================ */
+
+.usuarios-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-numero {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.stat-verde { color: var(--color-green); }
+.stat-ambar { color: var(--color-amber-dark); }
+.stat-rojo { color: var(--color-red); }
+
+.stat-label {
+  color: var(--color-slate-500);
+  font-size: 13px;
+}
+
+/* ============================
+   Filtros
+   ============================ */
+
+.usuarios-filtros {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.usuarios-buscador {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 8px;
+}
+
+.usuarios-filtros select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 8px;
+  background: white;
+}
+
+/* ============================
+   Tabla
+   ============================ */
+
+.usuarios-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-slate-200);
+}
+
+.usuarios-tabla th {
+  text-align: left;
+  padding: 12px 16px;
+  background: var(--color-slate-50);
+  color: var(--color-slate-500);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.usuarios-tabla td {
+  padding: 14px 16px;
+  border-top: 1px solid var(--color-slate-100);
+}
+
+.usuarios-vacio {
+  text-align: center;
+  color: var(--color-slate-400);
+  padding: 32px;
+}
+
+.usuario-nombre-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usuario-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.usuario-avatar-lg {
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+
+.usuario-email-chico {
+  color: var(--color-slate-500);
+  font-size: 13px;
+}
+
+.btn-ver {
+  border: 1px solid var(--color-slate-200);
+  background: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--color-navy);
+}
+
+.btn-ver:hover {
+  background: var(--color-slate-50);
+}
+
+/* ============================
+   Badges
+   ============================ */
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-navy { background: #e8ebf3; color: var(--color-navy); }
+.badge-green { background: var(--color-green-light); color: var(--color-green); }
+.badge-amber { background: var(--color-amber-light); color: var(--color-amber-dark); }
+.badge-red { background: var(--color-red-light); color: var(--color-red); }
+.badge-slate { background: var(--color-slate-100); color: var(--color-slate-600); }
+
+/* ============================
+   Detalle - layout general
+   ============================ */
+
+.volver-link {
+  background: none;
+  border: none;
+  color: var(--color-slate-500);
+  cursor: pointer;
+  margin-bottom: 16px;
+  padding: 0;
+  font-size: 14px;
+}
+
+.volver-link:hover {
+  color: var(--color-navy);
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.detalle-card, .acciones-card {
+  background: white;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* ============================
+   Detalle - header
+   ============================ */
+
+.detalle-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-slate-100);
+}
+
+.detalle-nombre-bloque {
+  flex: 1;
+}
+
+.detalle-nombre-bloque h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.detalle-badges {
+  display: flex;
+  gap: 8px;
+}
+
+/* ============================
+   Detalle - datos (modo lectura)
+   ============================ */
+
+.detalle-datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.detalle-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-slate-400);
+}
+
+.detalle-datos p {
+  margin: 4px 0 0;
+}
+
+/* ============================
+   Detalle - form (modo edición)
+   ============================ */
+
+.detalle-form label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-slate-500);
+  margin-bottom: 10px;
+}
+
+.detalle-form input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.detalle-form input:focus {
+  outline: none;
+  border-color: var(--color-navy);
+}
+
+.detalle-form-botones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-guardar {
+  background: var(--color-navy);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-guardar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancelar {
+  background: var(--color-slate-100);
+  color: var(--color-slate-700);
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ============================
+   Acciones (card lateral)
+   ============================ */
+
+.acciones-card h3 {
+  margin-top: 0;
+  font-size: 15px;
+}
+
+.btn-accion {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
+
+.btn-accion:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-validar { background: var(--color-green-light); color: var(--color-green); }
+.btn-rechazar { background: var(--color-red-light); color: var(--color-red); }
+.btn-bloquear { background: var(--color-red-light); color: var(--color-red); }
+.btn-desbloquear { background: var(--color-green-light); color: var(--color-green); }
+.btn-editar { background: var(--color-blue-light); color: var(--color-blue); }
+.btn-reset { background: var(--color-amber-light); color: var(--color-amber-dark); }
+
+.acciones-vacio {
+  color: var(--color-slate-500);
+  font-size: 13px;
+}
+
+/* ============================
+   Resumen (card lateral)
+   ============================ */
+
+.resumen-box {
+  margin-top: 20px;
+  border-top: 1px solid var(--color-slate-100);
+  padding-top: 16px;
+}
+
+.resumen-box h4 {
+  font-size: 13px;
+  color: var(--color-slate-500);
+  margin-bottom: 10px;
+}
+
+.resumen-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* ============================
+   Responsive
+   ============================ */
+
+@media (max-width: 900px) {
+  .usuarios-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .usuarios-filtros {
+    flex-direction: column;
+  }
+
+  .detalle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detalle-datos {
+    grid-template-columns: 1fr;
+  }
+
+  .usuarios-tabla {
+    display: block;
+    overflow-x: auto;
+  }
+}

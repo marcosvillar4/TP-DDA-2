@@ -3,6 +3,7 @@ package com.example.DA2Back.Seguridad.negocio;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.DA2Back.deposito.negocio.IDeposito;
@@ -10,6 +11,8 @@ import com.example.DA2Back.deposito.dto.AsociarDepositoDTO;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
+import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
+import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 import com.example.DA2Back.Seguridad.excepcion.RecursoNoEncontradoException;
@@ -28,6 +31,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final UsuarioFactory usuarioFactory;
     private final ResolverEstadoUsuario resolverEstadoUsuario;
     private final IDeposito depositoService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -63,6 +67,36 @@ public class UsuarioServiceImpl implements IUsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + email));
         return UsuarioMapper.toResponseDTO(usuario);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO actualizarUsuarioAdmin(Long id, ActualizarUsuarioAdminDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + id));
+
+        boolean emailCambio = !usuario.getEmail().equalsIgnoreCase(dto.getEmail());
+        if (emailCambio && usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new UsuarioYaExisteException("Ya existe un usuario con ese email");
+        }
+
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setEmail(dto.getEmail());
+        usuario.setDNI(dto.getDni());
+
+        return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuario));
+    }
+
+    @Override
+    @Transactional
+    public void resetearPasswordAdmin(Long id, CambiarPasswordAdminDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + id));
+
+        usuario.setPassword(passwordEncoder.encode(dto.getPasswordNuevo()));
+        usuarioRepository.save(usuario);
     }
 
     @Override

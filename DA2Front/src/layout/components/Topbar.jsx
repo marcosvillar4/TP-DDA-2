@@ -5,6 +5,7 @@ import "../styles/Topbar.css";
 
 export function Topbar({ user, title }) {
   const navigate = useNavigate();
+  const nombreCompleto = [user?.nombre, user?.apellido].filter(Boolean).join(" ") || "Usuario";
 
   function handleLogout() {
     localStorage.removeItem("logired_token");
@@ -18,7 +19,7 @@ export function Topbar({ user, title }) {
 
       <div className="topbar-user">
         <div className="topbar-user-info">
-          <span className="topbar-user-name">{user?.username ?? "Usuario"}</span>
+          <span className="topbar-user-name">{nombreCompleto}</span>
           <span className="topbar-user-role">
             {ROLE_LABELS[user?.rol] ?? user?.rol}
           </span>

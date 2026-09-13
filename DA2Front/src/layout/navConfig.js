@@ -21,6 +21,7 @@ import PedidosList from "../pedidos/PedidosList";
 import SeguimientoPage from "../seguimiento/SeguimientoPage";
 import ProductosPage from "../productos/ProductosPage";
 import RepartidoresPage from "../repartidores/RepartidoresPage";
+import UsuariosPage from "../usuarios/UsuariosPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -143,6 +144,7 @@ export const NAV_ITEMS = [
     path: "/usuarios",
     icon: Users,
     roles: [ROLES.ADMIN],
+    element: UsuariosPage,
   },
   {
     key: "configuracion",

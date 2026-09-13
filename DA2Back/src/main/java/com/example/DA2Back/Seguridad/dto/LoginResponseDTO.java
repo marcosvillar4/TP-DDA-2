@@ -12,10 +12,9 @@ import lombok.NoArgsConstructor;
 public class LoginResponseDTO {
 
     private String token;
-
     private Long id;
-
-    private String username;
-
+    private String nombre;
+    private String apellido;
+    private String email;
     private Rol rol;
 }
