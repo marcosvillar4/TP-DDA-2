@@ -19,6 +19,7 @@ import InventarioPage from "../inventario/InventarioPage";
 import ComerciosList from "../comercios/ComerciosList";
 import PedidosList from "../pedidos/PedidosList";
 import SeguimientoPage from "../seguimiento/SeguimientoPage";
+import ProductosPage from "../productos/ProductosPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -84,19 +85,20 @@ export const NAV_ITEMS = [
     element: ComerciosList,
   },
   {
+    key: "productos",
+    label: "Productos",
+    path: "/productos",
+    icon: Package,
+    roles: [ROLES.ADMIN, ROLES.COMERCIO],
+    element: ProductosPage,
+  },
+  {
     key: "inventario",
     label: "Inventario",
     path: "/inventario",
     icon: Boxes,
     roles: [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO],
     element: InventarioPage,
-  },
-  {
-    key: "productos",
-    label: "Productos",
-    path: "/productos",
-    icon: Package,
-    roles: [ROLES.ADMIN, ROLES.COMERCIO],
   },
   {
     key: "depositos",
