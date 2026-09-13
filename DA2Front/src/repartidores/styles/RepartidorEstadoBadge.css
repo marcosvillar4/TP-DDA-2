@@ -1,0 +1,27 @@
+.repartidor-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.repartidor-badge-disponible {
+  color: var(--color-green);
+  background-color: var(--color-green-light);
+}
+
+.repartidor-badge-en_entrega {
+  color: var(--color-violet);
+  background-color: var(--color-violet-light);
+}
+
+.repartidor-badge-no_disponible,
+.repartidor-badge-inactivo {
+  color: var(--color-amber-dark);
+  background-color: var(--color-amber-light);
+}

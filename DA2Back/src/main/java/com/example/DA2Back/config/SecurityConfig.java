@@ -91,6 +91,9 @@ public class SecurityConfig {
 
     .requestMatchers("/repartidor/**")
         .hasRole("REPARTIDOR")
+
+    .requestMatchers("/repartidores/**")
+        .hasRole("ADMIN")
     
     .requestMatchers("/deposito/**")
         .hasAnyRole("DEPOSITO", "ADMIN", "COMERCIO")
