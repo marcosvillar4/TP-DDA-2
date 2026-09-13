@@ -15,10 +15,18 @@ export async function loginRequest({ email, password }) {
   }
 
   if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("Correo o contraseña incorrectos.");
+    let errorMsg = "No se pudo iniciar sesión. Intentá nuevamente en unos minutos.";
+    try {
+      const errorData = await response.json();
+      if (errorData && errorData.message) {
+        errorMsg = errorData.message;
+      }
+    } catch (e) {
+      if (response.status === 401 || response.status === 403) {
+        errorMsg = "Correo o contraseña incorrectos.";
+      }
     }
-    throw new Error("No se pudo iniciar sesión. Intentá nuevamente en unos minutos.");
+    throw new Error(errorMsg);
   }
 
   return response.json();

@@ -63,12 +63,15 @@ public class AuthServiceImpl implements IAuthService {
 
         } catch (BadCredentialsException ex) {
             // Contraseña incorrecta: cuenta como intento fallido.
-            controlIntentosLoginService.registrarIntentoFallido(email);
+            boolean recienBloqueado = controlIntentosLoginService.registrarIntentoFallido(email);
+            if (recienBloqueado) {
+                throw new CredencialesInvalidasException("La cuenta está bloqueada por intentos fallidos consecutivos");
+            }
             throw new CredencialesInvalidasException("Email o contraseña incorrectos");
 
         } catch (LockedException ex) {
             // Cuenta ya bloqueada (estado BLOQUEADO): no suma intento nuevo.
-            throw new CredencialesInvalidasException("La cuenta se encuentra bloqueada");
+            throw new CredencialesInvalidasException("La cuenta está bloqueada y no se puede iniciar sesión");
 
         } catch (DisabledException ex) {
             // Cuenta aun no validada (estado != VALIDADO): no suma intento nuevo.

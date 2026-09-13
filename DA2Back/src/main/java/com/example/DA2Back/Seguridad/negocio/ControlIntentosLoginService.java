@@ -50,7 +50,7 @@ public class ControlIntentosLoginService {
      * Registra un intento de login fallido para el email dado.
      * Si se alcanza el umbral maximo, bloquea la cuenta automaticamente.
      */
-    public void registrarIntentoFallido(String email) {
+    public boolean registrarIntentoFallido(String email) {
         String clave = normalizar(email);
 
         int intentos = intentosFallidosPorEmail
@@ -62,7 +62,9 @@ public class ControlIntentosLoginService {
         if (intentos >= MAX_INTENTOS_FALLIDOS) {
             bloquearCuenta(clave);
             intentosFallidosPorEmail.remove(clave);
+            return true; // Just blocked
         }
+        return false;
     }
 
     /**
