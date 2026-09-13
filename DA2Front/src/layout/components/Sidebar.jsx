@@ -5,7 +5,15 @@ export function Sidebar({ items, collapsed, onToggleCollapse }) {
   return (
     <aside className={`sidebar ${collapsed ? "sidebar-collapsed" : ""}`}>
       <div className="sidebar-brand">
-        <span className="sidebar-brand-mark">LogiRed</span>
+        {collapsed ? (
+          <span className="sidebar-brand-mark sidebar-brand-mini" title="LogiRed">
+            L<span className="text-red">R</span>
+          </span>
+        ) : (
+          <span className="sidebar-brand-mark">
+            Logi<span className="text-red">Red</span>
+          </span>
+        )}
       </div>
 
       <nav className="sidebar-nav">
