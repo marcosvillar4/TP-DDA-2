@@ -1,0 +1,474 @@
+.deposito-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.deposito-back-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: none;
+  background: none;
+  color: var(--color-navy);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0;
+}
+
+.deposito-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.deposito-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.deposito-detail-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.875rem;
+  color: var(--color-navy);
+  background-color: var(--color-slate-100);
+}
+
+.deposito-detail-header h1 {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.deposito-detail-header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.deposito-edit-button,
+.deposito-edit-primary,
+.deposito-edit-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 800;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.deposito-edit-button {
+  gap: 0.375rem;
+  flex-shrink: 0;
+  background-color: var(--color-navy);
+  color: #fff;
+  padding: 0.625rem 0.875rem;
+}
+
+.deposito-edit-button:hover,
+.deposito-edit-primary:hover,
+.deposito-edit-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.deposito-edit-button:disabled,
+.deposito-edit-primary:disabled,
+.deposito-edit-secondary:disabled,
+.deposito-modal-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
+.deposito-detail-success {
+  border-radius: 0.75rem;
+  background-color: var(--color-green-light);
+  color: var(--color-green);
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.875rem 1rem;
+}
+
+.deposito-detail-card,
+.deposito-detail-state {
+  background-color: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.deposito-detail-card {
+  padding: 1rem;
+}
+
+.deposito-detail-card h2 {
+  margin: 0 0 1rem;
+  color: var(--color-slate-800);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.deposito-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.deposito-metric-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.deposito-metric-icon {
+  grid-row: span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  color: var(--color-navy);
+  background-color: var(--color-slate-100);
+}
+
+.deposito-metric-value {
+  color: var(--color-slate-800);
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.deposito-metric-label {
+  color: var(--color-slate-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.deposito-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.6fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.deposito-detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--color-slate-100);
+  padding: 0.875rem 0;
+}
+
+.deposito-detail-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.deposito-detail-row strong {
+  color: var(--color-slate-800);
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.deposito-detail-state {
+  padding: 1.25rem;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.deposito-detail-state {
+  text-align: center;
+}
+
+.deposito-detail-error {
+  color: var(--color-red);
+}
+
+.deposito-inventory-card {
+  min-width: 0;
+}
+
+.deposito-inventory-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.deposito-inventory-header h2 {
+  margin-bottom: 0.25rem;
+}
+
+.deposito-inventory-header p {
+  margin: 0;
+  color: var(--color-slate-500);
+  font-size: 0.8125rem;
+}
+
+.deposito-retry-button {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--color-navy);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.5rem 0.875rem;
+}
+
+.deposito-detail-empty,
+.deposito-detail-warning {
+  border-radius: 0.625rem;
+  padding: 1rem;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.deposito-detail-empty {
+  background-color: var(--color-slate-50);
+}
+
+.deposito-detail-warning {
+  margin-bottom: 1rem;
+  background-color: var(--color-amber-light);
+  color: var(--color-amber-dark);
+  text-align: left;
+}
+
+.deposito-products-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.deposito-products-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.deposito-products-table th {
+  text-align: left;
+  padding: 0.75rem;
+  background-color: var(--color-slate-50);
+  border-bottom: 1px solid var(--color-slate-200);
+  color: var(--color-slate-400);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.deposito-products-table td {
+  padding: 0.875rem 0.75rem;
+  border-bottom: 1px solid var(--color-slate-100);
+  color: var(--color-slate-700);
+  font-size: 0.875rem;
+  vertical-align: top;
+}
+
+.deposito-products-table tbody tr:hover td {
+  background-color: var(--color-slate-50);
+}
+
+.deposito-product-sku,
+.deposito-product-quantity {
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
+
+.deposito-product-quantity {
+  text-align: right;
+}
+
+.deposito-product-unresolved {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-slate-400);
+  font-size: 0.75rem;
+}
+
+.deposito-products-table th:last-child,
+.deposito-products-table td:last-child {
+  text-align: right;
+}
+
+.deposito-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(15, 23, 42, 0.42);
+  padding: 1rem;
+}
+
+.deposito-edit-modal {
+  width: min(100%, 520px);
+  border-radius: 0.75rem;
+  background-color: #fff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+}
+
+.deposito-edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-slate-100);
+  padding: 1rem 1.25rem;
+}
+
+.deposito-edit-modal-header h2 {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.deposito-edit-modal-header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.8125rem;
+}
+
+.deposito-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-500);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.deposito-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.deposito-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  color: var(--color-slate-700);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.deposito-edit-form input {
+  width: 100%;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  color: var(--color-slate-800);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.deposito-edit-form input:focus {
+  border-color: var(--color-navy);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12);
+  outline: none;
+}
+
+.deposito-edit-error {
+  border-radius: 0.625rem;
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.75rem;
+}
+
+.deposito-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.deposito-edit-secondary {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-700);
+  padding: 0.625rem 0.875rem;
+}
+
+.deposito-edit-primary {
+  background-color: var(--color-navy);
+  color: #fff;
+  padding: 0.625rem 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .deposito-detail-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .deposito-detail-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .deposito-edit-button {
+    width: 100%;
+  }
+
+  .deposito-detail-row {
+    flex-direction: column;
+  }
+
+  .deposito-detail-row strong {
+    text-align: left;
+  }
+
+  .deposito-edit-actions {
+    flex-direction: column-reverse;
+  }
+
+  .deposito-edit-primary,
+  .deposito-edit-secondary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .deposito-detail-summary,
+  .deposito-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}

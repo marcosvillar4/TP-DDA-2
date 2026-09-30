@@ -10,6 +10,7 @@ import PedidoDetail from "./pedidos/PedidoDetail";
 import SeguimientoPage from "./seguimiento/SeguimientoPage";
 import RepartidorDetail from "./repartidores/RepartidorDetail";
 import UsuarioDetailPage from "./usuarios/UsuarioDetailPage";
+import DepositoDetail from "./depositos/DepositoDetail";
 
 /**
  * Rutas "hijas" que no son ítems de sidebar (detalle, alta, edición),
@@ -23,6 +24,7 @@ const EXTRA_ROUTES = [
   { path: "/comercios/:id", element: ComercioDetail },
   { path: "/pedidos/:id", element: PedidoDetail },
   { path: "/repartidores/:id", element: RepartidorDetail },
+  { path: "/depositos/:id", element: DepositoDetail },
   { path: "/seguimiento/:id", element: SeguimientoPage },
   { path: "/usuarios/:id", element: UsuarioDetailPage},
 ];

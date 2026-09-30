@@ -22,6 +22,7 @@ import SeguimientoPage from "../seguimiento/SeguimientoPage";
 import ProductosPage from "../productos/ProductosPage";
 import RepartidoresPage from "../repartidores/RepartidoresPage";
 import UsuariosPage from "../usuarios/UsuariosPage";
+import DepositosPage from "../depositos/DepositosPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -108,6 +109,7 @@ export const NAV_ITEMS = [
     path: "/depositos",
     icon: Warehouse,
     roles: [ROLES.ADMIN],
+    element: DepositosPage,
   },
   {
     key: "repartidores",
