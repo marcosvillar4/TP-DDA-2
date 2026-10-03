@@ -12,10 +12,11 @@ public interface IDeposito {
     List<DepositoResponseDTO> obtenerTodos();
     List<DepositoResponseDTO> obtenerPorComercio(Long comercioId);
     DepositoResponseDTO crear(DepositoCreateDTO dto, Long usuarioId);
+    /** Crea el depósito ya vinculado al comercio indicado. */
+    DepositoResponseDTO crear(DepositoCreateDTO dto, Long usuarioId, Long comercioId);
     DepositoResponseDTO actualizar(Long id, DepositoCreateDTO dto);
     void asociarAComercio(Long depositoId, Long comercioId);
     void eliminar(Long id);
     Deposito obtenerEntidadPorId(Long id);
 
 }
-

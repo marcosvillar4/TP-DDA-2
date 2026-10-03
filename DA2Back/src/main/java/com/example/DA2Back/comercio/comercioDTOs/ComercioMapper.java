@@ -1,5 +1,6 @@
 package com.example.DA2Back.comercio.comercioDTOs;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.comercio.dato.Comercio;
 
 public class ComercioMapper {
@@ -22,11 +23,19 @@ public class ComercioMapper {
     }
 
     public static ComercioResponseDTO toResponseDTO(Comercio comercio) {
+        return toResponseDTO(comercio, null);
+    }
+
+    /**
+     * Igual que {@link #toResponseDTO(Comercio)} pero completa responsable y
+     * estado a partir del usuario dueño del comercio (puede ser null).
+     */
+    public static ComercioResponseDTO toResponseDTO(Comercio comercio, Usuario usuario) {
         if (comercio == null) {
             return null;
         }
 
-        return ComercioResponseDTO.builder()
+        ComercioResponseDTO.ComercioResponseDTOBuilder builder = ComercioResponseDTO.builder()
                 .id(comercio.getId())
                 .nombreComercial(comercio.getNombreComercial())
                 .razonSocial(comercio.getRazonSocial())
@@ -34,7 +43,13 @@ public class ComercioMapper {
                 .cuit(comercio.getCUIT())
                 .telefono(comercio.getTelefono())
                 .email(comercio.getEmail())
-                .usuarioId(comercio.getUsuarioId())
-                .build();
+                .usuarioId(comercio.getUsuarioId());
+
+        if (usuario != null) {
+            builder.responsable(usuario.getNombre() + " " + usuario.getApellido())
+                   .estado(usuario.getEstado());
+        }
+
+        return builder.build();
     }
 }

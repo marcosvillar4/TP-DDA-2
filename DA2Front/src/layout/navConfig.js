@@ -12,11 +12,14 @@ import {
   Users,
   Package,
   Settings,
+  Store,
 } from "lucide-react";
 
 import DashboardPage from "../dashboard/DashboardPage";
 import InventarioPage from "../inventario/InventarioPage";
 import ComerciosList from "../comercios/ComerciosList";
+import MiComercio from "../comercios/MiComercio";
+import DepositosPage from "../depositos/DepositosPage";
 import PedidosList from "../pedidos/PedidosList";
 import SeguimientoPage from "../seguimiento/SeguimientoPage";
 import ProductosPage from "../productos/ProductosPage";
@@ -87,6 +90,14 @@ export const NAV_ITEMS = [
     element: ComerciosList,
   },
   {
+    key: "mi-comercio",
+    label: "Mi Comercio",
+    path: "/mi-comercio",
+    icon: Store,
+    roles: [ROLES.COMERCIO],
+    element: MiComercio,
+  },
+  {
     key: "productos",
     label: "Productos",
     path: "/productos",
@@ -108,6 +119,14 @@ export const NAV_ITEMS = [
     path: "/depositos",
     icon: Warehouse,
     roles: [ROLES.ADMIN],
+  },
+  {
+    key: "mis-depositos",
+    label: "Mis Depósitos",
+    path: "/mis-depositos",
+    icon: Warehouse,
+    roles: [ROLES.COMERCIO],
+    element: DepositosPage,
   },
   {
     key: "repartidores",

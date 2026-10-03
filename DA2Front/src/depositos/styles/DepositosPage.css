@@ -1,0 +1,293 @@
+.depositos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.depositos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.depositos-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
+.depositos-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-slate-500);
+}
+
+.depositos-btn-nuevo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--color-navy);
+  color: #fff;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.depositos-btn-nuevo:hover:not(:disabled) {
+  background-color: var(--color-navy-dark);
+}
+
+.depositos-btn-nuevo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.depositos-message {
+  margin: 0;
+  color: var(--color-slate-500);
+}
+
+.depositos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  border-radius: 0.75rem;
+  background-color: #fff;
+  color: var(--color-slate-400);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.depositos-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.depositos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1.5rem;
+}
+
+.deposito-card {
+  border-radius: 0.75rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.deposito-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-navy);
+}
+
+.deposito-card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}
+
+.deposito-card-data {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.deposito-card-data dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-slate-400);
+}
+
+.deposito-card-data dd {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-slate-800);
+  word-break: break-word;
+}
+
+/* Modal */
+.deposito-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(15, 23, 42, 0.42);
+}
+
+.deposito-modal {
+  width: min(100%, 38rem);
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  background-color: #fff;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+.deposito-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-slate-200);
+}
+
+.deposito-modal-header h2 {
+  margin: 0;
+  color: var(--color-slate-800);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.deposito-modal-header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-slate-500);
+  font-size: 0.875rem;
+}
+
+.deposito-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-slate-500);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.deposito-modal-close:hover {
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-800);
+}
+
+.deposito-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.deposito-form-section {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.deposito-form-section:first-child {
+  margin-top: 0;
+}
+
+.deposito-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 560px) {
+  .deposito-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.deposito-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.deposito-form label span {
+  color: var(--color-slate-500);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.deposito-form input {
+  width: 100%;
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.5rem;
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-800);
+  font: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  padding: 0.625rem 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.deposito-form input:focus {
+  border-color: var(--color-navy);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
+}
+
+.deposito-form-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+}
+
+.deposito-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.deposito-btn-cancel,
+.deposito-btn-submit {
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deposito-btn-cancel {
+  border: 1px solid var(--color-slate-200);
+  background-color: #fff;
+  color: var(--color-slate-700);
+}
+
+.deposito-btn-cancel:hover {
+  background-color: var(--color-slate-50);
+}
+
+.deposito-btn-submit {
+  border: none;
+  background-color: var(--color-navy);
+  color: #fff;
+}
+
+.deposito-btn-submit:hover:not(:disabled) {
+  background-color: var(--color-navy-dark);
+}
+
+.deposito-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

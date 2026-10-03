@@ -18,7 +18,6 @@ import UsuarioDetailPage from "./usuarios/UsuarioDetailPage";
  * Mismo criterio que NAV_ITEMS: agregar acá, no tocar el resto.
  */
 const EXTRA_ROUTES = [
-  { path: "/comercios/nuevo", element: ComercioForm },
   { path: "/comercios/:id/editar", element: ComercioForm },
   { path: "/comercios/:id", element: ComercioDetail },
   { path: "/pedidos/:id", element: PedidoDetail },

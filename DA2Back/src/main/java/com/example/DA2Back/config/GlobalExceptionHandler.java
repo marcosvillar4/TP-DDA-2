@@ -105,6 +105,22 @@ public class GlobalExceptionHandler {
                 .body(Map.of("message", ex.getMessage()));
     }
 
+    /** Recursos no encontrados de los módulos comercio y deposito → 404. */
+    @ExceptionHandler({
+            com.example.DA2Back.comercio.excepcion.RecursoNoEncontradoException.class,
+            com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException.class
+    })
+    public ResponseEntity<Map<String, String>> handleNoEncontradoComercioDeposito(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(com.example.DA2Back.deposito.excepcion.AsociacionInvalidaException.class)
+    public ResponseEntity<Map<String, String>> handleAsociacionInvalida(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(UsuarioYaExisteException.class)
     public ResponseEntity<Map<String, String>> handleYaExiste(UsuarioYaExisteException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
