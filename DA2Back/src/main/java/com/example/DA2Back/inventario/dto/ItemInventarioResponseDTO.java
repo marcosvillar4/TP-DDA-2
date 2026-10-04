@@ -18,4 +18,16 @@ public class ItemInventarioResponseDTO {
     private Long depositoId;
 
     private Integer cantidad;
+
+    // Datos descriptivos (solo lectura) para no obligar al cliente a cruzar
+    // ids contra otros endpoints (algunos roles no tienen acceso a /productos).
+    private String productoNombre;
+
+    private String productoSku;
+
+    private String depositoNombre;
+
+    private Long comercioId;
+
+    private String comercioNombre;
 }

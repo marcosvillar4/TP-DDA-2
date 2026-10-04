@@ -23,6 +23,11 @@
   color: var(--color-green);
 }
 
+.badge-comercio-pendiente {
+  background-color: var(--color-amber-light);
+  color: var(--color-amber-dark);
+}
+
 .badge-comercio-inactivo {
   background-color: var(--color-slate-200);
   color: var(--color-slate-600);

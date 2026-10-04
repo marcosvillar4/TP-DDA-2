@@ -58,6 +58,16 @@ public class RepartidorService implements IRepartidorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public RepartidorResponseDTO obtenerPorUsuarioId(Long usuarioId) {
+        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+        return toResponseDTO(repartidor);
+    }
+
+    @Override
     @Transactional
     public RepartidorResponseDTO crear(RepartidorCreateDTO dto) {
         validarCamposCreacion(dto);

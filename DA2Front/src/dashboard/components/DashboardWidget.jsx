@@ -6,7 +6,8 @@ const STATUS_CLASS = {
 };
 
 export function DashboardWidget({ title, description, status = "PRONTO", value, loading }) {
-  const activado = value !== undefined && value !== null;
+  // Con datos reales (o cargándolos) se muestra el valor; sin fuente de datos, el badge.
+  const activado = loading || (value !== undefined && value !== null);
 
   return (
     <div className="dashboard-widget">

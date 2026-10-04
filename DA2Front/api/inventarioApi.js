@@ -37,6 +37,15 @@ export function eliminarInventario(id) {
   return request(`/inventarios/${id}`, { method: "DELETE" });
 }
 
+/** Todos los ítems de inventario del sistema (vista ADMIN). */
+export function getItemsInventario() {
+  return request("/items-inventario");
+}
+
+export function getItemsPorDeposito(depositoId) {
+  return request(`/items-inventario/deposito/${depositoId}`);
+}
+
 export function getItemsPorInventario(inventarioId) {
   return request(`/items-inventario/inventario/${inventarioId}`);
 }

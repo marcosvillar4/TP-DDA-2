@@ -1,29 +1,38 @@
+import { useState } from 'react';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import '../styles/AlertasOperativas.css';
 
-const alertas = [
-  { tipo: 'CRÍTICO',     titulo: 'Sin stock',       desc: 'Urban Shoes – Depósito Palermo sin stock disponible',               tiempo: 'hace 12 min', nivel: 'critico' },
-  { tipo: 'CRÍTICO',     titulo: 'Pedido demorado', desc: 'LOG-0021 lleva 4h de retraso – zona Belgrano',                      tiempo: 'hace 45 min', nivel: 'critico' },
-  { tipo: 'ADVERTENCIA', titulo: 'Stock bajo',      desc: 'TecnoStore – Dep. Caballito: 3 unidades restantes',                 tiempo: 'hace 1h',     nivel: 'advertencia' },
-  { tipo: 'ADVERTENCIA', titulo: 'Gran volumen',    desc: 'Casa Norte – Dep. Belgrano: 128 paquetes pendientes de despacho',   tiempo: 'hace 2h',     nivel: 'advertencia' },
-  { tipo: 'ADVERTENCIA', titulo: 'Stock bajo',      desc: 'Casa Norte – Depósito Caballito: 5 unidades restantes',             tiempo: 'hace 3h',     nivel: 'advertencia' },
-];
+const VISIBLES = 5;
 
-export default function AlertasOperativas() {
+/** @param {{ alertas: Array<{nivel, tipo, titulo, desc}> }} props  ver utils/alertas.js */
+export default function AlertasOperativas({ alertas = [] }) {
+  const [verTodas, setVerTodas] = useState(false);
+
+  const criticas = alertas.filter((a) => a.nivel === 'critico').length;
+  const advertencias = alertas.length - criticas;
+  const visibles = verTodas ? alertas : alertas.slice(0, VISIBLES);
+
   return (
     <div className="alertas-card">
       <div className="alertas-header">
         <div>
           <h2 className="alertas-title">Alertas operativas</h2>
           <p className="alertas-subtitle">
-            <span className="alertas-critico-count">2 críticas</span> · 3 advertencias
+            <span className="alertas-critico-count">
+              {criticas} crítica{criticas !== 1 ? 's' : ''}
+            </span>{' '}
+            · {advertencias} advertencia{advertencias !== 1 ? 's' : ''}
           </p>
         </div>
-        <button className="alertas-ver-btn">Ver todas</button>
+        {alertas.length > VISIBLES && (
+          <button className="alertas-ver-btn" onClick={() => setVerTodas((v) => !v)}>
+            {verTodas ? 'Ver menos' : 'Ver todas'}
+          </button>
+        )}
       </div>
 
       <ul className="alertas-list">
-        {alertas.map((a, i) => (
+        {visibles.map((a, i) => (
           <li key={i} className={`alerta-item alerta-${a.nivel}`}>
             <div className="alerta-icon">
               {a.nivel === 'critico'
@@ -37,9 +46,15 @@ export default function AlertasOperativas() {
               </div>
               <p className="alerta-desc">{a.desc}</p>
             </div>
-            <span className="alerta-tiempo">{a.tiempo}</span>
           </li>
         ))}
+        {alertas.length === 0 && (
+          <li className="alerta-item">
+            <div className="alerta-body">
+              <p className="alerta-desc">No hay alertas activas.</p>
+            </div>
+          </li>
+        )}
       </ul>
     </div>
   );

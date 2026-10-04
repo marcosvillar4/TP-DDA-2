@@ -16,6 +16,9 @@ public interface IRepartidorService {
 
     RepartidorResponseDTO obtenerPorId(Long id);
 
+    /** Perfil de repartidor del usuario (rol REPARTIDOR) indicado. */
+    RepartidorResponseDTO obtenerPorUsuarioId(Long usuarioId);
+
     RepartidorResponseDTO crear(RepartidorCreateDTO dto);
 
     RepartidorResponseDTO actualizar(Long id, RepartidorUpdateDTO dto);

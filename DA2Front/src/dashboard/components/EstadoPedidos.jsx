@@ -1,21 +1,25 @@
+import { ESTADOS_PEDIDO, ORDEN_ESTADOS_PEDIDO } from '../utils/pedidoEstado';
 import '../styles/EstadoPedidos.css';
 
-const MAX = 168;
+/** @param {{ conteo: Record<string, number>, alcance?: string }} props */
+export default function EstadoPedidos({ conteo = {}, alcance = 'en el sistema' }) {
+  const estados = ORDEN_ESTADOS_PEDIDO.map((estado) => ({
+    label: ESTADOS_PEDIDO[estado].label,
+    color: ESTADOS_PEDIDO[estado].color,
+    count: conteo[estado] ?? 0,
+  }));
 
-const estados = [
-  { label: 'Pendiente',   count: 47,  color: 'var(--color-amber)' },
-  { label: 'Preparando',  count: 35,  color: 'var(--color-orange)' },
-  { label: 'En tránsito', count: 89,  color: 'var(--color-violet)' },
-  { label: 'Entregado',   count: 168, color: 'var(--color-green)' },
-  { label: 'Cancelado',   count: 3,   color: 'var(--color-red)' },
-];
+  const total = estados.reduce((acc, e) => acc + e.count, 0);
+  const max = Math.max(...estados.map((e) => e.count), 1);
+  const ticks = [0, 1, 2, 3, 4].map((i) => Math.round((max * i) / 4));
 
-export default function EstadoPedidos() {
   return (
     <div className="estado-card">
       <div className="estado-header">
         <h2 className="estado-title">Estado de pedidos</h2>
-        <p className="estado-subtitle">342 pedidos en el sistema</p>
+        <p className="estado-subtitle">
+          {total} pedido{total !== 1 ? 's' : ''} {alcance}
+        </p>
       </div>
 
       <div className="estado-chart">
@@ -25,7 +29,7 @@ export default function EstadoPedidos() {
             <div className="estado-track">
               <div
                 className="estado-fill"
-                style={{ width: `${(count / MAX) * 100}%`, backgroundColor: color }}
+                style={{ width: `${(count / max) * 100}%`, backgroundColor: color }}
               />
             </div>
           </div>
@@ -33,7 +37,7 @@ export default function EstadoPedidos() {
       </div>
 
       <div className="estado-axis">
-        {[0, 45, 90, 135, 180].map((n) => <span key={n}>{n}</span>)}
+        {ticks.map((n, i) => <span key={i}>{n}</span>)}
       </div>
 
       <div className="estado-legend">

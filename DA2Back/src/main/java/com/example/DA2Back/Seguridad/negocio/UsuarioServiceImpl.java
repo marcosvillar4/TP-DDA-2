@@ -8,12 +8,17 @@ import org.springframework.stereotype.Service;
 
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.deposito.dto.AsociarDepositoDTO;
+import com.example.DA2Back.deposito.dto.DepositoCreateDTO;
+import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
+import com.example.DA2Back.comercio.negocio.IComercio;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
 import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
+import com.example.DA2Back.Seguridad.dto.RegistroDepositoDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 import com.example.DA2Back.Seguridad.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.Seguridad.excepcion.UsuarioYaExisteException;
@@ -31,6 +36,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final UsuarioFactory usuarioFactory;
     private final ResolverEstadoUsuario resolverEstadoUsuario;
     private final IDeposito depositoService;
+    private final IComercio comercioService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -46,6 +52,33 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuarioFactory.crearEntidadRelacionada(dto, guardado.getId());
 
         return UsuarioMapper.toResponseDTO(guardado);
+    }
+
+    @Override
+    @Transactional
+    public DepositoResponseDTO registrarDepositoParaComercio(RegistroDepositoDTO dto, Long usuarioComercioId) {
+        // El comercio se resuelve desde el usuario autenticado, nunca desde el body:
+        // así un comercio no puede vincular depósitos a otro.
+        ComercioResponseDTO comercio = comercioService.obtenerPorUsuarioId(usuarioComercioId);
+
+        // Se valida el tope antes de crear el usuario para fallar sin tocar la base.
+        depositoService.validarCupoDisponible(comercio.getId());
+
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new UsuarioYaExisteException("Ya existe un usuario con ese email");
+        }
+
+        if (usuarioRepository.existsPorDni(dto.getDni())) {
+            throw new UsuarioYaExisteException("Ya existe un usuario con ese DNI");
+        }
+
+        Usuario usuarioDeposito = usuarioRepository.save(usuarioFactory.crearUsuarioDeposito(dto));
+
+        DepositoCreateDTO depositoDTO = new DepositoCreateDTO();
+        depositoDTO.setNombre(dto.getNombreDeposito());
+        depositoDTO.setDireccion(dto.getDireccionDeposito());
+
+        return depositoService.crear(depositoDTO, usuarioDeposito.getId(), comercio.getId());
     }
 
     @Override
