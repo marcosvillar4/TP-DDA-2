@@ -1,9 +1,11 @@
 package com.example.DA2Back.inventario.negocio;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
+import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.inventario.dato.Inventario;
@@ -134,6 +136,8 @@ public class ItemInventarioService implements IItemInventario {
         Deposito deposito =
                 depositoService.obtenerEntidadPorId(depositoId);
 
+        validarMismoComercio(inventario, producto, deposito);
+
         return itemInventarioRepository
                 .findByInventarioIdAndProductoIdAndDepositoId(
                         inventarioId,
@@ -226,17 +230,82 @@ public class ItemInventarioService implements IItemInventario {
 
         ItemInventario item = obtenerPorId(id);
 
-        if (productoId != null) {
-            item.setProducto(productoService.obtenerPorId(productoId));
-        }
+        Producto productoFinal = productoId != null
+                ? productoService.obtenerPorId(productoId)
+                : item.getProducto();
 
-        if (depositoId != null) {
-            item.setDeposito(depositoService.obtenerEntidadPorId(depositoId));
-        }
+        Deposito depositoFinal = depositoId != null
+                ? depositoService.obtenerEntidadPorId(depositoId)
+                : item.getDeposito();
 
+        validarMismoComercio(item.getInventario(), productoFinal, depositoFinal);
+        validarCombinacionNoDuplicada(item, productoFinal, depositoFinal);
+
+        item.setProducto(productoFinal);
+        item.setDeposito(depositoFinal);
         item.setCantidad(cantidad);
 
         return itemInventarioRepository.save(item);
+    }
+
+    private void validarMismoComercio(
+            Inventario inventario,
+            Producto producto,
+            Deposito deposito) {
+
+        Long comercioInventarioId = obtenerComercioId(
+                inventario != null ? inventario.getComercio() : null
+        );
+        Long comercioProductoId = obtenerComercioId(
+                producto != null ? producto.getComercio() : null
+        );
+        Long comercioDepositoId = obtenerComercioId(
+                deposito != null ? deposito.getComercio() : null
+        );
+
+        if (comercioInventarioId == null) {
+            throw new IllegalStateException(
+                    "El inventario no tiene un comercio asociado"
+            );
+        }
+
+        if (!Objects.equals(comercioInventarioId, comercioProductoId)) {
+            throw new IllegalStateException(
+                    "El producto no pertenece al comercio del inventario"
+            );
+        }
+
+        if (!Objects.equals(comercioInventarioId, comercioDepositoId)) {
+            throw new IllegalStateException(
+                    "El depósito no pertenece al comercio del inventario"
+            );
+        }
+    }
+
+    private Long obtenerComercioId(Comercio comercio) {
+        return comercio != null ? comercio.getId() : null;
+    }
+
+    private void validarCombinacionNoDuplicada(
+            ItemInventario item,
+            Producto productoFinal,
+            Deposito depositoFinal) {
+
+        itemInventarioRepository
+                .findByInventarioIdAndProductoIdAndDepositoId(
+                        item.getInventario().getId(),
+                        productoFinal.getId(),
+                        depositoFinal.getId()
+                )
+                .filter(itemExistente -> !Objects.equals(
+                        itemExistente.getId(),
+                        item.getId()
+                ))
+                .ifPresent(itemExistente -> {
+                    throw new IllegalStateException(
+                            "Ya existe un item de inventario para ese producto y depósito"
+                    );
+                });
     }
 }
 
