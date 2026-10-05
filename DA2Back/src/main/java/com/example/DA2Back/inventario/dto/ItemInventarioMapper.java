@@ -34,10 +34,18 @@ public class ItemInventarioMapper {
 
         if (item.getProducto() != null) {
             dto.setProductoId(item.getProducto().getId());
+            dto.setProductoNombre(item.getProducto().getNombre());
+            dto.setProductoSku(item.getProducto().getSku());
         }
 
         if (item.getDeposito() != null) {
             dto.setDepositoId(item.getDeposito().getId());
+            dto.setDepositoNombre(item.getDeposito().getNombre());
+        }
+
+        if (item.getInventario() != null && item.getInventario().getComercio() != null) {
+            dto.setComercioId(item.getInventario().getComercio().getId());
+            dto.setComercioNombre(item.getInventario().getComercio().getNombreComercial());
         }
 
         return dto;

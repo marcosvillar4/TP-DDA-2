@@ -1,25 +1,33 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Edit2 } from 'lucide-react';
-import { comerciosMock } from './mockData';
+import { Search, Eye, Edit2 } from 'lucide-react';
+import { useComercios } from '../../hooks/useComercios';
 import BadgeComercio from './components/BadgeComercio';
+import { ESTADO_COMERCIO_LABELS, esComercioActivo } from './utils/comercioEstado';
 import './styles/ComerciosList.css';
+
+const TODOS = 'TODOS';
 
 export default function ComerciosList() {
   const navigate = useNavigate();
+  const { comercios, loading, error } = useComercios();
   const [searchTerm, setSearchTerm] = useState('');
-  const [estadoFilter, setEstadoFilter] = useState('Todos los estados');
+  const [estadoFilter, setEstadoFilter] = useState(TODOS);
 
-  const filteredComercios = comerciosMock.filter((c) => {
-    const matchSearch = c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        c.cuit.includes(searchTerm) ||
-                        c.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchEstado = estadoFilter === 'Todos los estados' || c.estado === estadoFilter;
+  const term = searchTerm.toLowerCase();
+
+  const filteredComercios = comercios.filter((c) => {
+    const matchSearch =
+      (c.nombreComercial ?? '').toLowerCase().includes(term) ||
+      (c.razonSocial ?? '').toLowerCase().includes(term) ||
+      (c.cuit ?? '').includes(searchTerm) ||
+      (c.email ?? '').toLowerCase().includes(term);
+    const matchEstado = estadoFilter === TODOS || c.estado === estadoFilter;
     return matchSearch && matchEstado;
   });
 
-  const activosCount = filteredComercios.filter(c => c.estado === 'Activo').length;
-  const inactivosCount = filteredComercios.filter(c => c.estado === 'Inactivo').length;
+  const activosCount = filteredComercios.filter((c) => esComercioActivo(c.estado)).length;
+  const noActivosCount = filteredComercios.length - activosCount;
 
   return (
     <div className="comercios-list-page">
@@ -30,38 +38,35 @@ export default function ComerciosList() {
             {filteredComercios.length} comercio{filteredComercios.length !== 1 ? 's' : ''} registrado{filteredComercios.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button className="comercios-btn-nuevo" onClick={() => navigate('/comercios/nuevo')}>
-          <Plus size={16} />
-          Nuevo comercio
-        </button>
       </div>
 
       <div className="comercios-filters-card">
         <div className="comercios-search-wrapper">
           <Search className="comercios-search-icon" size={18} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Nombre, CUIT o email..."
             className="comercios-search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select 
+        <select
           className="comercios-select"
           value={estadoFilter}
           onChange={(e) => setEstadoFilter(e.target.value)}
         >
-          <option value="Todos los estados">Todos los estados</option>
-          <option value="Activo">Activo</option>
-          <option value="Inactivo">Inactivo</option>
+          <option value={TODOS}>Todos los estados</option>
+          {Object.entries(ESTADO_COMERCIO_LABELS).map(([valor, label]) => (
+            <option key={valor} value={valor}>{label}</option>
+          ))}
         </select>
-        {(searchTerm || estadoFilter !== 'Todos los estados') && (
-          <button 
+        {(searchTerm || estadoFilter !== TODOS) && (
+          <button
             className="comercios-btn-limpiar"
             onClick={() => {
               setSearchTerm('');
-              setEstadoFilter('Todos los estados');
+              setEstadoFilter(TODOS);
             }}
           >
             Limpiar
@@ -84,10 +89,10 @@ export default function ComerciosList() {
               </tr>
             </thead>
             <tbody>
-              {filteredComercios.map(c => (
+              {filteredComercios.map((c) => (
                 <tr key={c.id}>
                   <td className="col-comercio-info">
-                    <span className="comercio-nombre">{c.nombre}</span>
+                    <span className="comercio-nombre">{c.nombreComercial}</span>
                     <span className="comercio-responsable">{c.responsable}</span>
                   </td>
                   <td className="col-cuit">{c.cuit}</td>
@@ -98,14 +103,14 @@ export default function ComerciosList() {
                     <BadgeComercio estado={c.estado} />
                   </td>
                   <td className="col-acciones">
-                    <button 
+                    <button
                       className="comercios-btn-ver"
                       onClick={() => navigate(`/comercios/${c.id}`)}
                       title="Ver comercio"
                     >
                       <Eye size={16} /> Ver
                     </button>
-                    <button 
+                    <button
                       className="comercios-btn-icon"
                       title="Editar comercio"
                       onClick={() => navigate(`/comercios/${c.id}/editar`)}
@@ -115,7 +120,17 @@ export default function ComerciosList() {
                   </td>
                 </tr>
               ))}
-              {filteredComercios.length === 0 && (
+              {loading && (
+                <tr>
+                  <td colSpan="7" className="comercios-empty">Cargando comercios...</td>
+                </tr>
+              )}
+              {!loading && error && (
+                <tr>
+                  <td colSpan="7" className="comercios-empty">{error}</td>
+                </tr>
+              )}
+              {!loading && !error && filteredComercios.length === 0 && (
                 <tr>
                   <td colSpan="7" className="comercios-empty">
                     No se encontraron comercios.
@@ -125,12 +140,12 @@ export default function ComerciosList() {
             </tbody>
           </table>
         </div>
-        
+
         <div className="comercios-pagination">
-          <span className="pagination-info">Mostrando {filteredComercios.length} de {comerciosMock.length} comercios</span>
+          <span className="pagination-info">Mostrando {filteredComercios.length} de {comercios.length} comercios</span>
           <div className="pagination-stats">
             <span className="badge-count activos">{activosCount} Activo{activosCount !== 1 ? 's' : ''}</span>
-            <span className="badge-count inactivos">{inactivosCount} Inactivo{inactivosCount !== 1 ? 's' : ''}</span>
+            <span className="badge-count inactivos">{noActivosCount} No activo{noActivosCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
       </div>

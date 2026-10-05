@@ -93,3 +93,5 @@
 
 .rep-disponible { color: var(--color-green); }
 .rep-activo     { color: var(--color-navy); }
+
+.rep-inactivo { color: var(--color-slate-400); }

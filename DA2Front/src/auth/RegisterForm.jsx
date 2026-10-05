@@ -1,4 +1,4 @@
-import { Building2, Navigation, Package, Mail, Lock, User, Phone, MapPin } from 'lucide-react';
+import { Building2, Navigation, Mail, Lock, User, Phone, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/Logo.png';
 import { useRegister } from '../../hooks/useRegister';
@@ -16,12 +16,6 @@ const roles = [
     title: 'Repartidor',
     icon: <Navigation size={22} />,
     description: 'Toma pedidos y realiza la entrega de última milla.',
-  },
-  {
-    id: 'DEPOSITO',
-    title: 'Depósito',
-    icon: <Package size={22} />,
-    description: 'Administra mercadería física y prepara paquetes.',
   },
 ];
 
@@ -257,26 +251,6 @@ export default function RegisterForm() {
                       <option value="AUTO">Auto / Utilitario</option>
                       <option value="BICI">Bicicleta</option>
                     </select>
-                  </div>
-                </div>
-              )}
-
-              {/* DEPOSITO */}
-              {userType === 'DEPOSITO' && (
-                <div className="register-fields-group">
-                  <div className="register-field">
-                    <label className="register-label">Nombre del Depósito</label>
-                    <div className="register-input-wrapper">
-                      <Building2 className="register-input-icon" size={16} />
-                      <input type="text" name="nombreDeposito" required className="register-input has-icon" placeholder="Depósito Palermo Central" onChange={handleExtraChange} />
-                    </div>
-                  </div>
-                  <div className="register-field">
-                    <label className="register-label">Dirección del Depósito</label>
-                    <div className="register-input-wrapper">
-                      <MapPin className="register-input-icon" size={16} />
-                      <input type="text" name="direccionDeposito" required className="register-input has-icon" placeholder="Av. Siempre Viva 742, CABA" onChange={handleExtraChange} />
-                    </div>
                   </div>
                 </div>
               )}

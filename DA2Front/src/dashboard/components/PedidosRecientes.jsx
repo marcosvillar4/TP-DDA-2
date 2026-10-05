@@ -1,24 +1,23 @@
+import { useNavigate } from 'react-router-dom';
+import { ESTADOS_PEDIDO } from '../utils/pedidoEstado';
 import '../styles/PedidosRecientes.css';
 
-const pedidos = [
-  { id: 'LOG-0031', comercio: 'Urban Shoes',  destinatario: 'María García',    estado: 'En tránsito', repartidor: 'Carlos Ruiz',   fecha: '24/08/2026' },
-  { id: 'LOG-0030', comercio: 'TecnoStore',   destinatario: 'Juan Pérez',      estado: 'Entregado',   repartidor: 'Ana López',     fecha: '24/08/2026' },
-  { id: 'LOG-0029', comercio: 'Casa Norte',   destinatario: 'Lucía Martínez',  estado: 'Pendiente',   repartidor: '—',             fecha: '23/08/2026' },
-  { id: 'LOG-0028', comercio: 'Urban Shoes',  destinatario: 'Roberto Silva',   estado: 'Preparando',  repartidor: 'Miguel Torres', fecha: '23/08/2026' },
-  { id: 'LOG-0027', comercio: 'TecnoStore',   destinatario: 'Carmen Díaz',     estado: 'Cancelado',   repartidor: '—',             fecha: '22/08/2026' },
-  { id: 'LOG-0026', comercio: 'Casa Norte',   destinatario: 'Diego Fernández', estado: 'Entregado',   repartidor: 'Pablo Gómez',  fecha: '22/08/2026' },
-  { id: 'LOG-0025', comercio: 'Urban Shoes',  destinatario: 'Sofía Castro',    estado: 'En tránsito', repartidor: 'Carlos Ruiz',   fecha: '21/08/2026' },
-];
+const CANTIDAD = 7;
 
-const estadoClass = {
-  'En tránsito': 'badge-transito',
-  'Entregado':   'badge-entregado',
-  'Pendiente':   'badge-pendiente',
-  'Preparando':  'badge-preparando',
-  'Cancelado':   'badge-cancelado',
-};
+/**
+ * @param {{
+ *   pedidos: Array,            PedidoResponseDTO (opcionalmente con comercioNombre)
+ *   mostrarComercio?: boolean,
+ *   verTodosPath?: string      si se omite, no se muestra el botón
+ * }} props
+ */
+export default function PedidosRecientes({ pedidos = [], mostrarComercio = false, verTodosPath }) {
+  const navigate = useNavigate();
 
-export default function PedidosRecientes() {
+  // El id es autoincremental: los más nuevos tienen el id más alto.
+  const recientes = [...pedidos].sort((a, b) => b.id - a.id).slice(0, CANTIDAD);
+  const columnas = mostrarComercio ? 5 : 4;
+
   return (
     <div className="pedidos-card">
       <div className="pedidos-header">
@@ -26,35 +25,42 @@ export default function PedidosRecientes() {
           <h2 className="pedidos-title">Pedidos recientes</h2>
           <p className="pedidos-subtitle">Últimas operaciones registradas</p>
         </div>
-        <button className="pedidos-ver-btn">Ver todos</button>
+        {verTodosPath && (
+          <button className="pedidos-ver-btn" onClick={() => navigate(verTodosPath)}>
+            Ver todos
+          </button>
+        )}
       </div>
       <div className="pedidos-table-wrapper">
         <table className="pedidos-table">
           <thead>
             <tr>
               <th>ID PEDIDO</th>
-              <th>COMERCIO</th>
-              <th>DESTINATARIO</th>
+              {mostrarComercio && <th>COMERCIO</th>}
+              <th>DESTINO</th>
               <th>ESTADO</th>
               <th>REPARTIDOR</th>
-              <th>FECHA</th>
             </tr>
           </thead>
           <tbody>
-            {pedidos.map((p) => (
+            {recientes.map((p) => (
               <tr key={p.id}>
-                <td className="pedido-id">{p.id}</td>
-                <td>{p.comercio}</td>
-                <td>{p.destinatario}</td>
+                <td className="pedido-id">#{p.id}</td>
+                {mostrarComercio && <td>{p.comercioNombre ?? `Comercio Nº ${p.comercioId}`}</td>}
+                <td>{p.direccionDestino}</td>
                 <td>
-                  <span className={`pedido-badge ${estadoClass[p.estado] ?? ''}`}>
-                    {p.estado}
+                  <span className={`pedido-badge ${ESTADOS_PEDIDO[p.estado]?.badge ?? ''}`}>
+                    {ESTADOS_PEDIDO[p.estado]?.label ?? p.estado}
                   </span>
                 </td>
-                <td>{p.repartidor}</td>
-                <td className="pedido-fecha">{p.fecha}</td>
+                <td>{p.repartidorNombre ?? '—'}</td>
               </tr>
             ))}
+            {recientes.length === 0 && (
+              <tr>
+                <td colSpan={columnas} className="pedido-fecha">Todavía no hay pedidos.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

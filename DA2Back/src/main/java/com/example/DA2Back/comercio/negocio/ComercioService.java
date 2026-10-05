@@ -1,9 +1,14 @@
 package com.example.DA2Back.comercio.negocio;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.comercio.dato.ComercioRepository;
 import com.example.DA2Back.comercio.excepcion.*;
@@ -19,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class ComercioService implements IComercio {
 
     private final ComercioRepository comercioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public ComercioResponseDTO obtenerPorId(Long id) {
@@ -30,13 +36,34 @@ public class ComercioService implements IComercio {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No se encontró el comercio con ID: " + id));
 
-        return ComercioMapper.toResponseDTO(comercio);
+        return aDTO(comercio);
+    }
+
+    @Override
+    public ComercioResponseDTO obtenerPorUsuarioId(Long usuarioId) {
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("El ID del usuario no puede ser null");
+        }
+
+        Comercio comercio = comercioRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "El usuario " + usuarioId + " no tiene un comercio asociado"));
+
+        return aDTO(comercio);
     }
 
     @Override
     public List<ComercioResponseDTO> obtenerTodos() {
-        return comercioRepository.findAll().stream()
-                .map(ComercioMapper::toResponseDTO)
+        List<Comercio> comercios = comercioRepository.findAll();
+
+        // Una sola consulta para traer a todos los dueños (evita N+1).
+        Map<Long, Usuario> usuariosPorId = usuarioRepository
+                .findAllById(comercios.stream().map(Comercio::getUsuarioId).toList())
+                .stream()
+                .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+
+        return comercios.stream()
+                .map(c -> ComercioMapper.toResponseDTO(c, usuariosPorId.get(c.getUsuarioId())))
                 .toList();
     }
 
@@ -53,7 +80,7 @@ public class ComercioService implements IComercio {
         Comercio comercio = ComercioMapper.toEntity(dto, usuarioId);
         Comercio guardado = comercioRepository.save(comercio);
 
-        return ComercioMapper.toResponseDTO(guardado);
+        return aDTO(guardado);
     }
 
     @Override
@@ -70,6 +97,13 @@ public class ComercioService implements IComercio {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No se encontró el comercio con ID: " + id));
 
+        if (comercioRepository.existsOtroConCuit(dto.getCuit(), id)) {
+            throw new IllegalStateException("Ya existe otro comercio con ese CUIT");
+        }
+        if (comercioRepository.existsOtroConEmail(dto.getEmail(), id)) {
+            throw new IllegalStateException("Ya existe otro comercio con ese email");
+        }
+
         comercioExistente.setNombreComercial(dto.getNombreComercial());
         comercioExistente.setRazonSocial(dto.getRazonSocial());
         comercioExistente.setDireccion(dto.getDireccion());
@@ -77,7 +111,7 @@ public class ComercioService implements IComercio {
         comercioExistente.setTelefono(dto.getTelefono());
         comercioExistente.setEmail(dto.getEmail());
 
-        return ComercioMapper.toResponseDTO(comercioRepository.save(comercioExistente));
+        return aDTO(comercioRepository.save(comercioExistente));
     }
 
     @Override
@@ -107,5 +141,10 @@ public class ComercioService implements IComercio {
     @Override
     public boolean existePorId(Long id) {
         return id != null && comercioRepository.existsById(id);
+    }
+
+    private ComercioResponseDTO aDTO(Comercio comercio) {
+        Usuario dueno = usuarioRepository.findById(comercio.getUsuarioId()).orElse(null);
+        return ComercioMapper.toResponseDTO(comercio, dueno);
     }
 }
