@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -95,6 +97,20 @@ public class SecurityConfig {
     .requestMatchers("/repartidores/**")
         .hasRole("ADMIN")
     
+    .requestMatchers("/comercios/me")
+        .hasRole("COMERCIO")
+
+    // Los depósitos son solo para ADMIN, salvo estas acciones puntuales.
+    // Van ANTES de la regla general porque Spring usa la primera que coincide.
+    .requestMatchers(HttpMethod.POST, "/depositos")
+        .hasRole("COMERCIO")
+
+    .requestMatchers(HttpMethod.GET, "/depositos/me")
+        .hasRole("DEPOSITO")
+
+    .requestMatchers(HttpMethod.GET, "/depositos/comercio/**")
+        .hasAnyRole("ADMIN", "COMERCIO", "DEPOSITO")
+
     .requestMatchers("/depositos", "/depositos/**")
         .hasRole("ADMIN")
 

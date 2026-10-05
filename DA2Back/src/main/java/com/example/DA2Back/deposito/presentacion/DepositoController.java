@@ -2,10 +2,18 @@ package com.example.DA2Back.deposito.presentacion;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dto.RegistroDepositoDTO;
+import com.example.DA2Back.Seguridad.negocio.IUsuarioService;
+import com.example.DA2Back.comercio.negocio.IComercio;
 import com.example.DA2Back.deposito.dto.DepositoCreateDTO;
 import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
 import com.example.DA2Back.deposito.dto.AsociarDepositoDTO;
@@ -20,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 public class DepositoController {
 
     private final IDeposito depositoService;
+    private final IUsuarioService usuarioService;
+    private final IComercio comercioService;
 
     @GetMapping
     public ResponseEntity<List<DepositoResponseDTO>> obtenerTodos() {
@@ -31,9 +41,41 @@ public class DepositoController {
         return ResponseEntity.ok(depositoService.obtenerPorId(id));
     }
 
+    /** Depósito del usuario autenticado (rol DEPOSITO). */
+    @GetMapping("/me")
+    public ResponseEntity<DepositoResponseDTO> obtenerMiDeposito(
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(depositoService.obtenerPorUsuarioId(usuario.getId()));
+    }
+
     @GetMapping("/comercio/{comercioId}")
-    public ResponseEntity<List<DepositoResponseDTO>> obtenerPorComercio(@PathVariable Long comercioId) {
+    public ResponseEntity<List<DepositoResponseDTO>> obtenerPorComercio(
+            @PathVariable Long comercioId,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        // Un COMERCIO solo puede ver los depósitos de su propio comercio.
+        if (usuario.getRol() == Rol.COMERCIO) {
+            Long duenoId = comercioService.obtenerPorId(comercioId).getUsuarioId();
+            if (!usuario.getId().equals(duenoId)) {
+                throw new AccessDeniedException("No podés ver los depósitos de otro comercio");
+            }
+        }
+
         return ResponseEntity.ok(depositoService.obtenerPorComercio(comercioId));
+    }
+
+    /**
+     * Un COMERCIO agrega un depósito (con su usuario responsable).
+     * El depósito queda vinculado automáticamente al comercio del usuario autenticado.
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('COMERCIO')")
+    public ResponseEntity<DepositoResponseDTO> agregarDeposito(
+            @Valid @RequestBody RegistroDepositoDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+        DepositoResponseDTO creado =
+                usuarioService.registrarDepositoParaComercio(dto, usuario.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/{id}")

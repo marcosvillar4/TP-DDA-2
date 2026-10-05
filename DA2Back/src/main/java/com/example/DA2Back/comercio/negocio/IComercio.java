@@ -9,6 +9,8 @@ import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
 public interface IComercio {
 
     ComercioResponseDTO obtenerPorId(Long id);
+    /** Comercio cuyo dueño es el usuario indicado (rol COMERCIO). */
+    ComercioResponseDTO obtenerPorUsuarioId(Long usuarioId);
     List<ComercioResponseDTO> obtenerTodos();
     ComercioResponseDTO crear(ComercioCreateDTO dto, Long usuarioId);
     ComercioResponseDTO actualizar(Long id, ComercioCreateDTO dto);

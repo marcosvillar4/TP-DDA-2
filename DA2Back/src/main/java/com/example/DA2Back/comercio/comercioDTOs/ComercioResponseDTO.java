@@ -1,5 +1,7 @@
 package com.example.DA2Back.comercio.comercioDTOs;
 
+import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +21,10 @@ public class ComercioResponseDTO {
     private String telefono;
     private String email;
     private Long usuarioId;
+
+    /** Nombre y apellido del usuario dueño del comercio. */
+    private String responsable;
+
+    /** Estado de la cuenta del usuario dueño (EN_EVALUACION, VALIDADO, ...). */
+    private EstadoUsuario estado;
 }

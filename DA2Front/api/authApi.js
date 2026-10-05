@@ -38,8 +38,10 @@ export async function loginRequest({ email, password }) {
  * El backend espera un RegisterDTO polimórfico (discriminado por "rol"):
  *   Base:       { email, password, nombre, apellido, dni, telefono, rol }
  *   COMERCIO:   + { nombreComercial, razonSocial, cuit, direccion }
- *   DEPOSITO:   + { nombreDeposito, direccionDeposito }
  *   REPARTIDOR: + { vehiculo }
+ *
+ * El rol DEPOSITO ya no se registra acá: un COMERCIO lo agrega con
+ * POST /depositos (ver api/depositosApi.js).
  *
  * useRegister.js arma el objeto plano combinando los datos base con los
  * específicos del rol elegido; acá simplemente se reenvía tal cual.

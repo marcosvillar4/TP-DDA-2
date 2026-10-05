@@ -19,7 +19,6 @@ import lombok.Setter;
 
 @JsonSubTypes({
     @JsonSubTypes.Type(value = RegistroComercioDTO.class, name = "COMERCIO"),
-    @JsonSubTypes.Type(value = RegistroDepositoDTO.class, name = "DEPOSITO"),
     @JsonSubTypes.Type(value = RegistroRepartidorDTO.class, name = "REPARTIDOR")
 })
 @Getter

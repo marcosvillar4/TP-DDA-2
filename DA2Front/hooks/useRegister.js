@@ -11,8 +11,10 @@ import { registerRequest } from "../api/authApi";
  *     (email, password, nombre, apellido, dni, telefono)
  *   - extraData: campos específicos del rol elegido
  *     COMERCIO   → nombreComercial, razonSocial, cuit, direccion
- *     DEPOSITO   → nombreDeposito, direccionDeposito
  *     REPARTIDOR → vehiculo
+ *
+ * DEPOSITO ya no es un rol de auto-registro: los depósitos los agrega un
+ * comercio desde su panel (ver hooks/useDepositos.js).
  *
  * El JSON final es un único objeto plano con "rol" como discriminador,
  * tal como lo requiere @JsonTypeInfo del lado del backend.
