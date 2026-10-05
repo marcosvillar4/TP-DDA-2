@@ -14,6 +14,7 @@ import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
+import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
@@ -41,6 +42,7 @@ public class RepartidorService implements IRepartidorService {
     private final RepartidorRepository repartidorRepository;
     private final UsuarioRepository usuarioRepository;
     private final PedidosRepository pedidosRepository;
+    private final ServicioDePedidos servicioDePedidos;
 
     @Override
     @Transactional(readOnly = true)
@@ -155,34 +157,12 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional
     public RepartidorResponseDTO asignarPedido(Long repartidorId, Long pedidoId) {
-        Repartidor repartidor = buscarRepartidor(repartidorId);
-
-        if (!repartidor.isActivo()) {
-            throw new IllegalStateException("No se puede asignar un pedido a un repartidor inactivo");
-        }
-
-        if (repartidor.getEstado() != EstadoRepartidor.DISPONIBLE) {
-            throw new IllegalStateException("El repartidor no está disponible para recibir pedidos");
-        }
-
-        Pedido pedido = pedidosRepository.findById(pedidoId)
-                .orElseThrow(() -> new NoSuchElementException(
-                        "Pedido con id=" + pedidoId + " no encontrado"));
-
-        if (pedido.getRepartidor() != null) {
-            throw new IllegalStateException("El pedido ya tiene un repartidor asignado");
-        }
-
-        if (pedido.getEstado() != EstadoPedido.CREADO) {
-            throw new IllegalStateException("Solo se pueden asignar pedidos en estado CREADO");
-        }
-
-        pedido.setRepartidor(repartidor);
-        pedido.setEstado(EstadoPedido.ASIGNADO);
-        repartidor.setEstado(EstadoRepartidor.EN_ENTREGA);
-
-        pedidosRepository.save(pedido);
-        return toResponseDTO(repartidorRepository.save(repartidor));
+        // Delegamos la asignación al ServicioDePedidos, que es el único
+        // responsable de mutar el estado de un pedido (patrón State).
+        // Antes este método tocaba PedidosRepository directamente,
+        // violando la responsabilidad única y saltándose las validaciones.
+        servicioDePedidos.asignarRepartidor(pedidoId, repartidorId);
+        return toResponseDTO(buscarRepartidor(repartidorId));
     }
 
     @Override
@@ -206,7 +186,7 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosAsignables() {
-        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.CREADO)
+        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.PENDIENTE_COTIZACION)
                 .stream()
                 .map(this::toPedidoResponseDTO)
                 .toList();

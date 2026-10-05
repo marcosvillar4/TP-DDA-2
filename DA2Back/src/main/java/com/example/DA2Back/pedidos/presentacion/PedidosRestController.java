@@ -1,7 +1,6 @@
 package com.example.DA2Back.pedidos.presentacion;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
-import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
@@ -20,8 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Controlador REST de la capa de Presentacion (PedidosView).
- * Mapeado a /api/pedidos. Inyecta la interfaz ServicioDePedidos (IoC).
+ * Controlador REST de la capa de Presentación para Pedidos.
+ *
+ * Cada endpoint mapea directamente a una transición de estado del
+ * patrón State, haciendo que la API sea autodescriptiva sobre qué
+ * operaciones son posibles en el ciclo de vida de un pedido.
  */
 @RestController
 @RequestMapping("/api/pedidos")
@@ -30,7 +32,7 @@ public class PedidosRestController {
 
     private final ServicioDePedidos servicioDePedidos;
 
-    /** POST /api/pedidos — crea un nuevo pedido */
+    /** POST /api/pedidos — crea un nuevo pedido en estado CREADO */
     @PostMapping
     public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody CrearPedidoDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -51,15 +53,13 @@ public class PedidosRestController {
 
     /** GET /api/pedidos/comercio/{comercioId} — pedidos de un comercio */
     @GetMapping("/comercio/{comercioId}")
-    public ResponseEntity<List<PedidoResponseDTO>> listarPorComercio(
-            @PathVariable Long comercioId) {
+    public ResponseEntity<List<PedidoResponseDTO>> listarPorComercio(@PathVariable Long comercioId) {
         return ResponseEntity.ok(servicioDePedidos.listarPorComercio(comercioId));
     }
 
     /** GET /api/pedidos/estado/{estado} — pedidos por estado */
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<PedidoResponseDTO>> listarPorEstado(
-            @PathVariable EstadoPedido estado) {
+    public ResponseEntity<List<PedidoResponseDTO>> listarPorEstado(@PathVariable EstadoPedido estado) {
         return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado));
     }
 
@@ -69,15 +69,39 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables());
     }
 
-    /** PATCH /api/pedidos/{id}/estado — actualiza el estado de un pedido */
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<PedidoResponseDTO> actualizarEstado(
+    /**
+     * PATCH /api/pedidos/{id}/asignar/{repartidorId}
+     * CREADO → ASIGNADO: asigna un repartidor al pedido.
+     */
+    @PatchMapping("/{id}/asignar/{repartidorId}")
+    public ResponseEntity<PedidoResponseDTO> asignarRepartidor(
             @PathVariable Long id,
-            @RequestBody ActualizarEstadoDTO dto) {
-        return ResponseEntity.ok(servicioDePedidos.actualizarEstado(id, dto));
+            @PathVariable Long repartidorId) {
+        return ResponseEntity.ok(servicioDePedidos.asignarRepartidor(id, repartidorId));
     }
 
-    /** DELETE /api/pedidos/{id}/cancelar — cancela un pedido */
+    /**
+     * PATCH /api/pedidos/{id}/iniciar-viaje
+     * ASIGNADO → EN_CAMINO: el repartidor inicia el viaje.
+     */
+    @PatchMapping("/{id}/iniciar-viaje")
+    public ResponseEntity<PedidoResponseDTO> iniciarViaje(@PathVariable Long id) {
+        return ResponseEntity.ok(servicioDePedidos.iniciarViaje(id));
+    }
+
+    /**
+     * PATCH /api/pedidos/{id}/entregar
+     * EN_CAMINO → ENTREGADO: el repartidor confirma la entrega.
+     */
+    @PatchMapping("/{id}/entregar")
+    public ResponseEntity<PedidoResponseDTO> entregar(@PathVariable Long id) {
+        return ResponseEntity.ok(servicioDePedidos.entregar(id));
+    }
+
+    /**
+     * DELETE /api/pedidos/{id}/cancelar
+     * Cancela el pedido desde cualquier estado que lo permita.
+     */
     @DeleteMapping("/{id}/cancelar")
     public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDePedidos.cancelar(id));

@@ -1,27 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye } from 'lucide-react';
-import { pedidosMock } from './mockData';
+import { getPedidos } from '../../api/pedidosApi';
+import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from './components/BadgeEstado';
 import './styles/PedidosList.css';
 
 export default function PedidosList() {
   const navigate = useNavigate();
+  const [pedidos, setPedidos] = useState([]);
+  const [comerciosMap, setComerciosMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [estadoFilter, setEstadoFilter] = useState('Todos los estados');
   const [comercioFilter, setComercioFilter] = useState('Todos los comercios');
 
-  const filteredPedidos = pedidosMock.filter((p) => {
-    const matchSearch = p.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        p.comercio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        p.destinatario.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    Promise.all([getPedidos(), getComercios()])
+      .then(([pedidosData, comerciosData]) => {
+        setPedidos(pedidosData);
+        
+        const map = {};
+        comerciosData.forEach(c => {
+          map[c.id] = c;
+        });
+        setComerciosMap(map);
+      })
+      .catch(err => console.error("Error cargando pedidos:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredPedidos = pedidos.filter((p) => {
+    const comercio = comerciosMap[p.comercioId] || { nombre: `Comercio ${p.comercioId}` };
+    const idStr = p.id.toString();
+    const matchSearch = idStr.includes(searchTerm) || 
+                        comercio.nombreComercial.toLowerCase().includes(searchTerm.toLowerCase());
     const matchEstado = estadoFilter === 'Todos los estados' || p.estado === estadoFilter;
-    const matchComercio = comercioFilter === 'Todos los comercios' || p.comercio.nombre === comercioFilter;
+    const matchComercio = comercioFilter === 'Todos los comercios' || comercio.nombreComercial === comercioFilter;
     return matchSearch && matchEstado && matchComercio;
   });
 
-  const uniqueEstados = ['Todos los estados', ...new Set(pedidosMock.map(p => p.estado))];
-  const uniqueComercios = ['Todos los comercios', ...new Set(pedidosMock.map(p => p.comercio.nombre))];
+  const uniqueEstados = ['Todos los estados', ...new Set(pedidos.map(p => p.estado))];
+  const uniqueComercios = ['Todos los comercios', ...new Set(pedidos.map(p => comerciosMap[p.comercioId]?.nombre || `Comercio ${p.comercioId}`))];
 
   return (
     <div className="pedidos-list-page">
@@ -32,7 +53,7 @@ export default function PedidosList() {
             {filteredPedidos.length} {filteredPedidos.length === 1 ? 'resultado' : 'resultados'}
           </p>
         </div>
-        <button className="pedidos-btn-nuevo">
+        <button className="pedidos-btn-nuevo" onClick={() => navigate('/pedidos/nuevo')}>
           <Plus size={16} />
           Nuevo pedido
         </button>
@@ -43,7 +64,7 @@ export default function PedidosList() {
           <Search className="pedidos-search-icon" size={18} />
           <input 
             type="text" 
-            placeholder="ID de pedido, destinatario o comercio..."
+            placeholder="ID de pedido o comercio..."
             className="pedidos-search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -84,43 +105,49 @@ export default function PedidosList() {
               <tr>
                 <th>ID PEDIDO</th>
                 <th>COMERCIO</th>
-                <th>DESTINATARIO</th>
-                <th>DIRECCIÓN</th>
+                <th>DIRECCIÓN DESTINO</th>
                 <th>ESTADO</th>
                 <th>REPARTIDOR</th>
-                <th>FECHA</th>
+                <th>ÚLTIMA ACTUALIZACIÓN</th>
                 <th>ACCIONES</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPedidos.map(p => (
-                <tr key={p.id}>
-                  <td className="col-id">{p.id}</td>
-                  <td className="col-comercio">
-                    <span className="comercio-nombre">{p.comercio.nombre}</span>
-                    <span className="comercio-rubro">{p.comercio.rubro}</span>
-                  </td>
-                  <td>{p.destinatario}</td>
-                  <td className="col-direccion">{p.direccion}</td>
-                  <td>
-                    <BadgeEstado estado={p.estado} />
-                  </td>
-                  <td>{p.repartidor}</td>
-                  <td className="col-fecha">{p.fecha}</td>
-                  <td>
-                    <button 
-                      className="pedidos-btn-ver"
-                      onClick={() => navigate(`/pedidos/${p.id}`)}
-                    >
-                      <Eye size={16} /> Ver
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredPedidos.length === 0 && (
+              {loading ? (
+                <tr><td colSpan="7" style={{textAlign: 'center', padding: '2rem'}}>Cargando pedidos...</td></tr>
+              ) : filteredPedidos.map(p => {
+                const comercio = comerciosMap[p.comercioId] || { nombre: `Comercio ${p.comercioId}`, rubro: '-' };
+                const lastHistorial = p.historial && p.historial.length > 0 ? p.historial[0] : null;
+                const fechaStr = lastHistorial ? new Date(lastHistorial.fechaHora).toLocaleString() : '-';
+
+                return (
+                  <tr key={p.id}>
+                    <td className="col-id">LOG-{p.id}</td>
+                    <td className="col-comercio">
+                      <span className="comercio-nombre">{comercio.nombreComercial}</span>
+                      <span className="comercio-rubro">{comercio.rubro}</span>
+                    </td>
+                    <td className="col-direccion">{p.direccionDestino}</td>
+                    <td>
+                      <BadgeEstado estado={p.estado} />
+                    </td>
+                    <td>{p.repartidorNombre || 'Sin asignar'}</td>
+                    <td className="col-fecha">{fechaStr}</td>
+                    <td>
+                      <button 
+                        className="pedidos-btn-ver"
+                        onClick={() => navigate(`/pedidos/${p.id}`)}
+                      >
+                        <Eye size={16} /> Ver
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!loading && filteredPedidos.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="pedidos-empty">
-                    No se encontraron pedidos con los filtros aplicados.
+                  <td colSpan="7" className="pedidos-empty">
+                    No se encontraron pedidos.
                   </td>
                 </tr>
               )}
@@ -129,14 +156,10 @@ export default function PedidosList() {
         </div>
         
         <div className="pedidos-pagination">
-          <span className="pagination-info">Mostrando {filteredPedidos.length} de {pedidosMock.length} pedidos</span>
-          <div className="pagination-controls">
-            <button className="pagination-btn disabled">← Anterior</button>
-            <span className="pagination-page">1</span>
-            <button className="pagination-btn disabled">Siguiente →</button>
-          </div>
+          <span className="pagination-info">Mostrando {filteredPedidos.length} de {pedidos.length} pedidos</span>
         </div>
       </div>
     </div>
   );
 }
+

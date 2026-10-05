@@ -1,69 +1,86 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, CheckCircle2, Warehouse, Store } from 'lucide-react';
-import { pedidosMock } from '../pedidos/mockData';
+import { getPedidoById } from '../../api/pedidosApi';
+import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
 import './styles/SeguimientoPage.css';
 
-const STEPS_ORDER = [
-  'Pedido recibido',
-  'En preparación',
-  'Listo para despacho',
-  'En tránsito',
-  'Entregado'
-];
+const STEPS_ORDER = ['PENDIENTE_COTIZACION', 'ASIGNADO', 'EN_CAMINO', 'ENTREGADO'];
 
 export default function SeguimientoPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   
-  useEffect(() => {
-    if (id) {
-      setSearchInput(id);
-    }
-  }, [id]);
+  const [pedido, setPedido] = useState(null);
+  const [comercioNombre, setComercioNombre] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      navigate(`/seguimiento/${searchInput.trim()}`);
-    }
+    if (!searchInput.trim()) return;
+    navigate(`/seguimiento/${searchInput.trim()}`);
   };
 
-  const recentSearches = ['LOG-0031', 'LOG-0025', 'LOG-0023', 'LOG-0021'];
-
-  // Check if we have a valid tracking ID to show
-  const pedido = id ? pedidosMock.find(p => p.id === id) : null;
-  const isNotFound = id && !pedido;
-
-  // Determine current step index (1 to 5) based on history array
-  let currentStepIndex = 1;
-  let statusColorClass = 'status-navy'; // Default fallback
-  
-  if (pedido) {
-    const currentHist = pedido.historial.find(h => h.status === 'current' || h.status === 'completed' && h.estado === pedido.estado);
-    if (currentHist) {
-      currentStepIndex = STEPS_ORDER.indexOf(currentHist.estado) + 1;
-    } else {
-      // fallback based on general status
-      currentStepIndex = STEPS_ORDER.indexOf(pedido.estado) + 1;
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      setError(false);
+      setPedido(null);
+      
+      const cleanId = id.replace('LOG-', ''); // allow users to type LOG-1
+      
+      Promise.all([getPedidoById(cleanId), getComercios()])
+        .then(([pedidoData, comerciosData]) => {
+          setPedido(pedidoData);
+          const comercio = comerciosData.find(c => c.id === pedidoData.comercioId);
+          setComercioNombre(comercio ? comercio.nombreComercial : `Comercio ${pedidoData.comercioId}`);
+        })
+        .catch(err => {
+          console.error(err);
+          setError(true);
+        })
+        .finally(() => setLoading(false));
     }
+  }, [id]);
+
+  const recentSearches = ['1', '2'];
+
+  let currentStepIndex = 1;
+  let statusColorClass = 'status-navy';
+  let isNotFound = error;
+  let historialUI = [];
+
+  if (pedido) {
+    currentStepIndex = STEPS_ORDER.indexOf(pedido.estado) + 1;
+    if (pedido.estado === 'CANCELADO') currentStepIndex = 5;
     if (currentStepIndex < 1) currentStepIndex = 1;
 
     switch (pedido.estado) {
-      case 'Pendiente': statusColorClass = 'status-amber'; break;
-      case 'En tránsito': statusColorClass = 'status-violet'; break;
-      case 'Entregado': statusColorClass = 'status-green'; break;
-      case 'Preparando': statusColorClass = 'status-blue'; break;
-      case 'Cancelado': statusColorClass = 'status-red'; break;
+      case 'PENDIENTE_COTIZACION': statusColorClass = 'status-amber'; break;
+      case 'EN_CAMINO': statusColorClass = 'status-violet'; break;
+      case 'ENTREGADO': statusColorClass = 'status-green'; break;
+      case 'ASIGNADO': statusColorClass = 'status-blue'; break;
+      case 'CANCELADO': statusColorClass = 'status-red'; break;
       default: statusColorClass = 'status-navy';
     }
+
+    // reverse so chronological order is top-down
+    historialUI = (pedido.historial || []).map((h, i) => {
+      const isCurrent = i === 0;
+      return {
+        estado: h.estado,
+        fecha: new Date(h.fechaHora).toLocaleString(),
+        ubicacion: 'Sistema',
+        status: isCurrent ? 'current' : 'completed'
+      };
+    }).reverse();
   }
 
   return (
     <div className="seguimiento-container">
-      {/* Search Header Card */}
       <div className="seguimiento-search-card">
         <div className="seguimiento-icon-wrapper">
           <MapPin size={28} />
@@ -77,7 +94,7 @@ export default function SeguimientoPage() {
           <input 
             type="text" 
             className="seguimiento-input" 
-            placeholder="Ej: LOG-0031"
+            placeholder="Ej: 1"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
@@ -94,52 +111,66 @@ export default function SeguimientoPage() {
                 onClick={() => navigate(`/seguimiento/${searchId}`)}
                 type="button"
               >
-                {searchId}
+                LOG-{searchId}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {isNotFound && (
+      {loading && (
+        <div className="seguimiento-card" style={{ width: '100%', maxWidth: '900px', textAlign: 'center' }}>
+          <p>Buscando pedido...</p>
+        </div>
+      )}
+
+      {!loading && isNotFound && (
         <div className="seguimiento-card" style={{ width: '100%', maxWidth: '900px', textAlign: 'center' }}>
           <p>No se encontró ningún pedido con el ID: <strong>{id}</strong></p>
         </div>
       )}
 
       {/* Result Section */}
-      {pedido && (
+      {!loading && pedido && (
         <div className="seguimiento-result-wrapper">
           {/* Top Status Card */}
           <div className={`seguimiento-card seguimiento-status-card ${statusColorClass}`}>
             <div className="status-header">
               <div className="status-info-left">
                 <span className="status-label">NÚMERO DE SEGUIMIENTO</span>
-                <h2 className="status-id">{pedido.id}</h2>
+                <h2 className="status-id">LOG-{pedido.id}</h2>
                 <span className="status-route">
-                  {pedido.comercio.nombre} ➔ <strong>{pedido.destinatario}</strong>
+                  {comercioNombre}
                 </span>
               </div>
               <div className="status-info-right">
                 <BadgeEstado estado={pedido.estado} />
-                <span className="status-step-text">Paso {currentStepIndex} de 5</span>
-                <span className="status-date">Creado: {pedido.fecha}</span>
+                {pedido.estado !== 'CANCELADO' && (
+                  <span className="status-step-text">Paso {currentStepIndex} de 4</span>
+                )}
+                {pedido.fechaCreacion && (
+                  <span className="status-date">Creado: {new Date(pedido.fechaCreacion).toLocaleString()}</span>
+                )}
               </div>
             </div>
 
-            <div className="status-progress-bar">
-              {[1, 2, 3, 4, 5].map(step => {
-                let segmentClass = 'pending';
-                if (step < currentStepIndex) segmentClass = 'completed';
-                else if (step === currentStepIndex) segmentClass = 'current';
-                
-                return <div key={step} className={`progress-segment ${segmentClass}`} />
-              })}
-            </div>
-            <div className="status-progress-labels">
-              <span>Recibido</span>
-              <span>Entregado</span>
-            </div>
+            {pedido.estado !== 'CANCELADO' && (
+              <div className="status-progress-bar">
+                {[1, 2, 3, 4].map(step => {
+                  let segmentClass = 'pending';
+                  if (step < currentStepIndex) segmentClass = 'completed';
+                  else if (step === currentStepIndex) segmentClass = 'current';
+                  
+                  return <div key={step} className={`progress-segment ${segmentClass}`} />
+                })}
+              </div>
+            )}
+            {pedido.estado !== 'CANCELADO' && (
+              <div className="status-progress-labels">
+                <span>PENDIENTE_COTIZACION</span>
+                <span>Entregado</span>
+              </div>
+            )}
           </div>
 
           <div className="seguimiento-detail-grid">
@@ -149,7 +180,7 @@ export default function SeguimientoPage() {
               <p className="history-subtitle">Trayectoria completa del pedido</p>
               
               <div className="history-stepper">
-                {pedido.historial.map((step, index) => (
+                {historialUI.map((step, index) => (
                   <div key={index} className={`history-step ${step.status}`}>
                     <div className="history-icon-wrapper">
                       {step.status === 'completed' ? (
@@ -178,20 +209,20 @@ export default function SeguimientoPage() {
                 <span className="info-card-label">DIRECCIÓN DE ENTREGA</span>
                 <div className="info-card-content">
                   <MapPin size={16} className="info-icon-red" />
-                  <span>{pedido.direccion}</span>
+                  <span>{pedido.direccionDestino}</span>
                 </div>
               </div>
 
               {/* Conditional Rendering for Repartidor */}
-              {pedido.estado === 'En tránsito' && (
+              {['ASIGNADO', 'EN_CAMINO'].includes(pedido.estado) && pedido.repartidorNombre && (
                 <div className="seguimiento-card info-card">
                   <span className="info-card-label">REPARTIDOR ASIGNADO</span>
                   <div className="info-card-content">
                     <div className="repartidor-avatar">
-                      {pedido.repartidor.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                      {pedido.repartidorNombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                     </div>
                     <div className="repartidor-details">
-                      <span className="repartidor-name">{pedido.repartidor}</span>
+                      <span className="repartidor-name">{pedido.repartidorNombre}</span>
                       <span className="repartidor-status">En ruta activa</span>
                     </div>
                   </div>
@@ -199,15 +230,11 @@ export default function SeguimientoPage() {
               )}
 
               <div className="seguimiento-card info-card">
-                <span className="info-card-label">DEPÓSITO DE ORIGEN</span>
+                <span className="info-card-label">COMERCIO</span>
                 <div className="info-card-stack">
                   <div className="info-stack-item">
-                    <Warehouse size={16} className="info-icon-navy" />
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-slate-700)' }}>{pedido.deposito}</span>
-                  </div>
-                  <div className="info-stack-item">
                     <Store size={16} className="info-icon-navy" />
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-slate-700)' }}>{pedido.comercio.nombre}</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-slate-700)' }}>{comercioNombre}</span>
                   </div>
                 </div>
               </div>
@@ -219,3 +246,7 @@ export default function SeguimientoPage() {
     </div>
   );
 }
+
+
+
+

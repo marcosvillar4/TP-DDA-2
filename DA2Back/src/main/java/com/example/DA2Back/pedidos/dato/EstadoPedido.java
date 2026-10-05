@@ -5,7 +5,7 @@ package com.example.DA2Back.pedidos.dato;
  * en el sistema de logistica de ultima milla.
  */
 public enum EstadoPedido {
-    CREADO,
+    PENDIENTE_COTIZACION,
     ASIGNADO,
     EN_CAMINO,
     ENTREGADO,

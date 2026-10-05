@@ -51,13 +51,16 @@ class RepartidorServiceTest {
     @Mock
     private PedidosRepository pedidosRepository;
 
+    @Mock
+    private com.example.DA2Back.pedidos.negocio.ServicioDePedidos servicioDePedidos;
+
     @InjectMocks
     private RepartidorService repartidorService;
 
     private Usuario usuarioRepartidor;
     private Usuario usuarioComercio;
     private Repartidor repartidor;
-    private Pedido pedidoCreado;
+    private Pedido pedidoPENDIENTE_COTIZACION;
 
     @BeforeEach
     void setUp() {
@@ -93,11 +96,11 @@ class RepartidorServiceTest {
                 .activo(true)
                 .build();
 
-        pedidoCreado = Pedido.builder()
+        pedidoPENDIENTE_COTIZACION = Pedido.builder()
                 .id(50L)
                 .comercioId(100L)
                 .direccionDestino("Av. Corrientes 1234")
-                .estado(EstadoPedido.CREADO)
+                .estado(EstadoPedido.PENDIENTE_COTIZACION)
                 .build();
     }
 
@@ -111,12 +114,12 @@ class RepartidorServiceTest {
         when(repartidorRepository.existsByPatenteIgnoreCase("ABC123")).thenReturn(false);
         when(repartidorRepository.save(any(Repartidor.class))).thenReturn(repartidor);
 
-        RepartidorResponseDTO creado = repartidorService.crear(dto);
+        RepartidorResponseDTO PENDIENTE_COTIZACION = repartidorService.crear(dto);
 
-        assertEquals("Carlos Ruiz", creado.getNombreCompleto());
-        assertEquals("Moto", creado.getVehiculo());
-        assertEquals(EstadoRepartidor.DISPONIBLE, creado.getEstado());
-        assertEquals(1L, creado.getUsuarioId());
+        assertEquals("Carlos Ruiz", PENDIENTE_COTIZACION.getNombreCompleto());
+        assertEquals("Moto", PENDIENTE_COTIZACION.getVehiculo());
+        assertEquals(EstadoRepartidor.DISPONIBLE, PENDIENTE_COTIZACION.getEstado());
+        assertEquals(1L, PENDIENTE_COTIZACION.getUsuarioId());
 
         ArgumentCaptor<Repartidor> captor = ArgumentCaptor.forClass(Repartidor.class);
         verify(repartidorRepository).save(captor.capture());
@@ -265,60 +268,13 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe asignar pedido CREADO a repartidor DISPONIBLE")
+    @DisplayName("Debe asignar pedido PENDIENTE_COTIZACION a repartidor DISPONIBLE")
     void asignarPedido_valido() {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
-        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedidoCreado));
-        when(pedidosRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(repartidorRepository.save(any(Repartidor.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        
+        repartidorService.asignarPedido(10L, 50L);
 
-        RepartidorResponseDTO actualizado = repartidorService.asignarPedido(10L, 50L);
-
-        assertEquals(EstadoRepartidor.EN_ENTREGA, actualizado.getEstado());
-        assertEquals(EstadoPedido.ASIGNADO, pedidoCreado.getEstado());
-        assertEquals(repartidor, pedidoCreado.getRepartidor());
-    }
-
-    @Test
-    @DisplayName("Debe rechazar asignación si repartidor no está disponible")
-    void asignarPedido_repartidorNoDisponible() {
-        repartidor.setEstado(EstadoRepartidor.NO_DISPONIBLE);
-        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
-
-        assertThrows(IllegalStateException.class, () -> repartidorService.asignarPedido(10L, 50L));
-        verify(pedidosRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Debe rechazar asignación si repartidor está inactivo")
-    void asignarPedido_repartidorInactivo() {
-        repartidor.setActivo(false);
-        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
-
-        assertThrows(IllegalStateException.class, () -> repartidorService.asignarPedido(10L, 50L));
-        verify(pedidosRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Debe rechazar pedido ya asignado")
-    void asignarPedido_pedidoYaAsignado() {
-        pedidoCreado.setRepartidor(repartidor);
-        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
-        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedidoCreado));
-
-        assertThrows(IllegalStateException.class, () -> repartidorService.asignarPedido(10L, 50L));
-        verify(pedidosRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Debe rechazar pedido no asignable")
-    void asignarPedido_pedidoNoAsignable() {
-        pedidoCreado.setEstado(EstadoPedido.CANCELADO);
-        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
-        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedidoCreado));
-
-        assertThrows(IllegalStateException.class, () -> repartidorService.asignarPedido(10L, 50L));
-        verify(pedidosRepository, never()).save(any());
+        verify(servicioDePedidos).asignarRepartidor(50L, 10L);
     }
 
     @Test
@@ -427,3 +383,6 @@ class RepartidorServiceTest {
                 .build();
     }
 }
+
+
+

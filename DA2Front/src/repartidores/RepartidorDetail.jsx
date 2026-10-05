@@ -223,7 +223,7 @@ function Info({ icon: Icon, label, value }) {
 
 function formatPedidoEstado(estado) {
   const labels = {
-    CREADO: "Creado",
+    PENDIENTE_COTIZACION: "PENDIENTE_COTIZACION",
     ASIGNADO: "Asignado",
     EN_CAMINO: "En camino",
     ENTREGADO: "Entregado",
@@ -240,3 +240,4 @@ function formatVehiculo(vehiculo) {
   };
   return labels[vehiculo] || vehiculo || "—";
 }
+

@@ -19,7 +19,10 @@ public class PedidoResponseDTO {
     private Long id;
     private Long comercioId;
     private String direccionDestino;
+    private String direccionOrigen;
+    private java.time.LocalDateTime fechaCreacion;
     private EstadoPedido estado;
     private Long repartidorId;
     private String repartidorNombre;
+    private java.util.List<HistorialEstadoDTO> historial;
 }

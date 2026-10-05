@@ -15,4 +15,5 @@ public class CrearPedidoDTO {
 
     private Long comercioId;
     private String direccionDestino;
+    private String direccionOrigen;
 }

@@ -9,6 +9,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +43,12 @@ public class Pedido {
     @Column(name = "direccion_destino", nullable = false)
     private String direccionDestino;
 
+    @Column(name = "direccion_origen")
+    private String direccionOrigen;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    private java.time.LocalDateTime fechaCreacion;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoPedido estado;
@@ -48,4 +56,8 @@ public class Pedido {
     @ManyToOne
     @JoinColumn(name = "repartidor_id")
     private Repartidor repartidor;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<HistorialEstadoPedido> historial = new java.util.ArrayList<>();
 }

@@ -56,6 +56,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * TransicionInvalidaPedidoException → 409 Conflict
+     * Se lanza por el patrón State cuando se intenta una transición
+     * no permitida en el ciclo de vida del pedido.
+     */
+    @ExceptionHandler(com.example.DA2Back.pedidos.excepcion.TransicionInvalidaPedidoException.class)
+    public ResponseEntity<Map<String, Object>> handleTransicionInvalidaPedido(
+            com.example.DA2Back.pedidos.excepcion.TransicionInvalidaPedidoException ex) {
+
+        return buildError(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /**
      * IllegalStateException → 409 Conflict
      * Ejemplo: intentar cancelar un pedido ya entregado.
      */

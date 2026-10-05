@@ -161,7 +161,7 @@ class LogiRedIntegrationTest {
 
     @Test
     @Order(5)
-    @DisplayName("POST /api/pedidos crea un pedido en estado CREADO (HTTP 201)")
+    @DisplayName("POST /api/pedidos crea un pedido en estado PENDIENTE_COTIZACION (HTTP 201)")
     void crearPedido_conToken_devuelve201() throws Exception {
         assertNotNull(tokenJwt, "Requiere token — ejecutar test de login primero");
 
@@ -179,7 +179,7 @@ class LogiRedIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.comercioId", is(COMERCIO_ID.intValue())))
-                .andExpect(jsonPath("$.estado", is("CREADO")))
+                .andExpect(jsonPath("$.estado", is("PENDIENTE_COTIZACION")))
                 .andReturn();
 
         pedidoId = objectMapper.readTree(result.getResponse().getContentAsString())
@@ -209,7 +209,7 @@ class LogiRedIntegrationTest {
                         .header("Authorization", "Bearer " + tokenJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(pedidoId.intValue())))
-                .andExpect(jsonPath("$.estado", is("CREADO")));
+                .andExpect(jsonPath("$.estado", is("PENDIENTE_COTIZACION")));
     }
 
     @Test
@@ -226,37 +226,19 @@ class LogiRedIntegrationTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/pedidos/estado/CREADO filtra por estado")
+    @DisplayName("GET /api/pedidos/estado/PENDIENTE_COTIZACION filtra por estado")
     void listarPorEstado_devuelve200() throws Exception {
         assertNotNull(tokenJwt);
 
-        mockMvc.perform(get("/api/pedidos/estado/CREADO")
+        mockMvc.perform(get("/api/pedidos/estado/PENDIENTE_COTIZACION")
                         .header("Authorization", "Bearer " + tokenJwt))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].estado", is("CREADO")));
+                .andExpect(jsonPath("$[0].estado", is("PENDIENTE_COTIZACION")));
     }
 
-    @Test
+        @Test
     @Order(10)
-    @DisplayName("PATCH /api/pedidos/{id}/estado actualiza a EN_CAMINO y persiste en BD")
-    void actualizarEstado_persiste() throws Exception {
-        assertNotNull(tokenJwt);
-        assertNotNull(pedidoId);
-
-        mockMvc.perform(patch("/api/pedidos/" + pedidoId + "/estado")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + tokenJwt)
-                        .content("{\"estado\": \"EN_CAMINO\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado", is("EN_CAMINO")));
-
-        Pedido bd = pedidosRepository.findById(pedidoId).orElseThrow();
-        assertEquals(EstadoPedido.EN_CAMINO, bd.getEstado());
-    }
-
-    @Test
-    @Order(11)
-    @DisplayName("DELETE /api/pedidos/{id}/cancelar cancela el pedido y persiste en BD")
+    @DisplayName("PATCH /api/pedidos/{id}/cancelar cancela el pedido y persiste en BD")
     void cancelarPedido_persiste() throws Exception {
         assertNotNull(tokenJwt);
         assertNotNull(pedidoId);
@@ -271,33 +253,15 @@ class LogiRedIntegrationTest {
     }
 
     @Test
-    @Order(12)
-    @DisplayName("DELETE /api/pedidos/{id}/cancelar sobre ENTREGADO devuelve 409 Conflict")
+    @Order(11)
+    @DisplayName("DELETE /api/pedidos/{id}/cancelar sobre CANCELADO devuelve 409 Conflict")
     void cancelarEntregado_devuelve409() throws Exception {
         assertNotNull(tokenJwt);
+        assertNotNull(pedidoId);
 
-        // Crear nuevo pedido y llevarlo a ENTREGADO
-        MvcResult crear = mockMvc.perform(post("/api/pedidos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + tokenJwt)
-                        .content("{\"comercioId\":1,\"direccionDestino\":\"Test\"}"))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        Long idEntregado = objectMapper
-                .readTree(crear.getResponse().getContentAsString())
-                .get("id").asLong();
-
-        mockMvc.perform(patch("/api/pedidos/" + idEntregado + "/estado")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + tokenJwt)
-                .content("{\"estado\": \"ENTREGADO\"}"))
-                .andExpect(status().isOk());
-
-        // Intentar cancelar — debe retornar 409
-        mockMvc.perform(delete("/api/pedidos/" + idEntregado + "/cancelar")
+        // Intentar cancelar de nuevo -> debe retornar 409
+        mockMvc.perform(delete("/api/pedidos/" + pedidoId + "/cancelar")
                         .header("Authorization", "Bearer " + tokenJwt))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", containsString("entregado")));
+                .andExpect(status().isConflict());
     }
 }

@@ -7,6 +7,7 @@ import { NAV_ITEMS } from "./layout/navConfig";
 import ComercioDetail from "./comercios/ComercioDetail";
 import ComercioForm from "./comercios/ComercioForm";
 import PedidoDetail from "./pedidos/PedidoDetail";
+import PedidoForm from "./pedidos/PedidoForm";
 import SeguimientoPage from "./seguimiento/SeguimientoPage";
 import RepartidorDetail from "./repartidores/RepartidorDetail";
 import UsuarioDetailPage from "./usuarios/UsuarioDetailPage";
@@ -21,6 +22,7 @@ import DepositoDetail from "./depositos/DepositoDetail";
 const EXTRA_ROUTES = [
   { path: "/comercios/:id/editar", element: ComercioForm },
   { path: "/comercios/:id", element: ComercioDetail },
+  { path: "/pedidos/nuevo", element: PedidoForm },
   { path: "/pedidos/:id", element: PedidoDetail },
   { path: "/repartidores/:id", element: RepartidorDetail },
   { path: "/depositos/:id", element: DepositoDetail },

@@ -40,12 +40,12 @@ class PedidosRestControllerTest {
                 .id(1L)
                 .comercioId(100L)
                 .direccionDestino("Av. Corrientes 1234")
-                .estado(EstadoPedido.CREADO)
+                .estado(EstadoPedido.PENDIENTE_COTIZACION)
                 .build();
     }
 
     @Test
-    @DisplayName("POST /api/pedidos debe retornar HTTP 201 Created y el DTO creado")
+    @DisplayName("POST /api/pedidos debe retornar HTTP 201 Created y el DTO PENDIENTE_COTIZACION")
     void testCrearPedido() {
         CrearPedidoDTO dto = new CrearPedidoDTO();
         dto.setComercioId(100L);
@@ -60,7 +60,7 @@ class PedidosRestControllerTest {
         assertNotNull(respuesta.getBody());
         assertEquals(1L, respuesta.getBody().getId());
         assertEquals(100L, respuesta.getBody().getComercioId());
-        assertEquals(EstadoPedido.CREADO, respuesta.getBody().getEstado());
+        assertEquals(EstadoPedido.PENDIENTE_COTIZACION, respuesta.getBody().getEstado());
 
         verify(servicioDePedidos, times(1)).crearPedido(any(CrearPedidoDTO.class));
     }
@@ -115,26 +115,23 @@ class PedidosRestControllerTest {
     @Test
     @DisplayName("GET /api/pedidos/estado/{estado} debe retornar pedidos por estado")
     void testListarPorEstado() {
-        when(servicioDePedidos.listarPorEstado(EstadoPedido.CREADO))
+        when(servicioDePedidos.listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION))
                 .thenReturn(List.of(responseDTO));
 
         ResponseEntity<List<PedidoResponseDTO>> respuesta =
-                controller.listarPorEstado(EstadoPedido.CREADO);
+                controller.listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
-        assertEquals(EstadoPedido.CREADO, respuesta.getBody().get(0).getEstado());
+        assertEquals(EstadoPedido.PENDIENTE_COTIZACION, respuesta.getBody().get(0).getEstado());
 
-        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.CREADO);
+        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION);
     }
 
     @Test
-    @DisplayName("PATCH /api/pedidos/{id}/estado debe retornar HTTP 200 con estado actualizado")
-    void testActualizarEstado() {
-        ActualizarEstadoDTO dto = new ActualizarEstadoDTO();
-        dto.setEstado(EstadoPedido.EN_CAMINO);
-
+    @DisplayName("PATCH /api/pedidos/{id}/iniciar-viaje debe retornar HTTP 200 con estado EN_CAMINO")
+    void testIniciarViaje() {
         PedidoResponseDTO responseActualizada = PedidoResponseDTO.builder()
                 .id(1L)
                 .comercioId(100L)
@@ -142,17 +139,17 @@ class PedidosRestControllerTest {
                 .estado(EstadoPedido.EN_CAMINO)
                 .build();
 
-        when(servicioDePedidos.actualizarEstado(eq(1L), any(ActualizarEstadoDTO.class)))
+        when(servicioDePedidos.iniciarViaje(eq(1L)))
                 .thenReturn(responseActualizada);
 
-        ResponseEntity<PedidoResponseDTO> respuesta = controller.actualizarEstado(1L, dto);
+        ResponseEntity<PedidoResponseDTO> respuesta = controller.iniciarViaje(1L);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertEquals(EstadoPedido.EN_CAMINO, respuesta.getBody().getEstado());
 
         verify(servicioDePedidos, times(1))
-                .actualizarEstado(eq(1L), any(ActualizarEstadoDTO.class));
+                .iniciarViaje(eq(1L));
     }
 
     @Test

@@ -52,7 +52,7 @@ export default function AsignarPedidoModal({
                 </option>
               ))}
             </select>
-            {pedidos.length === 0 && <small>No hay pedidos CREADO sin repartidor asignado.</small>}
+            {pedidos.length === 0 && <small>No hay pedidos PENDIENTE_COTIZACION sin repartidor asignado.</small>}
           </label>
 
           <div className="repartidor-form-actions">
@@ -68,3 +68,4 @@ export default function AsignarPedidoModal({
     </div>
   );
 }
+
