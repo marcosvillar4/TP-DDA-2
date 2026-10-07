@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -89,7 +90,7 @@ class RepartidorServiceTest {
 
         repartidor = Repartidor.builder()
                 .id(10L)
-                .usuario(usuarioRepartidor)
+                .usuarioId(usuarioRepartidor.getId())
                 .patente("ABC123")
                 .zona("Palermo")
                 .estado(EstadoRepartidor.DISPONIBLE)
@@ -102,6 +103,8 @@ class RepartidorServiceTest {
                 .direccionDestino("Av. Corrientes 1234")
                 .estado(EstadoPedido.PENDIENTE_COTIZACION)
                 .build();
+
+        lenient().when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioRepartidor));
     }
 
     @Test
@@ -125,6 +128,7 @@ class RepartidorServiceTest {
         verify(repartidorRepository).save(captor.capture());
         assertEquals(EstadoRepartidor.DISPONIBLE, captor.getValue().getEstado());
         assertEquals("ABC123", captor.getValue().getPatente());
+        assertEquals(1L, captor.getValue().getUsuarioId());
     }
 
     @Test
@@ -322,6 +326,19 @@ class RepartidorServiceTest {
         RepartidorResponseDTO detalle = repartidorService.obtenerPorId(10L);
 
         assertNull(detalle.getPedidoActual());
+    }
+
+    @Test
+    @DisplayName("Debe obtener perfil por usuarioId")
+    void obtenerPorUsuarioId_resuelvePerfil() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+
+        RepartidorResponseDTO detalle = repartidorService.obtenerPorUsuarioId(1L);
+
+        assertEquals(10L, detalle.getId());
+        assertEquals(1L, detalle.getUsuarioId());
+        assertEquals("Carlos Ruiz", detalle.getNombreCompleto());
+        verify(repartidorRepository).findByUsuarioId(1L);
     }
 
     @Test
