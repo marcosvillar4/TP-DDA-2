@@ -1,12 +1,18 @@
 package com.example.DA2Back.inventario.negocio;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.negocio.IComercio;
 import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.inventario.dato.Inventario;
 import com.example.DA2Back.inventario.dato.ItemInventario;
@@ -17,21 +23,26 @@ import com.example.DA2Back.producto.negocio.IProductoService;
 @Service
 public class ItemInventarioService implements IItemInventario {
 
+    private static final int STOCK_MINIMO_DEFAULT = 5;
+
     private final ItemInventarioRepository itemInventarioRepository;
     private final IInventario inventarioService;
     private final IProductoService productoService;
     private final IDeposito depositoService;
+    private final IComercio comercioService;
 
     public ItemInventarioService(
             ItemInventarioRepository itemInventarioRepository,
             IInventario inventarioService,
             IProductoService productoService,
-            IDeposito depositoService) {
+            IDeposito depositoService,
+            IComercio comercioService) {
 
         this.itemInventarioRepository = itemInventarioRepository;
         this.inventarioService = inventarioService;
         this.productoService = productoService;
         this.depositoService = depositoService;
+        this.comercioService = comercioService;
     }
 
     @Override
@@ -44,7 +55,7 @@ public class ItemInventarioService implements IItemInventario {
         }
 
         return itemInventarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new NoSuchElementException(
                         "No se encontró el item de inventario con ID: " + id
                 ));
     }
@@ -97,6 +108,17 @@ public class ItemInventarioService implements IItemInventario {
             Long depositoId,
             Integer cantidad) {
 
+        return crear(inventarioId, productoId, depositoId, cantidad, null);
+    }
+
+    @Override
+    public ItemInventario crear(
+            Long inventarioId,
+            Long productoId,
+            Long depositoId,
+            Integer cantidad,
+            Integer stockMinimo) {
+
         if (inventarioId == null) {
             throw new IllegalArgumentException(
                     "El ID del inventario no puede ser nulo"
@@ -126,6 +148,8 @@ public class ItemInventarioService implements IItemInventario {
                     "La cantidad no puede ser negativa"
             );
         }
+
+        Integer stockMinimoFinal = normalizarStockMinimoOpcional(stockMinimo);
 
         Inventario inventario =
                 inventarioService.obtenerPorId(inventarioId);
@@ -160,6 +184,7 @@ public class ItemInventarioService implements IItemInventario {
                     nuevo.setProducto(producto);
                     nuevo.setDeposito(deposito);
                     nuevo.setCantidad(cantidad);
+                    nuevo.setStockMinimo(stockMinimoFinal);
 
                     return itemInventarioRepository.save(nuevo);
                 });
@@ -193,6 +218,44 @@ public class ItemInventarioService implements IItemInventario {
         item.setCantidad(cantidad);
 
         return itemInventarioRepository.save(item);
+    }
+
+    @Override
+    public ItemInventario actualizarStockMinimo(
+            Long id,
+            Integer stockMinimo,
+            Usuario usuario) {
+
+        validarUsuarioAutenticado(usuario);
+        validarStockMinimoObligatorio(stockMinimo);
+
+        ItemInventario item = obtenerPorId(id);
+        validarPuedeConfigurarStockMinimo(item, usuario);
+
+        item.setStockMinimo(stockMinimo);
+
+        return itemInventarioRepository.save(item);
+    }
+
+    @Override
+    public List<ItemInventario> obtenerAlertasStock(Usuario usuario) {
+        validarUsuarioAutenticado(usuario);
+
+        if (usuario.getRol() == Rol.ADMIN) {
+            return itemInventarioRepository.findAlertasStock();
+        }
+
+        if (usuario.getRol() == Rol.COMERCIO) {
+            Long comercioId = comercioService.obtenerPorUsuarioId(usuario.getId()).getId();
+            return itemInventarioRepository.findAlertasStockByComercioId(comercioId);
+        }
+
+        if (usuario.getRol() == Rol.DEPOSITO) {
+            DepositoResponseDTO deposito = depositoService.obtenerPorUsuarioId(usuario.getId());
+            return itemInventarioRepository.findAlertasStockByDepositoId(deposito.getId());
+        }
+
+        throw new AccessDeniedException("No tenés permisos para consultar alertas de inventario");
     }
 
     @Override
@@ -246,6 +309,52 @@ public class ItemInventarioService implements IItemInventario {
         item.setCantidad(cantidad);
 
         return itemInventarioRepository.save(item);
+    }
+
+    private Integer normalizarStockMinimoOpcional(Integer stockMinimo) {
+        if (stockMinimo == null) {
+            return STOCK_MINIMO_DEFAULT;
+        }
+
+        validarStockMinimoObligatorio(stockMinimo);
+        return stockMinimo;
+    }
+
+    private void validarStockMinimoObligatorio(Integer stockMinimo) {
+        if (stockMinimo == null) {
+            throw new IllegalArgumentException(
+                    "El stock mínimo no puede ser nulo"
+            );
+        }
+
+        if (stockMinimo < 0) {
+            throw new IllegalArgumentException(
+                    "El stock mínimo no puede ser negativo"
+            );
+        }
+    }
+
+    private void validarUsuarioAutenticado(Usuario usuario) {
+        if (usuario == null || usuario.getId() == null || usuario.getRol() == null) {
+            throw new AccessDeniedException("Usuario autenticado inválido");
+        }
+    }
+
+    private void validarPuedeConfigurarStockMinimo(ItemInventario item, Usuario usuario) {
+        if (usuario.getRol() == Rol.ADMIN) {
+            return;
+        }
+
+        if (usuario.getRol() == Rol.COMERCIO) {
+            Long usuarioComercioId = comercioService.obtenerPorUsuarioId(usuario.getId()).getId();
+            Long itemComercioId = obtenerComercioId(item.getInventario().getComercio());
+
+            if (Objects.equals(usuarioComercioId, itemComercioId)) {
+                return;
+            }
+        }
+
+        throw new AccessDeniedException("No tenés permisos para configurar el stock mínimo de este item");
     }
 
     private void validarMismoComercio(

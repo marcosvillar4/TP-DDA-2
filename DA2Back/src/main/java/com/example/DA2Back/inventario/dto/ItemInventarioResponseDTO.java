@@ -19,6 +19,8 @@ public class ItemInventarioResponseDTO {
 
     private Integer cantidad;
 
+    private Integer stockMinimo;
+
     // Datos descriptivos (solo lectura) para no obligar al cliente a cruzar
     // ids contra otros endpoints (algunos roles no tienen acceso a /productos).
     private String productoNombre;

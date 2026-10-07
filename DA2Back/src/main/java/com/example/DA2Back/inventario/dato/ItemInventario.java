@@ -33,4 +33,15 @@ public class ItemInventario {
 
     @Column(nullable = false)
     private Integer cantidad;
+
+    @Column(name = "stock_minimo")
+    private Integer stockMinimo = 5;
+
+    @PrePersist
+    @PreUpdate
+    private void aplicarStockMinimoDefault() {
+        if (stockMinimo == null) {
+            stockMinimo = 5;
+        }
+    }
 }

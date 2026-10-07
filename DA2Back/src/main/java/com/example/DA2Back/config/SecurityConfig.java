@@ -117,6 +117,12 @@ public class SecurityConfig {
     .requestMatchers("/productos", "/productos/**")
         .hasAnyRole("ADMIN", "COMERCIO")
 
+    .requestMatchers(HttpMethod.GET, "/items-inventario/alertas-stock")
+        .hasAnyRole("ADMIN", "COMERCIO", "DEPOSITO")
+
+    .requestMatchers(HttpMethod.PATCH, "/items-inventario/*/stock-minimo")
+        .hasAnyRole("ADMIN", "COMERCIO")
+
     .anyRequest().authenticated()
 )
 

@@ -1,7 +1,10 @@
 package com.example.DA2Back.service;
 
 import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
+import com.example.DA2Back.comercio.negocio.IComercio;
 import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.inventario.dato.Inventario;
 import com.example.DA2Back.inventario.dato.ItemInventario;
@@ -10,13 +13,18 @@ import com.example.DA2Back.inventario.negocio.IInventario;
 import com.example.DA2Back.inventario.negocio.ItemInventarioService;
 import com.example.DA2Back.producto.dato.Producto;
 import com.example.DA2Back.producto.negocio.IProductoService;
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +49,9 @@ class ItemInventarioServiceTest {
 
     @Mock
     private IDeposito depositoService;
+
+    @Mock
+    private IComercio comercioService;
 
     @InjectMocks
     private ItemInventarioService itemInventarioService;
@@ -67,6 +78,7 @@ class ItemInventarioServiceTest {
         assertSame(producto, creado.getProducto());
         assertSame(deposito, creado.getDeposito());
         assertEquals(5, creado.getCantidad());
+        assertEquals(5, creado.getStockMinimo());
         verify(itemInventarioRepository).save(creado);
     }
 
@@ -125,6 +137,61 @@ class ItemInventarioServiceTest {
         assertSame(existente, actualizado);
         assertEquals(8, actualizado.getCantidad());
         verify(itemInventarioRepository).save(existente);
+    }
+
+    @Test
+    @DisplayName("Crear combinación existente conserva el stock mínimo actual")
+    void crear_combinacionExistente_conservaStockMinimoActual() {
+        Comercio comercio = comercio(1L);
+        Inventario inventario = inventario(10L, comercio);
+        Producto producto = producto(20L, comercio);
+        Deposito deposito = deposito(30L, comercio);
+        ItemInventario existente = item(100L, inventario, producto, deposito, 10);
+        existente.setStockMinimo(5);
+
+        when(inventarioService.obtenerPorId(10L)).thenReturn(inventario);
+        when(productoService.obtenerPorId(20L)).thenReturn(producto);
+        when(depositoService.obtenerEntidadPorId(30L)).thenReturn(deposito);
+        when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(10L, 20L, 30L))
+                .thenReturn(Optional.of(existente));
+        when(itemInventarioRepository.save(existente)).thenReturn(existente);
+
+        ItemInventario actualizado = itemInventarioService.crear(10L, 20L, 30L, 3, 20);
+
+        assertSame(existente, actualizado);
+        assertEquals(13, actualizado.getCantidad());
+        assertEquals(5, actualizado.getStockMinimo());
+        verify(itemInventarioRepository).save(existente);
+    }
+
+    @Test
+    @DisplayName("Crear item con stock mínimo válido conserva el umbral indicado")
+    void crear_stockMinimoValido_conservaValor() {
+        Comercio comercio = comercio(1L);
+        Inventario inventario = inventario(10L, comercio);
+        Producto producto = producto(20L, comercio);
+        Deposito deposito = deposito(30L, comercio);
+
+        when(inventarioService.obtenerPorId(10L)).thenReturn(inventario);
+        when(productoService.obtenerPorId(20L)).thenReturn(producto);
+        when(depositoService.obtenerEntidadPorId(30L)).thenReturn(deposito);
+        when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(10L, 20L, 30L))
+                .thenReturn(Optional.empty());
+        when(itemInventarioRepository.save(any(ItemInventario.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ItemInventario creado = itemInventarioService.crear(10L, 20L, 30L, 7, 2);
+
+        assertEquals(2, creado.getStockMinimo());
+    }
+
+    @Test
+    @DisplayName("Crear item con stock mínimo negativo es rechazado")
+    void crear_stockMinimoNegativo_rechazado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> itemInventarioService.crear(10L, 20L, 30L, 7, -1));
+
+        verify(itemInventarioRepository, never()).save(any());
     }
 
     @Test
@@ -286,6 +353,202 @@ class ItemInventarioServiceTest {
         verify(itemInventarioRepository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("Item con cantidad mayor al stock mínimo no aparece como stock bajo")
+    void alertasStock_cantidadMayorAlMinimo_noAparece() {
+        when(itemInventarioRepository.findAlertasStock()).thenReturn(List.of());
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(1L, Rol.ADMIN));
+
+        assertEquals(0, alertas.size());
+    }
+
+    @Test
+    @DisplayName("Item con cantidad igual al stock mínimo aparece como stock bajo")
+    void alertasStock_cantidadIgualAlMinimo_aparece() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 5);
+        item.setStockMinimo(5);
+
+        when(itemInventarioRepository.findAlertasStock()).thenReturn(List.of(item));
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(1L, Rol.ADMIN));
+
+        assertEquals(1, alertas.size());
+        assertEquals(100L, alertas.get(0).getId());
+    }
+
+    @Test
+    @DisplayName("Item con cantidad cero aparece como stock bajo")
+    void alertasStock_cantidadCero_aparece() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 0);
+        item.setStockMinimo(5);
+
+        when(itemInventarioRepository.findAlertasStock()).thenReturn(List.of(item));
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(1L, Rol.ADMIN));
+
+        assertEquals(1, alertas.size());
+        assertEquals(0, alertas.get(0).getCantidad());
+    }
+
+    @Test
+    @DisplayName("Configurar stock mínimo negativo es rechazado")
+    void actualizarStockMinimo_negativo_rechazado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> itemInventarioService.actualizarStockMinimo(100L, -1, usuario(1L, Rol.ADMIN)));
+
+        verify(itemInventarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Configurar stock mínimo cero es válido")
+    void actualizarStockMinimo_cero_permitido() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 5);
+
+        when(itemInventarioRepository.findById(100L)).thenReturn(Optional.of(item));
+        when(itemInventarioRepository.save(item)).thenReturn(item);
+
+        ItemInventario actualizado = itemInventarioService.actualizarStockMinimo(
+                100L,
+                0,
+                usuario(1L, Rol.ADMIN)
+        );
+
+        assertEquals(0, actualizado.getStockMinimo());
+        verify(itemInventarioRepository).save(item);
+    }
+
+    @Test
+    @DisplayName("Configurar stock mínimo null es rechazado")
+    void actualizarStockMinimo_null_rechazado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> itemInventarioService.actualizarStockMinimo(100L, null, usuario(1L, Rol.ADMIN)));
+
+        verify(itemInventarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Configurar stock mínimo de item inexistente informa recurso no encontrado")
+    void actualizarStockMinimo_itemInexistente_recursoNoEncontrado() {
+        when(itemInventarioRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class,
+                () -> itemInventarioService.actualizarStockMinimo(999L, 4, usuario(1L, Rol.ADMIN)));
+
+        verify(itemInventarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("COMERCIO no puede modificar stock mínimo de otro comercio")
+    void actualizarStockMinimo_comercioAjeno_rechazado() {
+        ItemInventario item = item(100L, inventario(10L, comercio(2L)),
+                producto(20L, comercio(2L)), deposito(30L, comercio(2L)), 5);
+
+        when(itemInventarioRepository.findById(100L)).thenReturn(Optional.of(item));
+        when(comercioService.obtenerPorUsuarioId(1L)).thenReturn(
+                ComercioResponseDTO.builder().id(1L).usuarioId(1L).build()
+        );
+
+        assertThrows(AccessDeniedException.class,
+                () -> itemInventarioService.actualizarStockMinimo(100L, 4, usuario(1L, Rol.COMERCIO)));
+
+        verify(itemInventarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("COMERCIO puede modificar stock mínimo de su propio comercio")
+    void actualizarStockMinimo_comercioPropio_permitido() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 5);
+
+        when(itemInventarioRepository.findById(100L)).thenReturn(Optional.of(item));
+        when(comercioService.obtenerPorUsuarioId(1L)).thenReturn(
+                ComercioResponseDTO.builder().id(1L).usuarioId(1L).build()
+        );
+        when(itemInventarioRepository.save(item)).thenReturn(item);
+
+        ItemInventario actualizado = itemInventarioService.actualizarStockMinimo(
+                100L,
+                4,
+                usuario(1L, Rol.COMERCIO)
+        );
+
+        assertEquals(4, actualizado.getStockMinimo());
+        verify(itemInventarioRepository).save(item);
+    }
+
+    @Test
+    @DisplayName("DEPOSITO no puede configurar stock mínimo")
+    void actualizarStockMinimo_deposito_rechazado() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 5);
+
+        when(itemInventarioRepository.findById(100L)).thenReturn(Optional.of(item));
+
+        assertThrows(AccessDeniedException.class,
+                () -> itemInventarioService.actualizarStockMinimo(100L, 4, usuario(3L, Rol.DEPOSITO)));
+
+        verify(itemInventarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("COMERCIO consulta solo alertas de su comercio")
+    void obtenerAlertasStock_comercioSoloPropias() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 4);
+
+        when(comercioService.obtenerPorUsuarioId(1L)).thenReturn(
+                ComercioResponseDTO.builder().id(1L).usuarioId(1L).build()
+        );
+        when(itemInventarioRepository.findAlertasStockByComercioId(1L)).thenReturn(List.of(item));
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(1L, Rol.COMERCIO));
+
+        assertEquals(1, alertas.size());
+        verify(itemInventarioRepository).findAlertasStockByComercioId(1L);
+    }
+
+    @Test
+    @DisplayName("DEPOSITO consulta solo alertas de su depósito")
+    void obtenerAlertasStock_depositoSoloPropias() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 4);
+
+        when(depositoService.obtenerPorUsuarioId(3L)).thenReturn(
+                DepositoResponseDTO.builder().id(30L).usuarioId(3L).build()
+        );
+        when(itemInventarioRepository.findAlertasStockByDepositoId(30L)).thenReturn(List.of(item));
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(3L, Rol.DEPOSITO));
+
+        assertEquals(1, alertas.size());
+        verify(itemInventarioRepository).findAlertasStockByDepositoId(30L);
+    }
+
+    @Test
+    @DisplayName("REPARTIDOR no accede a alertas de inventario")
+    void obtenerAlertasStock_repartidor_rechazado() {
+        assertThrows(AccessDeniedException.class,
+                () -> itemInventarioService.obtenerAlertasStock(usuario(4L, Rol.REPARTIDOR)));
+    }
+
+    @Test
+    @DisplayName("ADMIN consulta alertas globales")
+    void obtenerAlertasStock_adminGlobal() {
+        ItemInventario item = item(100L, inventario(10L, comercio(1L)),
+                producto(20L, comercio(1L)), deposito(30L, comercio(1L)), 4);
+
+        when(itemInventarioRepository.findAlertasStock()).thenReturn(List.of(item));
+
+        List<ItemInventario> alertas = itemInventarioService.obtenerAlertasStock(usuario(1L, Rol.ADMIN));
+
+        assertEquals(1, alertas.size());
+        verify(itemInventarioRepository).findAlertasStock();
+    }
+
     private Comercio comercio(Long id) {
         Comercio comercio = new Comercio();
         comercio.setId(id);
@@ -326,6 +589,20 @@ class ItemInventarioServiceTest {
         item.setProducto(producto);
         item.setDeposito(deposito);
         item.setCantidad(cantidad);
+        item.setStockMinimo(5);
         return item;
+    }
+
+    private Usuario usuario(Long id, Rol rol) {
+        return Usuario.builder()
+                .id(id)
+                .email("usuario" + id + "@logired.com")
+                .password("test")
+                .nombre("Usuario")
+                .apellido(rol.name())
+                .DNI("3000000" + id)
+                .telefono("1100000000")
+                .rol(rol)
+                .build();
     }
 }

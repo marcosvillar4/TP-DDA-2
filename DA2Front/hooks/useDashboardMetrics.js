@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   getDepositos,
+  getAlertasStock,
   getInventarioPorComercio,
   getItemsInventario,
   getItemsPorDeposito,
@@ -76,13 +77,14 @@ export function useDashboardMetrics(user) {
 // ─────────────────────────────── ADMIN ───────────────────────────────
 
 async function cargarAdmin(fuente) {
-  const [comercios, depositos, usuarios, pedidos, repartidores, items] = await Promise.all([
+  const [comercios, depositos, usuarios, pedidos, repartidores, items, alertasStock] = await Promise.all([
     fuente("comercios", getComercios(), []),
     fuente("depósitos", getDepositos(), []),
     fuente("usuarios", getUsuariosAdmin(), []),
     fuente("pedidos", getPedidos(), []),
     fuente("repartidores", getRepartidores(), []),
     fuente("inventario", getItemsInventario(), []),
+    fuente("alertas de stock", getAlertasStock(), []),
   ]);
 
   const nombrePorComercio = Object.fromEntries(
@@ -113,7 +115,7 @@ async function cargarAdmin(fuente) {
       pedidos: pedidosConComercio,
       repartidores,
       alertas: construirAlertas({
-        items,
+        alertasStock,
         pedidos,
         usuariosPendientes,
         mostrarComercio: true,
@@ -131,11 +133,12 @@ async function cargarComercio(fuente) {
     return { metrics: {}, data: {} };
   }
 
-  const [pedidos, depositos, productos, inventario] = await Promise.all([
+  const [pedidos, depositos, productos, inventario, alertasStock] = await Promise.all([
     fuente("pedidos", getPedidosPorComercio(comercio.id), []),
     fuente("depósitos", getDepositosPorComercio(comercio.id), []),
     fuente("productos", getProductos({ comercioId: comercio.id }), []),
     fuente("inventario", getInventarioPorComercio(comercio.id), null),
+    fuente("alertas de stock", getAlertasStock(), []),
   ]);
 
   const items = inventario
@@ -155,7 +158,7 @@ async function cargarComercio(fuente) {
     data: {
       comercio,
       pedidos: pedidos.map((p) => ({ ...p, comercioNombre: comercio.nombreComercial })),
-      alertas: construirAlertas({ items, pedidos }),
+      alertas: construirAlertas({ alertasStock, pedidos }),
     },
   };
 }
@@ -170,11 +173,12 @@ async function cargarDeposito(fuente) {
     return { metrics: {}, data: { sinDeposito: true } };
   }
 
-  const [items, pedidos] = await Promise.all([
+  const [items, pedidos, alertasStock] = await Promise.all([
     fuente("inventario del depósito", getItemsPorDeposito(deposito.id), []),
     deposito.comercioId
       ? fuente("pedidos", getPedidosPorComercio(deposito.comercioId), [])
       : Promise.resolve([]),
+    fuente("alertas de stock", getAlertasStock(), []),
   ]);
 
   const porDespachar = pedidos.filter(
@@ -194,7 +198,7 @@ async function cargarDeposito(fuente) {
     data: {
       deposito,
       pedidos: pedidos.map((p) => ({ ...p, comercioNombre: deposito.comercioNombre })),
-      alertas: construirAlertas({ items, pedidos }),
+      alertas: construirAlertas({ alertasStock, pedidos }),
     },
   };
 }
