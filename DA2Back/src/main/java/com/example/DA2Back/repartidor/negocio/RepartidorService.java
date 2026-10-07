@@ -95,7 +95,7 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalStateException("Ya existe un repartidor con la patente indicada");
         }
 
-        Repartidor repartidor = RepartidorMapper.toEntity(dto, usuario);
+        Repartidor repartidor = RepartidorMapper.toEntity(dto, usuario.getId());
         return toResponseDTO(repartidorRepository.save(repartidor));
     }
 
@@ -213,8 +213,15 @@ public class RepartidorService implements IRepartidorService {
     private RepartidorResponseDTO toResponseDTO(Repartidor repartidor) {
         return RepartidorMapper.toResponseDTO(
                 repartidor,
+                buscarUsuario(repartidor.getUsuarioId()),
                 buscarPedidoActual(repartidor.getId())
         );
+    }
+
+    private Usuario buscarUsuario(Long usuarioId) {
+        return usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Usuario con id=" + usuarioId + " no encontrado"));
     }
 
     private PedidoActualDTO buscarPedidoActual(Long repartidorId) {
@@ -232,10 +239,11 @@ public class RepartidorService implements IRepartidorService {
 
     private PedidoResponseDTO toPedidoResponseDTO(Pedido pedido) {
         Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
-        String repartidorNombre = pedido.getRepartidor() != null
-                ? pedido.getRepartidor().getUsuario().getNombre() + " "
-                        + pedido.getRepartidor().getUsuario().getApellido()
-                : null;
+        String repartidorNombre = null;
+        if (pedido.getRepartidor() != null) {
+            Usuario usuario = buscarUsuario(pedido.getRepartidor().getUsuarioId());
+            repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
+        }
 
         return PedidoResponseDTO.builder()
                 .id(pedido.getId())

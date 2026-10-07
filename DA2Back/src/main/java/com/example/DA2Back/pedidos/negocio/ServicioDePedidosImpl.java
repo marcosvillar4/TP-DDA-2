@@ -1,5 +1,7 @@
 package com.example.DA2Back.pedidos.negocio;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedidoRepository;
@@ -40,6 +42,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     private final PedidosRepository pedidosRepository;
     private final RepartidorRepository repartidorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final HistorialEstadoPedidoRepository historialRepository;
     private final ResolverEstadoPedido resolverEstado;
 
@@ -213,10 +216,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     private PedidoResponseDTO toResponseDTO(Pedido pedido) {
         Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
-        String repartidorNombre = pedido.getRepartidor() != null
-                ? pedido.getRepartidor().getUsuario().getNombre() + " "
-                        + pedido.getRepartidor().getUsuario().getApellido()
-                : null;
+        String repartidorNombre = null;
+        if (pedido.getRepartidor() != null) {
+            Usuario usuario = buscarUsuario(pedido.getRepartidor().getUsuarioId());
+            repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
+        }
 
         List<HistorialEstadoDTO> historialDTO = pedido.getHistorial() != null
                 ? pedido.getHistorial().stream()
@@ -240,5 +244,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .repartidorNombre(repartidorNombre)
                 .historial(historialDTO)
                 .build();
+    }
+
+    private Usuario buscarUsuario(Long usuarioId) {
+        return usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Usuario con id=" + usuarioId + " no encontrado"));
     }
 }
