@@ -13,6 +13,7 @@ public class ItemInventarioMapper {
         ItemInventario item = new ItemInventario();
 
         item.setCantidad(dto.getCantidad());
+        item.setStockMinimo(dto.getStockMinimo());
 
         return item;
     }
@@ -27,6 +28,7 @@ public class ItemInventarioMapper {
 
         dto.setId(item.getId());
         dto.setCantidad(item.getCantidad());
+        dto.setStockMinimo(item.getStockMinimo() != null ? item.getStockMinimo() : 5);
 
         if (item.getInventario() != null) {
             dto.setInventarioId(item.getInventario().getId());

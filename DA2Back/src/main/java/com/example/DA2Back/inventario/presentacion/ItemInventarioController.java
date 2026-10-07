@@ -5,12 +5,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.inventario.dato.ItemInventario;
+import com.example.DA2Back.inventario.dto.AlertaStockDTO;
 import com.example.DA2Back.inventario.dto.ItemInventarioCreateDTO;
 import com.example.DA2Back.inventario.dto.ItemInventarioMapper;
 import com.example.DA2Back.inventario.dto.ItemInventarioResponseDTO;
+import com.example.DA2Back.inventario.dto.StockMinimoDTO;
 import com.example.DA2Back.inventario.negocio.IItemInventario;
 
 @RestController
@@ -35,6 +39,19 @@ public class ItemInventarioController {
                         .collect(Collectors.toList());
 
         return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/alertas-stock")
+    public ResponseEntity<List<AlertaStockDTO>> obtenerAlertasStock(
+            @AuthenticationPrincipal Usuario usuario) {
+
+        List<AlertaStockDTO> alertas =
+                itemInventarioService.obtenerAlertasStock(usuario)
+                        .stream()
+                        .map(this::toAlertaStockDTO)
+                        .collect(Collectors.toList());
+
+        return ResponseEntity.ok(alertas);
     }
 
     @GetMapping("/{id}")
@@ -96,12 +113,13 @@ public class ItemInventarioController {
             @RequestBody ItemInventarioCreateDTO dto) {
 
         ItemInventario creado =
-        itemInventarioService.crear(
-                dto.getInventarioId(),
-                dto.getProductoId(),
-                dto.getDepositoId(),
-                dto.getCantidad()
-        );
+                itemInventarioService.crear(
+                        dto.getInventarioId(),
+                        dto.getProductoId(),
+                        dto.getDepositoId(),
+                        dto.getCantidad(),
+                        dto.getStockMinimo()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -124,6 +142,24 @@ public class ItemInventarioController {
         );
     }
 
+    @PatchMapping("/{id}/stock-minimo")
+    public ResponseEntity<ItemInventarioResponseDTO> actualizarStockMinimo(
+            @PathVariable Long id,
+            @RequestBody StockMinimoDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        ItemInventario actualizado =
+                itemInventarioService.actualizarStockMinimo(
+                        id,
+                        dto != null ? dto.getStockMinimo() : null,
+                        usuario
+                );
+
+        return ResponseEntity.ok(
+                ItemInventarioMapper.toResponseDTO(actualizado)
+        );
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id) {
@@ -132,7 +168,8 @@ public class ItemInventarioController {
 
         return ResponseEntity.noContent().build();
     }
-        @PutMapping("/{id}")
+
+    @PutMapping("/{id}")
     public ResponseEntity<ItemInventarioResponseDTO> actualizar(
             @PathVariable Long id,
             @RequestBody ItemInventarioCreateDTO dto) {
@@ -148,5 +185,24 @@ public class ItemInventarioController {
         return ResponseEntity.ok(
                 ItemInventarioMapper.toResponseDTO(actualizado)
         );
+    }
+
+    private AlertaStockDTO toAlertaStockDTO(ItemInventario item) {
+        return AlertaStockDTO.builder()
+                .itemInventarioId(item.getId())
+                .productoId(item.getProducto() != null ? item.getProducto().getId() : null)
+                .productoNombre(item.getProducto() != null ? item.getProducto().getNombre() : null)
+                .productoSku(item.getProducto() != null ? item.getProducto().getSku() : null)
+                .depositoId(item.getDeposito() != null ? item.getDeposito().getId() : null)
+                .depositoNombre(item.getDeposito() != null ? item.getDeposito().getNombre() : null)
+                .comercioId(item.getInventario() != null && item.getInventario().getComercio() != null
+                        ? item.getInventario().getComercio().getId()
+                        : null)
+                .comercioNombre(item.getInventario() != null && item.getInventario().getComercio() != null
+                        ? item.getInventario().getComercio().getNombreComercial()
+                        : null)
+                .cantidad(item.getCantidad())
+                .stockMinimo(item.getStockMinimo() != null ? item.getStockMinimo() : 5)
+                .build();
     }
 }

@@ -42,6 +42,10 @@ export function getItemsInventario() {
   return request("/items-inventario");
 }
 
+export function getAlertasStock() {
+  return request("/items-inventario/alertas-stock");
+}
+
 export function getItemsPorDeposito(depositoId) {
   return request(`/items-inventario/deposito/${depositoId}`);
 }
@@ -66,6 +70,13 @@ export function actualizarItemInventario(id, { productoId, depositoId, cantidad 
   return request(`/items-inventario/${id}`, {
     method: "PUT",
     body: JSON.stringify({ productoId, depositoId, cantidad }),
+  });
+}
+
+export function actualizarStockMinimo(id, stockMinimo) {
+  return request(`/items-inventario/${id}/stock-minimo`, {
+    method: "PATCH",
+    body: JSON.stringify({ stockMinimo }),
   });
 }
 

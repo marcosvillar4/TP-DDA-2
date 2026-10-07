@@ -1,5 +1,6 @@
 package com.example.DA2Back.inventario.negocio;
 
+import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.inventario.dato.ItemInventario;
 
 import java.util.List;
@@ -16,13 +17,25 @@ public interface IItemInventario {
     List<ItemInventario> obtenerPorProducto(Long productoId);
 
     ItemInventario crear(
-    Long inventarioId,
-    Long productoId,
-    Long depositoId,
-    Integer cantidad
-);
+            Long inventarioId,
+            Long productoId,
+            Long depositoId,
+            Integer cantidad
+    );
+
+    ItemInventario crear(
+            Long inventarioId,
+            Long productoId,
+            Long depositoId,
+            Integer cantidad,
+            Integer stockMinimo
+    );
 
     ItemInventario actualizarCantidad(Long id, Integer cantidad);
+
+    ItemInventario actualizarStockMinimo(Long id, Integer stockMinimo, Usuario usuario);
+
+    List<ItemInventario> obtenerAlertasStock(Usuario usuario);
 
     /** Edita producto, depósito y cantidad de un ítem existente. */
     ItemInventario actualizar(Long id, Long productoId, Long depositoId, Integer cantidad);
