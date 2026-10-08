@@ -5,10 +5,10 @@ import com.example.DA2Back.pedidos.dato.Pedido;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EstadoAsignado implements IEstadoPedido {
+public class EstadoCreado implements IEstadoPedido {
     @Override
-    public void marcarRetirado(Pedido pedido) {
-        pedido.setEstado(EstadoPedido.RETIRADO);
+    public void marcarListoParaRetirar(Pedido pedido) {
+        pedido.setEstado(EstadoPedido.LISTO_PARA_RETIRAR);
     }
 
     @Override

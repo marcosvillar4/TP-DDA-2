@@ -42,3 +42,15 @@ export function cancelarPedido(pedidoId) {
     method: "DELETE",
   });
 }
+
+export function marcarListoParaRetirar(pedidoId) {
+  return request(`/api/pedidos/${pedidoId}/listo-para-retirar`, {
+    method: "PATCH",
+  });
+}
+
+export function marcarRetirado(pedidoId) {
+  return request(`/api/pedidos/${pedidoId}/retirar`, {
+    method: "PATCH",
+  });
+}

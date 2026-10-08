@@ -186,7 +186,7 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosAsignables() {
-        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.PENDIENTE_COTIZACION)
+        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.LISTO_PARA_RETIRAR)
                 .stream()
                 .map(this::toPedidoResponseDTO)
                 .toList();
@@ -291,3 +291,4 @@ public class RepartidorService implements IRepartidorService {
         return valor.trim();
     }
 }
+

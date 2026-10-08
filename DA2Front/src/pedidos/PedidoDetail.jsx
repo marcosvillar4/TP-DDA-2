@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle } from 'lucide-react';
-import { getPedidoById, cancelarPedido, iniciarViajePedido, entregarPedido } from '../../api/pedidosApi';
+import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle, PackageCheck, PackageOpen } from 'lucide-react';
+import { getPedidoById, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
+import { getDepositoPorId } from '../../api/depositosApi';
 import BadgeEstado from './components/BadgeEstado';
 import StepperHistorial from './components/StepperHistorial';
 import './styles/PedidoDetail.css';
@@ -14,14 +15,30 @@ export default function PedidoDetail() {
   
   const [pedido, setPedido] = useState(null);
   const [comercioNombre, setComercioNombre] = useState('');
+  const [depositoNombre, setDepositoNombre] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchPedido = () => {
-    Promise.all([getPedidoById(id), getComercios()])
-      .then(([pedidoData, comerciosData]) => {
+    getPedidoById(id)
+      .then(async (pedidoData) => {
         setPedido(pedidoData);
-        const comercio = comerciosData.find(c => c.id === pedidoData.comercioId);
-        setComercioNombre(comercio ? comercio.nombreComercial : `Comercio ${pedidoData.comercioId}`);
+        
+        try {
+          const comerciosData = await getComercios();
+          const comercio = comerciosData.find(c => c.id === pedidoData.comercioId);
+          setComercioNombre(comercio ? comercio.nombreComercial : `Comercio ${pedidoData.comercioId}`);
+        } catch (e) {
+          console.error("Error fetching comercio", e);
+        }
+
+        if (pedidoData.depositoId) {
+          try {
+            const depositoData = await getDepositoPorId(pedidoData.depositoId);
+            setDepositoNombre(`${depositoData.nombreDeposito} (${depositoData.direccion})`);
+          } catch (e) {
+            console.error("Error fetching deposito", e);
+          }
+        }
       })
       .catch(err => {
         console.error(err);
@@ -46,7 +63,7 @@ export default function PedidoDetail() {
       });
       if (result.isConfirmed) {
         await actionFn(id);
-        Swal.fire('Éxito', `El pedido ha sido actualizado`, 'success');
+        Swal.fire('¡Éxito!', `El pedido ha sido actualizado`, 'success');
         fetchPedido();
       }
     } catch (err) {
@@ -80,7 +97,7 @@ export default function PedidoDetail() {
 
       if (repartidorId) {
         await asignarRepartidor(id, repartidorId);
-        Swal.fire('Éxito', 'Repartidor asignado', 'success');
+        Swal.fire('¡Éxito!', 'Repartidor asignado', 'success');
         fetchPedido();
       }
     } catch (err) {
@@ -113,22 +130,38 @@ export default function PedidoDetail() {
           <BadgeEstado estado={pedido.estado} />
         </div>
         <div className="pedido-detail-actions" style={{display: 'flex', gap: '0.5rem'}}>
-          {pedido.estado === 'PENDIENTE_COTIZACION' && (
+          
+          {pedido.estado === 'CREADO' && (
+            <button className="pedido-btn-asignar" onClick={() => handleAction(marcarListoParaRetirar, 'Marcar Listo')} style={{backgroundColor: 'var(--color-orange)', color: 'white', border: 'none'}}>
+              <PackageCheck size={16} /> Marcar Listo Para Retirar
+            </button>
+          )}
+
+          {pedido.estado === 'LISTO_PARA_RETIRAR' && (
             <button className="pedido-btn-asignar" onClick={handleAsignarRepartidor}>
               <UserPlus size={16} /> Asignar repartidor
             </button>
           )}
+
           {pedido.estado === 'ASIGNADO' && (
+            <button className="pedido-btn-asignar" onClick={() => handleAction(marcarRetirado, 'Marcar Retirado')} style={{backgroundColor: 'var(--color-violet)', color: 'white', border: 'none'}}>
+              <PackageOpen size={16} /> Marcar Retirado
+            </button>
+          )}
+
+          {pedido.estado === 'RETIRADO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(iniciarViajePedido, 'Iniciar Viaje')} style={{backgroundColor: 'var(--color-blue)', color: 'white', border: 'none'}}>
               <Truck size={16} /> Iniciar Viaje
             </button>
           )}
+
           {pedido.estado === 'EN_CAMINO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(entregarPedido, 'Entrega')} style={{backgroundColor: 'var(--color-green)', color: 'white', border: 'none'}}>
               <CheckCircle size={16} /> Marcar Entregado
             </button>
           )}
-          {['PENDIENTE_COTIZACION', 'ASIGNADO', 'EN_CAMINO'].includes(pedido.estado) && (
+
+          {['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO'].includes(pedido.estado) && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(cancelarPedido, 'Cancelación')} style={{borderColor: 'var(--color-red)', color: 'var(--color-red)'}}>
               <XCircle size={16} /> Cancelar
             </button>
@@ -147,6 +180,10 @@ export default function PedidoDetail() {
                 <span className="info-value">{comercioNombre}</span>
               </div>
               <div className="info-block">
+                <span className="info-label">DEPÓSITO (ORIGEN)</span>
+                <span className="info-value">{depositoNombre || "No especificado"}</span>
+              </div>
+              <div className="info-block">
                 <span className="info-label">DIRECCIÓN DE ORIGEN</span>
                 <span className="info-value">{pedido.direccionOrigen || "No especificada"}</span>
               </div>
@@ -163,6 +200,30 @@ export default function PedidoDetail() {
                 <span className="info-value">{pedido.repartidorNombre || "Sin asignar"}</span>
               </div>
             </div>
+          </div>
+
+          <div className="pedido-card" style={{ marginTop: '1.5rem' }}>
+            <h3 className="pedido-card-title">Productos del Pedido</h3>
+            {pedido.detalles && pedido.detalles.length > 0 ? (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '1px solid var(--color-slate-200)' }}>Producto</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid var(--color-slate-200)' }}>Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedido.detalles.map(d => (
+                    <tr key={d.id}>
+                      <td style={{ padding: '0.5rem', borderBottom: '1px solid var(--color-slate-100)' }}>{d.productoNombre}</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid var(--color-slate-100)' }}>{d.cantidad}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-slate-500)' }}>Este pedido no tiene productos registrados.</p>
+            )}
           </div>
 
         </div>

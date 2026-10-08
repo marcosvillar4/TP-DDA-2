@@ -6,7 +6,7 @@ import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
 import './styles/SeguimientoPage.css';
 
-const STEPS_ORDER = ['PENDIENTE_COTIZACION', 'ASIGNADO', 'EN_CAMINO', 'ENTREGADO'];
+const STEPS_ORDER = ['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO', 'ENTREGADO'];
 
 export default function SeguimientoPage() {
   const { id } = useParams();
@@ -59,10 +59,12 @@ export default function SeguimientoPage() {
     if (currentStepIndex < 1) currentStepIndex = 1;
 
     switch (pedido.estado) {
-      case 'PENDIENTE_COTIZACION': statusColorClass = 'status-amber'; break;
+      case 'CREADO': statusColorClass = 'status-amber'; break;
+      case 'LISTO_PARA_RETIRAR': statusColorClass = 'status-orange'; break;
       case 'EN_CAMINO': statusColorClass = 'status-violet'; break;
       case 'ENTREGADO': statusColorClass = 'status-green'; break;
       case 'ASIGNADO': statusColorClass = 'status-blue'; break;
+      case 'RETIRADO': statusColorClass = 'status-violet'; break;
       case 'CANCELADO': statusColorClass = 'status-red'; break;
       default: statusColorClass = 'status-navy';
     }
@@ -167,7 +169,7 @@ export default function SeguimientoPage() {
             )}
             {pedido.estado !== 'CANCELADO' && (
               <div className="status-progress-labels">
-                <span>PENDIENTE_COTIZACION</span>
+                <span>Creado</span>
                 <span>Entregado</span>
               </div>
             )}
@@ -246,6 +248,8 @@ export default function SeguimientoPage() {
     </div>
   );
 }
+
+
 
 
 

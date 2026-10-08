@@ -1,18 +1,22 @@
 import '../styles/BadgeEstado.css';
 
 const config = {
+  'CREADO': 'badge-amber',
+  'LISTO_PARA_RETIRAR': 'badge-orange',
+  'ASIGNADO': 'badge-blue',
+  'RETIRADO': 'badge-violet',
   'EN_CAMINO': 'badge-violet',
   'ENTREGADO': 'badge-green',
-  'PENDIENTE_COTIZACION': 'badge-amber',
-  'ASIGNADO': 'badge-blue',
   'CANCELADO': 'badge-red'
 };
 
 const labels = {
-  'EN_CAMINO': 'En tránsito',
-  'ENTREGADO': 'Entregado',
-  'PENDIENTE_COTIZACION': 'Pendiente',
+  'CREADO': 'Creado',
+  'LISTO_PARA_RETIRAR': 'Listo para Retirar',
   'ASIGNADO': 'Asignado',
+  'RETIRADO': 'Retirado',
+  'EN_CAMINO': 'En Camino',
+  'ENTREGADO': 'Entregado',
   'CANCELADO': 'Cancelado'
 };
 

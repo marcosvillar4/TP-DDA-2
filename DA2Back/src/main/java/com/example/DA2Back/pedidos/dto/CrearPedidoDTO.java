@@ -14,6 +14,8 @@ import lombok.Setter;
 public class CrearPedidoDTO {
 
     private Long comercioId;
+    private Long depositoId;
     private String direccionDestino;
     private String direccionOrigen;
+    private java.util.List<DetallePedidoDTO> detalles;
 }

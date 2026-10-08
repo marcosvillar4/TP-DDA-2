@@ -3,6 +3,15 @@ package com.example.DA2Back.pedidos.negocio;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedidoRepository;
+import com.example.DA2Back.inventario.dato.Inventario;
+import com.example.DA2Back.inventario.dato.ItemInventario;
+import com.example.DA2Back.inventario.dato.ItemInventarioRepository;
+import com.example.DA2Back.inventario.negocio.IInventario;
+import com.example.DA2Back.pedidos.dato.DetallePedido;
+import com.example.DA2Back.pedidos.dto.DetallePedidoResponseDTO;
+import com.example.DA2Back.producto.dato.Producto;
+import com.example.DA2Back.producto.dato.ProductoRepository;
+import com.example.DA2Back.pedidos.dto.DetallePedidoDTO;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
@@ -38,28 +47,58 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private static final List<EstadoPedido> ESTADOS_ACTIVOS =
             List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO);
 
-    private final PedidosRepository pedidosRepository;
+        private final PedidosRepository pedidosRepository;
     private final RepartidorRepository repartidorRepository;
     private final HistorialEstadoPedidoRepository historialRepository;
     private final ResolverEstadoPedido resolverEstado;
+    private final IInventario inventarioService;
+    private final ItemInventarioRepository itemInventarioRepository;
+    private final ProductoRepository productoRepository;
 
     // -------------------------------------------------------------------------
     // Creación
     // -------------------------------------------------------------------------
 
-    @Override
+        @Override
     @Transactional
     public PedidoResponseDTO crearPedido(CrearPedidoDTO dto) {
         Pedido pedido = Pedido.builder()
                 .comercioId(dto.getComercioId())
+                .depositoId(dto.getDepositoId())
                 .direccionDestino(dto.getDireccionDestino())
                 .direccionOrigen(dto.getDireccionOrigen())
                 .fechaCreacion(LocalDateTime.now())
-                .estado(EstadoPedido.PENDIENTE_COTIZACION)
+                .estado(EstadoPedido.CREADO)
                 .build();
 
+        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
+            Inventario inv = inventarioService.obtenerPorComercio(dto.getComercioId());
+            for (DetallePedidoDTO d : dto.getDetalles()) {
+                Producto prod = productoRepository.findById(d.getProductoId())
+                        .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + d.getProductoId()));
+
+                ItemInventario item = itemInventarioRepository
+                        .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
+                        .orElseThrow(() -> new IllegalStateException("El producto " + prod.getNombre() + " no esta en el deposito seleccionado"));
+
+                if (item.getCantidad() < d.getCantidad()) {
+                    throw new IllegalStateException("Stock insuficiente para el producto: " + prod.getNombre());
+                }
+
+                item.setCantidad(item.getCantidad() - d.getCantidad());
+                itemInventarioRepository.save(item);
+
+                DetallePedido detalle = DetallePedido.builder()
+                        .pedido(pedido)
+                        .producto(prod)
+                        .cantidad(d.getCantidad())
+                        .build();
+                pedido.getDetalles().add(detalle);
+            }
+        }
+
         Pedido guardado = pedidosRepository.save(pedido);
-        registrarHistorial(guardado, EstadoPedido.PENDIENTE_COTIZACION);
+        registrarHistorial(guardado, EstadoPedido.CREADO);
         return toResponseDTO(guardado);
     }
 
@@ -100,7 +139,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarPendientesAsignables() {
-        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.PENDIENTE_COTIZACION).stream()
+        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.LISTO_PARA_RETIRAR).stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -115,6 +154,16 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
      * Este es el punto único de asignación — RepartidorService debe
      * llamar aquí en lugar de mutar el pedido directamente.
      */
+        @Override
+    @Transactional
+    public PedidoResponseDTO marcarListoParaRetirar(Long id) {
+        Pedido pedido = buscarPedido(id);
+        resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
+        return toResponseDTO(pedido);
+    }
+
     @Override
     @Transactional
     public PedidoResponseDTO asignarRepartidor(Long pedidoId, Long repartidorId) {
@@ -135,6 +184,16 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     /**
      * El repartidor inicia el viaje: ASIGNADO → EN_CAMINO.
      */
+        @Override
+    @Transactional
+    public PedidoResponseDTO marcarRetirado(Long id) {
+        Pedido pedido = buscarPedido(id);
+        resolverEstado.resolver(pedido.getEstado()).marcarRetirado(pedido);
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.RETIRADO);
+        return toResponseDTO(pedido);
+    }
+
     @Override
     @Transactional
     public PedidoResponseDTO iniciarViaje(Long id) {
@@ -211,7 +270,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         }
     }
 
-    private PedidoResponseDTO toResponseDTO(Pedido pedido) {
+        private PedidoResponseDTO toResponseDTO(Pedido pedido) {
         Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
         String repartidorNombre = pedido.getRepartidor() != null
                 ? pedido.getRepartidor().getUsuario().getNombre() + " "
@@ -229,9 +288,21 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                     .collect(Collectors.toList())
                 : new ArrayList<>();
 
+        List<DetallePedidoResponseDTO> detallesDTO = pedido.getDetalles() != null
+                ? pedido.getDetalles().stream()
+                    .map(d -> DetallePedidoResponseDTO.builder()
+                        .id(d.getId())
+                        .productoId(d.getProducto().getId())
+                        .productoNombre(d.getProducto().getNombre())
+                        .cantidad(d.getCantidad())
+                        .build())
+                    .collect(Collectors.toList())
+                : new ArrayList<>();
+
         return PedidoResponseDTO.builder()
                 .id(pedido.getId())
                 .comercioId(pedido.getComercioId())
+                .depositoId(pedido.getDepositoId())
                 .direccionDestino(pedido.getDireccionDestino())
                 .direccionOrigen(pedido.getDireccionOrigen())
                 .fechaCreacion(pedido.getFechaCreacion())
@@ -239,6 +310,10 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .repartidorId(repartidorId)
                 .repartidorNombre(repartidorNombre)
                 .historial(historialDTO)
+                .detalles(detallesDTO)
                 .build();
     }
 }
+
+
+

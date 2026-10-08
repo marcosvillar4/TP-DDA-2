@@ -168,6 +168,7 @@ class LogiRedIntegrationTest {
         String body = String.format("""
                 {
                   "comercioId": %d,
+                  "depositoId": 1,
                   "direccionDestino": "Av. Rivadavia 5000, CABA"
                 }
                 """, COMERCIO_ID);
@@ -179,7 +180,7 @@ class LogiRedIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.comercioId", is(COMERCIO_ID.intValue())))
-                .andExpect(jsonPath("$.estado", is("PENDIENTE_COTIZACION")))
+                .andExpect(jsonPath("$.estado", is("CREADO")))
                 .andReturn();
 
         pedidoId = objectMapper.readTree(result.getResponse().getContentAsString())
@@ -209,7 +210,7 @@ class LogiRedIntegrationTest {
                         .header("Authorization", "Bearer " + tokenJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(pedidoId.intValue())))
-                .andExpect(jsonPath("$.estado", is("PENDIENTE_COTIZACION")));
+                .andExpect(jsonPath("$.estado", is("CREADO")));
     }
 
     @Test
@@ -226,14 +227,14 @@ class LogiRedIntegrationTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/pedidos/estado/PENDIENTE_COTIZACION filtra por estado")
+    @DisplayName("GET /api/pedidos/estado/CREADO filtra por estado")
     void listarPorEstado_devuelve200() throws Exception {
         assertNotNull(tokenJwt);
 
-        mockMvc.perform(get("/api/pedidos/estado/PENDIENTE_COTIZACION")
+        mockMvc.perform(get("/api/pedidos/estado/CREADO")
                         .header("Authorization", "Bearer " + tokenJwt))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].estado", is("PENDIENTE_COTIZACION")));
+                .andExpect(jsonPath("$[0].estado", is("CREADO")));
     }
 
         @Test
@@ -265,3 +266,4 @@ class LogiRedIntegrationTest {
                 .andExpect(status().isConflict());
     }
 }
+

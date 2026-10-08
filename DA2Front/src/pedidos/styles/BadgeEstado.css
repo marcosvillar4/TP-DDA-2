@@ -47,3 +47,8 @@
   background-color: var(--color-slate-100);
   color: var(--color-slate-600);
 }
+
+.badge-orange {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+}

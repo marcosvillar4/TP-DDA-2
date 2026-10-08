@@ -100,7 +100,7 @@ class RepartidorServiceTest {
                 .id(50L)
                 .comercioId(100L)
                 .direccionDestino("Av. Corrientes 1234")
-                .estado(EstadoPedido.PENDIENTE_COTIZACION)
+                .estado(EstadoPedido.CREADO)
                 .build();
     }
 
@@ -383,6 +383,7 @@ class RepartidorServiceTest {
                 .build();
     }
 }
+
 
 
 

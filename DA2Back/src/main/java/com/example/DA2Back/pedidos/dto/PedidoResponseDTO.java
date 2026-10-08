@@ -18,6 +18,7 @@ public class PedidoResponseDTO {
 
     private Long id;
     private Long comercioId;
+    private Long depositoId;
     private String direccionDestino;
     private String direccionOrigen;
     private java.time.LocalDateTime fechaCreacion;
@@ -25,4 +26,5 @@ public class PedidoResponseDTO {
     private Long repartidorId;
     private String repartidorNombre;
     private java.util.List<HistorialEstadoDTO> historial;
+    private java.util.List<DetallePedidoResponseDTO> detalles;
 }

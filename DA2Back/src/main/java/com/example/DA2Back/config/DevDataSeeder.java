@@ -10,9 +10,14 @@ import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.inventario.dato.Inventario;
 import com.example.DA2Back.inventario.dato.InventarioRepository;
+import com.example.DA2Back.inventario.dato.ItemInventario;
+import com.example.DA2Back.inventario.dato.ItemInventarioRepository;
 import com.example.DA2Back.producto.dato.EstadoProducto;
 import com.example.DA2Back.producto.dato.Producto;
 import com.example.DA2Back.producto.dato.ProductoRepository;
+import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
+import com.example.DA2Back.repartidor.dato.Repartidor;
+import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -32,14 +37,14 @@ public class DevDataSeeder implements CommandLineRunner {
     private final DepositoRepository depositoRepository;
     private final ProductoRepository productoRepository;
     private final InventarioRepository inventarioRepository;
+    private final ItemInventarioRepository itemInventarioRepository;
+    private final RepartidorRepository repartidorRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
         if (comercioRepository.count() == 0) {
-
-            // Usuario dueño de Urban Shoes
             Usuario uComercio1 = usuarioRepository.save(Usuario.builder()
                     .email("urbanshoes@da2back.com")
                     .password(passwordEncoder.encode("admin123"))
@@ -61,35 +66,10 @@ public class DevDataSeeder implements CommandLineRunner {
                     .usuarioId(uComercio1.getId())
                     .build());
 
-            // Usuario dueño de ElectroTech
-            Usuario uComercio2 = usuarioRepository.save(Usuario.builder()
-                    .email("electrotech@da2back.com")
-                    .password(passwordEncoder.encode("admin123"))
-                    .nombre("Electro")
-                    .apellido("Tech")
-                    .DNI("20333444")
-                    .telefono("+54 11 4822-1100")
-                    .rol(Rol.COMERCIO)
-                    .estado(EstadoUsuario.VALIDADO)
-                    .build());
-
-            Comercio c2 = comercioRepository.save(Comercio.builder()
-                    .nombreComercial("ElectroTech Store")
-                    .razonSocial("ElectroTech S.R.L.")
-                    .direccion("Av. Santa Fe 2500, CABA")
-                    .CUIT("30-75558889-1")
-                    .telefono("+54 11 4822-1100")
-                    .email("ventas@electrotech.com")
-                    .usuarioId(uComercio2.getId())
-                    .build());
-
-            log.info("Comercios de prueba sembrados: {}, {}", c1.getNombreComercial(), c2.getNombreComercial());
-
-            // Usuario para depósito 1
             Usuario uDep1 = usuarioRepository.save(Usuario.builder()
                     .email("deposito.central@da2back.com")
                     .password(passwordEncoder.encode("admin123"))
-                    .nombre("Depósito")
+                    .nombre("Deposito")
                     .apellido("Central")
                     .DNI("20555666")
                     .telefono("+54 11 4000-0001")
@@ -98,72 +78,46 @@ public class DevDataSeeder implements CommandLineRunner {
                     .build());
 
             Deposito d1 = new Deposito();
-            d1.setNombre("Depósito Central Almagro");
+            d1.setNombre("Deposito Central Almagro");
             d1.setDireccion("Castro Barros 450, CABA");
             d1.setComercio(c1);
             d1.setUsuarioId(uDep1.getId());
             depositoRepository.save(d1);
 
-            // Usuario para depósito 2
-            Usuario uDep2 = usuarioRepository.save(Usuario.builder()
-                    .email("deposito.norte@da2back.com")
-                    .password(passwordEncoder.encode("admin123"))
-                    .nombre("Depósito")
-                    .apellido("Norte")
-                    .DNI("20777888")
-                    .telefono("+54 11 4000-0002")
-                    .rol(Rol.DEPOSITO)
-                    .estado(EstadoUsuario.VALIDADO)
-                    .build());
-
-            Deposito d2 = new Deposito();
-            d2.setNombre("Depósito Norte Belgrano");
-            d2.setDireccion("Juramento 1800, CABA");
-            d2.setComercio(c1);
-            d2.setUsuarioId(uDep2.getId());
-            depositoRepository.save(d2);
-
-            log.info("Depósitos sembrados para {}", c1.getNombreComercial());
-
-            Producto p1 = new Producto(
-                    null,
-                    "US-001",
-                    "Zapatillas Running X",
-                    "Calzado deportivo talle 42",
-                    "Calzado",
-                    EstadoProducto.ACTIVO,
-                    c1
-            );
-            Producto p2 = new Producto(
-                    null,
-                    "US-002",
-                    "Mochila Urbana Tech",
-                    "Mochila impermeable porta notebook",
-                    "Accesorios",
-                    EstadoProducto.ACTIVO,
-                    c1
-            );
-            Producto p3 = new Producto(
-                    null,
-                    "ET-001",
-                    "Auriculares Bluetooth Pro",
-                    "Cancelación de ruido activa",
-                    "Electrónica",
-                    EstadoProducto.ACTIVO,
-                    c2
-            );
-
+            Producto p1 = new Producto(null, "US-001", "Zapatillas Running X", "Calzado deportivo", "Calzado", EstadoProducto.ACTIVO, c1);
             productoRepository.save(p1);
-            productoRepository.save(p2);
-            productoRepository.save(p3);
-
-            log.info("Productos de prueba sembrados");
 
             Inventario inv = new Inventario();
             inv.setComercio(c1);
             inventarioRepository.save(inv);
 
-            log.info("Inventario sembrado para {}", c1.getNombreComercial());
+            ItemInventario item1 = new ItemInventario();
+            item1.setInventario(inv);
+            item1.setProducto(p1);
+            item1.setDeposito(d1);
+            item1.setCantidad(50);
+            itemInventarioRepository.save(item1);
+
+            Usuario uRepartidor = usuarioRepository.save(Usuario.builder()
+                    .email("repartidor@da2back.com")
+                    .password(passwordEncoder.encode("admin123"))
+                    .nombre("Juan")
+                    .apellido("Perez")
+                    .DNI("30123456")
+                    .telefono("+54 11 5555-4444")
+                    .rol(Rol.REPARTIDOR)
+                    .estado(EstadoUsuario.VALIDADO)
+                    .build());
+
+            Repartidor rep = new Repartidor();
+            rep.setPatente("AB123CD");
+            rep.setZona("Capital Federal");
+            rep.setEstado(EstadoRepartidor.DISPONIBLE);
+            rep.setUsuario(uRepartidor);
+            rep.setActivo(true);
+            repartidorRepository.save(rep);
+
+            log.info("Datos sembrados");
         }
     }
 }

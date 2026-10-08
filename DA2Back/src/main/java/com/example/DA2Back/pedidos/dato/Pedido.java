@@ -40,6 +40,9 @@ public class Pedido {
     @Column(name = "comercio_id", nullable = false)
     private Long comercioId;
 
+    @Column(name = "deposito_id", nullable = false)
+    private Long depositoId;
+
     @Column(name = "direccion_destino", nullable = false)
     private String direccionDestino;
 
@@ -60,4 +63,8 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private java.util.List<HistorialEstadoPedido> historial = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<DetallePedido> detalles = new java.util.ArrayList<>();
 }

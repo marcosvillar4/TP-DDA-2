@@ -40,7 +40,7 @@ class PedidosRestControllerTest {
                 .id(1L)
                 .comercioId(100L)
                 .direccionDestino("Av. Corrientes 1234")
-                .estado(EstadoPedido.PENDIENTE_COTIZACION)
+                .estado(EstadoPedido.CREADO)
                 .build();
     }
 
@@ -60,7 +60,7 @@ class PedidosRestControllerTest {
         assertNotNull(respuesta.getBody());
         assertEquals(1L, respuesta.getBody().getId());
         assertEquals(100L, respuesta.getBody().getComercioId());
-        assertEquals(EstadoPedido.PENDIENTE_COTIZACION, respuesta.getBody().getEstado());
+        assertEquals(EstadoPedido.CREADO, respuesta.getBody().getEstado());
 
         verify(servicioDePedidos, times(1)).crearPedido(any(CrearPedidoDTO.class));
     }
@@ -115,18 +115,18 @@ class PedidosRestControllerTest {
     @Test
     @DisplayName("GET /api/pedidos/estado/{estado} debe retornar pedidos por estado")
     void testListarPorEstado() {
-        when(servicioDePedidos.listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION))
+        when(servicioDePedidos.listarPorEstado(EstadoPedido.CREADO))
                 .thenReturn(List.of(responseDTO));
 
         ResponseEntity<List<PedidoResponseDTO>> respuesta =
-                controller.listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION);
+                controller.listarPorEstado(EstadoPedido.CREADO);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
-        assertEquals(EstadoPedido.PENDIENTE_COTIZACION, respuesta.getBody().get(0).getEstado());
+        assertEquals(EstadoPedido.CREADO, respuesta.getBody().get(0).getEstado());
 
-        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.PENDIENTE_COTIZACION);
+        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.CREADO);
     }
 
     @Test
@@ -173,3 +173,4 @@ class PedidosRestControllerTest {
         verify(servicioDePedidos, times(1)).cancelar(1L);
     }
 }
+
