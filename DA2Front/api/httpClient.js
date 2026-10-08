@@ -32,7 +32,9 @@ export async function request(path, options = {}) {
     } catch {
       // La respuesta no trae un cuerpo JSON con detalle del error.
     }
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
 
   const text = await response.text();
