@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class RepartidorService implements IRepartidorService {
 
     private static final List<EstadoPedido> ESTADOS_PEDIDO_ACTIVO =
-            List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO);
+            List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO);
 
     private static final List<EstadoPedido> ESTADOS_PEDIDO_FINALIZADO =
             List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO);
@@ -265,7 +265,7 @@ public class RepartidorService implements IRepartidorService {
     private void validarCambioEstadoManual(Repartidor repartidor, EstadoRepartidor nuevoEstado) {
         if (nuevoEstado == EstadoRepartidor.EN_ENTREGA) {
             throw new IllegalStateException(
-                    "El estado EN_ENTREGA se asigna automáticamente al asociar un pedido activo");
+                    "El estado EN_ENTREGA se asigna automáticamente cuando el repartidor retira o inicia el viaje del pedido");
         }
 
         validarSinPedidoActivo(repartidor);

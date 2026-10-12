@@ -123,6 +123,24 @@ public class SecurityConfig {
     .requestMatchers(HttpMethod.PATCH, "/items-inventario/*/stock-minimo")
         .hasAnyRole("ADMIN", "COMERCIO")
 
+    // Pedidos
+    .requestMatchers(HttpMethod.POST, "/api/pedidos")
+        .hasAnyRole("COMERCIO", "ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/listo-para-retirar")
+        .hasAnyRole("DEPOSITO", "COMERCIO", "ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/asignar/*")
+        .hasAnyRole("REPARTIDOR", "ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/retirar")
+        .hasAnyRole("REPARTIDOR", "ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/iniciar-viaje")
+        .hasAnyRole("REPARTIDOR", "ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/entregar")
+        .hasAnyRole("REPARTIDOR", "ADMIN")
+    .requestMatchers(HttpMethod.DELETE, "/api/pedidos/*/cancelar")
+        .hasAnyRole("COMERCIO", "ADMIN")
+    .requestMatchers("/api/pedidos/**")
+        .authenticated()
+
     .anyRequest().authenticated()
 )
 

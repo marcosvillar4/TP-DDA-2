@@ -113,7 +113,7 @@ public class DevDataSeeder implements CommandLineRunner {
             rep.setPatente("AB123CD");
             rep.setZona("Capital Federal");
             rep.setEstado(EstadoRepartidor.DISPONIBLE);
-            rep.setUsuario(uRepartidor);
+            rep.setUsuarioId(uRepartidor.getId());
             rep.setActivo(true);
             repartidorRepository.save(rep);
 

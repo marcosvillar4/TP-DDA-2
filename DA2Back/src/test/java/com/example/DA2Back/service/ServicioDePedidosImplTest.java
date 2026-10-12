@@ -44,6 +44,15 @@ class ServicioDePedidosImplTest {
     @Mock
     private ResolverEstadoPedido resolverEstado;
 
+    @Mock
+    private com.example.DA2Back.inventario.negocio.IInventario inventarioService;
+
+    @Mock
+    private com.example.DA2Back.inventario.dato.ItemInventarioRepository itemInventarioRepository;
+
+    @Mock
+    private com.example.DA2Back.producto.dato.ProductoRepository productoRepository;
+
     @InjectMocks
     private ServicioDePedidosImpl servicioDePedidos;
 
@@ -63,7 +72,7 @@ class ServicioDePedidosImplTest {
                 .usuarioId(1L)
                 .patente("ABC123")
                 .zona("Palermo")
-                .estado(EstadoRepartidor.EN_ENTREGA)
+                .estado(EstadoRepartidor.DISPONIBLE)
                 .activo(true)
                 .build();
     }
@@ -86,5 +95,72 @@ class ServicioDePedidosImplTest {
 
         assertEquals(10L, response.getRepartidorId());
         assertEquals("Carlos Ruiz", response.getRepartidorNombre());
+    }
+
+    @Test
+    @DisplayName("cancelarPedido debe restaurar stock de los items en el inventario")
+    void cancelarPedido_restauraStock() {
+        com.example.DA2Back.producto.dato.Producto producto = new com.example.DA2Back.producto.dato.Producto();
+        producto.setId(101L);
+        producto.setNombre("Zapatillas");
+
+        com.example.DA2Back.pedidos.dato.DetallePedido detalle = com.example.DA2Back.pedidos.dato.DetallePedido.builder()
+                .id(1L)
+                .producto(producto)
+                .cantidad(3)
+                .build();
+
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .depositoId(10L)
+                .estado(EstadoPedido.CREADO)
+                .detalles(new java.util.ArrayList<>(java.util.List.of(detalle)))
+                .build();
+
+        detalle.setPedido(pedido);
+
+        com.example.DA2Back.inventario.dato.Inventario inv = new com.example.DA2Back.inventario.dato.Inventario();
+        inv.setId(5L);
+
+        com.example.DA2Back.inventario.dato.ItemInventario item = new com.example.DA2Back.inventario.dato.ItemInventario();
+        item.setId(20L);
+        item.setCantidad(7);
+
+        com.example.DA2Back.pedidos.negocio.state.IEstadoPedido estadoMock = org.mockito.Mockito.mock(com.example.DA2Back.pedidos.negocio.state.IEstadoPedido.class);
+
+        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedido));
+        when(resolverEstado.resolver(EstadoPedido.CREADO)).thenReturn(estadoMock);
+        when(inventarioService.obtenerPorComercio(100L)).thenReturn(inv);
+        when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(5L, 101L, 10L))
+                .thenReturn(Optional.of(item));
+
+        servicioDePedidos.cancelar(50L);
+
+        assertEquals(10, item.getCantidad());
+        org.mockito.Mockito.verify(itemInventarioRepository).save(item);
+        org.mockito.Mockito.verify(estadoMock).cancelar(pedido);
+        org.mockito.Mockito.verify(pedidosRepository).save(pedido);
+    }
+
+    @Test
+    @DisplayName("marcarRetirado debe cambiar estado de repartidor a EN_ENTREGA")
+    void marcarRetirado_actualizaEstadoRepartidor() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.ASIGNADO)
+                .repartidor(repartidor)
+                .build();
+
+        com.example.DA2Back.pedidos.negocio.state.IEstadoPedido estadoMock = org.mockito.Mockito.mock(com.example.DA2Back.pedidos.negocio.state.IEstadoPedido.class);
+
+        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedido));
+        when(resolverEstado.resolver(EstadoPedido.ASIGNADO)).thenReturn(estadoMock);
+
+        servicioDePedidos.marcarRetirado(50L);
+
+        assertEquals(EstadoRepartidor.EN_ENTREGA, repartidor.getEstado());
+        org.mockito.Mockito.verify(repartidorRepository).save(repartidor);
     }
 }

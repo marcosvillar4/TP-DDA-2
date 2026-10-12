@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     private static final List<EstadoPedido> ESTADOS_ACTIVOS =
-            List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO);
+            List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO);
 
         private final PedidosRepository pedidosRepository;
     private final RepartidorRepository repartidorRepository;
@@ -192,6 +192,10 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     public PedidoResponseDTO marcarRetirado(Long id) {
         Pedido pedido = buscarPedido(id);
         resolverEstado.resolver(pedido.getEstado()).marcarRetirado(pedido);
+        if (pedido.getRepartidor() != null) {
+            pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+            repartidorRepository.save(pedido.getRepartidor());
+        }
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.RETIRADO);
         return toResponseDTO(pedido);
@@ -202,6 +206,10 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     public PedidoResponseDTO iniciarViaje(Long id) {
         Pedido pedido = buscarPedido(id);
         resolverEstado.resolver(pedido.getEstado()).iniciarViaje(pedido);
+        if (pedido.getRepartidor() != null) {
+            pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+            repartidorRepository.save(pedido.getRepartidor());
+        }
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.EN_CAMINO);
         return toResponseDTO(pedido);
@@ -224,13 +232,14 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     /**
      * Cancela el pedido desde cualquier estado que lo permita.
-     * Libera al repartidor si estaba asignado.
+     * Restaura el stock en el inventario del depósito y libera al repartidor si estaba asignado.
      */
     @Override
     @Transactional
     public PedidoResponseDTO cancelar(Long id) {
         Pedido pedido = buscarPedido(id);
         resolverEstado.resolver(pedido.getEstado()).cancelar(pedido);
+        restaurarStock(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.CANCELADO);
         liberarRepartidorSiCorresponde(pedido);
@@ -276,9 +285,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         private PedidoResponseDTO toResponseDTO(Pedido pedido) {
         Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
         String repartidorNombre = null;
-        if (pedido.getRepartidor() != null) {
+        if (pedido.getRepartidor() != null && pedido.getRepartidor().getUsuarioId() != null) {
             Usuario usuario = buscarUsuario(pedido.getRepartidor().getUsuarioId());
-            repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
+            if (usuario != null) {
+                repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
+            }
         }
 
         List<HistorialEstadoDTO> historialDTO = pedido.getHistorial() != null
@@ -318,10 +329,32 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .build();
     }
 
+    private void restaurarStock(Pedido pedido) {
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty() || pedido.getDepositoId() == null) {
+            return;
+        }
+        try {
+            Inventario inv = inventarioService.obtenerPorComercio(pedido.getComercioId());
+            if (inv == null) return;
+            for (DetallePedido detalle : pedido.getDetalles()) {
+                if (detalle.getProducto() != null && detalle.getCantidad() != null) {
+                    itemInventarioRepository
+                            .findByInventarioIdAndProductoIdAndDepositoId(
+                                    inv.getId(), detalle.getProducto().getId(), pedido.getDepositoId())
+                            .ifPresent(item -> {
+                                item.setCantidad(item.getCantidad() + detalle.getCantidad());
+                                itemInventarioRepository.save(item);
+                            });
+                }
+            }
+        } catch (Exception e) {
+            // Manejo defensivo en caso de inconsistencia de datos
+        }
+    }
+
     private Usuario buscarUsuario(Long usuarioId) {
-        return usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new NoSuchElementException(
-                        "Usuario con id=" + usuarioId + " no encontrado"));
+        if (usuarioId == null) return null;
+        return usuarioRepository.findById(usuarioId).orElse(null);
     }
 }
 

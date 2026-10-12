@@ -237,7 +237,7 @@ class RepartidorServiceTest {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
                 10L,
-                List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO)
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)
         )).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> repartidorService.cambiarEstado(10L, dto));
@@ -252,7 +252,7 @@ class RepartidorServiceTest {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
                 10L,
-                List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO)
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)
         )).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> repartidorService.desactivar(10L));
@@ -320,7 +320,7 @@ class RepartidorServiceTest {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         when(pedidosRepository.findFirstByRepartidorIdAndEstadoIn(
                 10L,
-                List.of(EstadoPedido.ASIGNADO, EstadoPedido.EN_CAMINO)
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)
         )).thenReturn(Optional.empty());
 
         RepartidorResponseDTO detalle = repartidorService.obtenerPorId(10L);
