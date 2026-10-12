@@ -9,9 +9,9 @@ public final class RepartidorMapper {
     private RepartidorMapper() {
     }
 
-    public static Repartidor toEntity(RepartidorCreateDTO dto, Usuario usuario) {
+    public static Repartidor toEntity(RepartidorCreateDTO dto, Long usuarioId) {
         return Repartidor.builder()
-                .usuario(usuario)
+                .usuarioId(usuarioId)
                 .patente(normalizar(dto.getPatente()))
                 .zona(normalizar(dto.getZona()))
                 .estado(EstadoRepartidor.DISPONIBLE)
@@ -26,14 +26,14 @@ public final class RepartidorMapper {
 
     public static RepartidorResponseDTO toResponseDTO(
             Repartidor repartidor,
+            Usuario usuario,
             PedidoActualDTO pedidoActual) {
 
-        Usuario usuario = repartidor.getUsuario();
         String nombreCompleto = nombreCompleto(usuario);
 
         return RepartidorResponseDTO.builder()
                 .id(repartidor.getId())
-                .usuarioId(usuario.getId())
+                .usuarioId(repartidor.getUsuarioId())
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
                 .nombreCompleto(nombreCompleto)

@@ -23,6 +23,7 @@ import PedidosList from "../pedidos/PedidosList";
 import SeguimientoPage from "../seguimiento/SeguimientoPage";
 import ProductosPage from "../productos/ProductosPage";
 import RepartidoresPage from "../repartidores/RepartidoresPage";
+import MisPedidosPage from "../repartidor/MisPedidosPage";
 import UsuariosPage from "../usuarios/UsuariosPage";
 import DepositosPage from "../depositos/DepositosPage";
 import MisDepositosPage from "../depositos/MisDepositosPage";
@@ -73,6 +74,7 @@ export const NAV_ITEMS = [
     path: "/mis-pedidos",
     icon: ClipboardList,
     roles: [ROLES.REPARTIDOR],
+    element: MisPedidosPage,
   },
   {
     key: "seguimiento",
