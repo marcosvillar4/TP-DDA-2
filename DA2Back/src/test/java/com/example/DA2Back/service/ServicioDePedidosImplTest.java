@@ -279,6 +279,8 @@ class ServicioDePedidosImplTest {
     @Test
     @DisplayName("marcarRetirado debe cambiar estado de repartidor a EN_ENTREGA")
     void marcarRetirado_actualizaEstadoRepartidor() {
+        repartidor.setEstado(EstadoRepartidor.EN_ENTREGA);
+
         Pedido pedido = Pedido.builder()
                 .id(50L)
                 .comercioId(100L)
@@ -288,7 +290,8 @@ class ServicioDePedidosImplTest {
 
         com.example.DA2Back.pedidos.negocio.state.IEstadoPedido estadoMock = org.mockito.Mockito.mock(com.example.DA2Back.pedidos.negocio.state.IEstadoPedido.class);
 
-        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedido));
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
         when(resolverEstado.resolver(EstadoPedido.ASIGNADO)).thenReturn(estadoMock);
 
         servicioDePedidos.marcarRetirado(50L);

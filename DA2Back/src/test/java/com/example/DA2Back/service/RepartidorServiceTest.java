@@ -313,6 +313,60 @@ class RepartidorServiceTest {
     }
 
     @Test
+    @DisplayName("Debe retirar pedido usando el perfil del usuario autenticado")
+    void retirarPedido_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoRetirado = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.RETIRADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.marcarRetiradoPorRepartidor(70L, 10L)).thenReturn(pedidoRetirado);
+
+        var response = repartidorService.retirarPedidoParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.RETIRADO, response.getEstado());
+        verify(servicioDePedidos).marcarRetiradoPorRepartidor(70L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe iniciar viaje usando el perfil del usuario autenticado")
+    void iniciarViaje_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoEnCamino = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.EN_CAMINO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.iniciarViajePorRepartidor(70L, 10L)).thenReturn(pedidoEnCamino);
+
+        var response = repartidorService.iniciarViajeParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.EN_CAMINO, response.getEstado());
+        verify(servicioDePedidos).iniciarViajePorRepartidor(70L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe entregar pedido usando el perfil del usuario autenticado")
+    void entregarPedido_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoEntregado = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.ENTREGADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.entregarPorRepartidor(70L, 10L)).thenReturn(pedidoEntregado);
+
+        var response = repartidorService.entregarPedidoParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.ENTREGADO, response.getEstado());
+        verify(servicioDePedidos).entregarPorRepartidor(70L, 10L);
+    }
+
+    @Test
     @DisplayName("Debe devolver historial con pedidos finalizados")
     void obtenerHistorial_pedidosFinalizados() {
         Pedido pedidoEntregado = Pedido.builder()

@@ -39,5 +39,11 @@ public interface IRepartidorService {
 
     PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId);
 
+    PedidoResponseDTO retirarPedidoParaUsuario(Long usuarioId, Long pedidoId);
+
+    PedidoResponseDTO iniciarViajeParaUsuario(Long usuarioId, Long pedidoId);
+
+    PedidoResponseDTO entregarPedidoParaUsuario(Long usuarioId, Long pedidoId);
+
     List<UsuarioRepartidorDisponibleDTO> listarUsuariosRepartidoresDisponibles();
 }

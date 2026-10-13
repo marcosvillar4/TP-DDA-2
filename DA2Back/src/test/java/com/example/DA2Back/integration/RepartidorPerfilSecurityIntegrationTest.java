@@ -144,6 +144,51 @@ class RepartidorPerfilSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("Otros roles no pueden operar el ciclo de entrega desde endpoints propios del repartidor")
+    void otrosRolesNoPuedenOperarCicloEntregaDesdePerfilRepartidor() throws Exception {
+        for (String endpoint : java.util.List.of(
+                "/repartidor/me/pedidos/1/retirar",
+                "/repartidor/me/pedidos/1/iniciar-viaje",
+                "/repartidor/me/pedidos/1/entregar")) {
+            mockMvc.perform(patch(endpoint)
+                            .header("Authorization", "Bearer " + adminToken))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(patch(endpoint)
+                            .header("Authorization", "Bearer " + comercioToken))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(patch(endpoint)
+                            .header("Authorization", "Bearer " + depositoToken))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    @DisplayName("REPARTIDOR no puede usar endpoints genéricos de ciclo de entrega")
+    void repartidorNoPuedeUsarEndpointsGenericosDeCicloEntrega() throws Exception {
+        for (String endpoint : java.util.List.of(
+                "/api/pedidos/1/retirar",
+                "/api/pedidos/1/iniciar-viaje",
+                "/api/pedidos/1/entregar")) {
+            mockMvc.perform(patch(endpoint)
+                            .header("Authorization", "Bearer " + repartidorToken))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    @DisplayName("REPARTIDOR autenticado llega a endpoints de ciclo y recibe error controlado si no tiene perfil")
+    void repartidorSinPerfilNoPuedeOperarCicloEntrega() throws Exception {
+        for (String endpoint : java.util.List.of(
+                "/repartidor/me/pedidos/1/retirar",
+                "/repartidor/me/pedidos/1/iniciar-viaje",
+                "/repartidor/me/pedidos/1/entregar")) {
+            mockMvc.perform(patch(endpoint)
+                            .header("Authorization", "Bearer " + repartidorToken))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
     private String login(String email, String password) throws Exception {
         String body = """
                 {

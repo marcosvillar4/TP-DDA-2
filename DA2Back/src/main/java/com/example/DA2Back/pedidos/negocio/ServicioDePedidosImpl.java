@@ -24,6 +24,7 @@ import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -208,12 +209,24 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         @Override
     @Transactional
     public PedidoResponseDTO marcarRetirado(Long id) {
-        Pedido pedido = buscarPedido(id);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, null);
         resolverEstado.resolver(pedido.getEstado()).marcarRetirado(pedido);
-        if (pedido.getRepartidor() != null) {
-            pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
-            repartidorRepository.save(pedido.getRepartidor());
-        }
+        pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+        repartidorRepository.save(pedido.getRepartidor());
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.RETIRADO);
+        return toResponseDTO(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO marcarRetiradoPorRepartidor(Long id, Long repartidorId) {
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, repartidorId);
+        resolverEstado.resolver(pedido.getEstado()).marcarRetirado(pedido);
+        pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+        repartidorRepository.save(pedido.getRepartidor());
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.RETIRADO);
         return toResponseDTO(pedido);
@@ -222,12 +235,24 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional
     public PedidoResponseDTO iniciarViaje(Long id) {
-        Pedido pedido = buscarPedido(id);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, null);
         resolverEstado.resolver(pedido.getEstado()).iniciarViaje(pedido);
-        if (pedido.getRepartidor() != null) {
-            pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
-            repartidorRepository.save(pedido.getRepartidor());
-        }
+        pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+        repartidorRepository.save(pedido.getRepartidor());
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.EN_CAMINO);
+        return toResponseDTO(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO iniciarViajePorRepartidor(Long id, Long repartidorId) {
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, repartidorId);
+        resolverEstado.resolver(pedido.getEstado()).iniciarViaje(pedido);
+        pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
+        repartidorRepository.save(pedido.getRepartidor());
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.EN_CAMINO);
         return toResponseDTO(pedido);
@@ -240,7 +265,20 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional
     public PedidoResponseDTO entregar(Long id) {
-        Pedido pedido = buscarPedido(id);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, null);
+        resolverEstado.resolver(pedido.getEstado()).entregar(pedido);
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.ENTREGADO);
+        liberarRepartidorSiCorresponde(pedido);
+        return toResponseDTO(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO entregarPorRepartidor(Long id, Long repartidorId) {
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        validarRepartidorAsignadoOperativo(pedido, repartidorId);
         resolverEstado.resolver(pedido.getEstado()).entregar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.ENTREGADO);
@@ -278,6 +316,38 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         return pedidosRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Pedido con id=" + id + " no encontrado"));
+    }
+
+    private Pedido buscarPedidoParaTransicion(Long id) {
+        return pedidosRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Pedido con id=" + id + " no encontrado"));
+    }
+
+    private Repartidor validarRepartidorAsignadoOperativo(Pedido pedido, Long repartidorEsperadoId) {
+        if (pedido.getRepartidor() == null || pedido.getRepartidor().getId() == null) {
+            throw new IllegalStateException("El pedido no tiene un repartidor asignado");
+        }
+
+        Repartidor repartidor = repartidorRepository.findByIdForUpdate(pedido.getRepartidor().getId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Repartidor con id=" + pedido.getRepartidor().getId() + " no encontrado"));
+
+        if (repartidorEsperadoId != null && !repartidor.getId().equals(repartidorEsperadoId)) {
+            throw new AccessDeniedException("El pedido no pertenece al repartidor autenticado");
+        }
+
+        if (!repartidor.isActivo()) {
+            throw new IllegalStateException("El repartidor asignado está inactivo");
+        }
+
+        if (repartidor.getEstado() != EstadoRepartidor.EN_ENTREGA) {
+            throw new IllegalStateException(
+                    "El repartidor debe estar EN_ENTREGA para operar el pedido");
+        }
+
+        pedido.setRepartidor(repartidor);
+        return repartidor;
     }
 
     private void registrarHistorial(Pedido pedido, EstadoPedido estado) {

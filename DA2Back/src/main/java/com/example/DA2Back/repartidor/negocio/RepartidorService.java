@@ -215,12 +215,30 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional
     public PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
-        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new NoSuchElementException(
-                        "El usuario " + usuarioId
-                                + " todavía no tiene un perfil de repartidor configurado"));
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
 
         return servicioDePedidos.asignarRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO retirarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.marcarRetiradoPorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO iniciarViajeParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.iniciarViajePorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO entregarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.entregarPorRepartidor(pedidoId, repartidor.getId());
     }
 
     @Override
@@ -239,6 +257,13 @@ public class RepartidorService implements IRepartidorService {
         return repartidorRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Repartidor con id=" + id + " no encontrado"));
+    }
+
+    private Repartidor buscarRepartidorPorUsuarioId(Long usuarioId) {
+        return repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
     }
 
     private RepartidorResponseDTO toResponseDTO(Repartidor repartidor) {

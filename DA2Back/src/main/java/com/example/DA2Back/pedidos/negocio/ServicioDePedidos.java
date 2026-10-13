@@ -17,7 +17,10 @@ public interface ServicioDePedidos {
     PedidoResponseDTO marcarListoParaRetirar(Long id);
     PedidoResponseDTO asignarRepartidor(Long pedidoId, Long repartidorId);
     PedidoResponseDTO marcarRetirado(Long id);
+    PedidoResponseDTO marcarRetiradoPorRepartidor(Long id, Long repartidorId);
     PedidoResponseDTO iniciarViaje(Long id);
+    PedidoResponseDTO iniciarViajePorRepartidor(Long id, Long repartidorId);
     PedidoResponseDTO entregar(Long id);
+    PedidoResponseDTO entregarPorRepartidor(Long id, Long repartidorId);
     PedidoResponseDTO cancelar(Long id);
 }

@@ -59,4 +59,28 @@ public class RepartidorPerfilController {
             @PathVariable Long pedidoId) {
         return ResponseEntity.ok(repartidorService.tomarPedidoParaUsuario(usuario.getId(), pedidoId));
     }
+
+    /** Confirma que el repartidor autenticado retiró el pedido asignado. */
+    @PatchMapping("/me/pedidos/{pedidoId}/retirar")
+    public ResponseEntity<PedidoResponseDTO> retirarPedido(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable Long pedidoId) {
+        return ResponseEntity.ok(repartidorService.retirarPedidoParaUsuario(usuario.getId(), pedidoId));
+    }
+
+    /** Inicia el viaje del pedido retirado por el repartidor autenticado. */
+    @PatchMapping("/me/pedidos/{pedidoId}/iniciar-viaje")
+    public ResponseEntity<PedidoResponseDTO> iniciarViaje(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable Long pedidoId) {
+        return ResponseEntity.ok(repartidorService.iniciarViajeParaUsuario(usuario.getId(), pedidoId));
+    }
+
+    /** Marca como entregado el pedido propio en camino. */
+    @PatchMapping("/me/pedidos/{pedidoId}/entregar")
+    public ResponseEntity<PedidoResponseDTO> entregarPedido(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable Long pedidoId) {
+        return ResponseEntity.ok(repartidorService.entregarPedidoParaUsuario(usuario.getId(), pedidoId));
+    }
 }

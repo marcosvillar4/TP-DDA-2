@@ -127,4 +127,61 @@ class RepartidorPerfilControllerTest {
         assertEquals(10L, response.getBody().getRepartidorId());
         verify(repartidorService).tomarPedidoParaUsuario(1L, 70L);
     }
+
+    @Test
+    @DisplayName("PATCH /repartidor/me/pedidos/{id}/retirar debe usar el usuario autenticado")
+    void retirarPedido_resuelvePorUsuarioAutenticado() {
+        PedidoResponseDTO pedido = PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.RETIRADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorService.retirarPedidoParaUsuario(1L, 70L)).thenReturn(pedido);
+
+        ResponseEntity<PedidoResponseDTO> response =
+                controller.retirarPedido(usuarioAutenticado, 70L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(EstadoPedido.RETIRADO, response.getBody().getEstado());
+        verify(repartidorService).retirarPedidoParaUsuario(1L, 70L);
+    }
+
+    @Test
+    @DisplayName("PATCH /repartidor/me/pedidos/{id}/iniciar-viaje debe usar el usuario autenticado")
+    void iniciarViaje_resuelvePorUsuarioAutenticado() {
+        PedidoResponseDTO pedido = PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.EN_CAMINO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorService.iniciarViajeParaUsuario(1L, 70L)).thenReturn(pedido);
+
+        ResponseEntity<PedidoResponseDTO> response =
+                controller.iniciarViaje(usuarioAutenticado, 70L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(EstadoPedido.EN_CAMINO, response.getBody().getEstado());
+        verify(repartidorService).iniciarViajeParaUsuario(1L, 70L);
+    }
+
+    @Test
+    @DisplayName("PATCH /repartidor/me/pedidos/{id}/entregar debe usar el usuario autenticado")
+    void entregarPedido_resuelvePorUsuarioAutenticado() {
+        PedidoResponseDTO pedido = PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.ENTREGADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorService.entregarPedidoParaUsuario(1L, 70L)).thenReturn(pedido);
+
+        ResponseEntity<PedidoResponseDTO> response =
+                controller.entregarPedido(usuarioAutenticado, 70L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(EstadoPedido.ENTREGADO, response.getBody().getEstado());
+        verify(repartidorService).entregarPedidoParaUsuario(1L, 70L);
+    }
 }
