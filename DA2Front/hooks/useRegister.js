@@ -11,14 +11,15 @@ import { registerRequest } from "../api/authApi";
  *     (email, password, nombre, apellido, dni, telefono)
  *   - extraData: campos específicos del rol elegido
  *     COMERCIO   → nombreComercial, razonSocial, cuit, direccion
- *     REPARTIDOR → vehiculo
+ *     REPARTIDOR → vehiculo, patente, zona
  *
- * DEPOSITO ya no es un rol de auto-registro: los depósitos los agrega un
- * comercio desde su panel (ver hooks/useDepositos.js).
- *
- * El JSON final es un único objeto plano con "rol" como discriminador,
- * tal como lo requiere @JsonTypeInfo del lado del backend.
+ * DEPOSITO no es un rol de auto-registro: los depósitos los agrega un
+ * comercio desde su panel.
  */
+
+// Mismos formatos que el @Pattern del backend: AAA999 (viejo) o AA999AA (Mercosur).
+const PATENTE_REGEX = /^([A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2})$/;
+
 export function useRegister() {
   const navigate = useNavigate();
 
@@ -37,33 +38,36 @@ export function useRegister() {
   const [loading, setLoading] = useState(false);
 
   function handleBaseChange(e) {
-    setBaseData({ ...baseData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setBaseData((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleExtraChange(e) {
-    setExtraData({ ...extraData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // La patente se normaliza a mayúsculas y sin espacios mientras se escribe.
+    const finalValue = name === "patente" ? value.toUpperCase().replace(/\s/g, "") : value;
+    setExtraData((prev) => ({ ...prev, [name]: finalValue }));
+  }
+
+  function warn(title, text) {
+    Swal.fire({ icon: "warning", title, text, confirmButtonColor: "#16223f" });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     if (!userType) {
-      Swal.fire({
-        icon: "warning",
-        title: "Falta el perfil",
-        text: "Seleccioná un tipo de cuenta antes de continuar.",
-        confirmButtonColor: "#16223f",
-      });
+      warn("Falta el perfil", "Seleccioná un tipo de cuenta antes de continuar.");
       return;
     }
 
     if (baseData.password !== baseData.confirmPassword) {
-      Swal.fire({
-        icon: "warning",
-        title: "Contraseñas distintas",
-        text: "Las contraseñas no coinciden. Verificalas e intentá de nuevo.",
-        confirmButtonColor: "#16223f",
-      });
+      warn("Contraseñas distintas", "Las contraseñas no coinciden. Verificalas e intentá de nuevo.");
+      return;
+    }
+
+    if (userType === "REPARTIDOR" && !PATENTE_REGEX.test(extraData.patente ?? "")) {
+      warn("Patente inválida", "El formato debe ser AAA999 o AA999AA.");
       return;
     }
 

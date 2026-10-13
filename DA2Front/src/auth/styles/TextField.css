@@ -31,3 +31,20 @@
   background-color: #fff;
   box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
 }
+
+.text-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.text-field-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--color-slate-400);
+  pointer-events: none;
+}
+
+.text-field-input.has-icon {
+  padding-left: 2.5rem;
+}

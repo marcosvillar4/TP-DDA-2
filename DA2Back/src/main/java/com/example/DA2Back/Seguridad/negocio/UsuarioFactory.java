@@ -4,6 +4,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.example.DA2Back.comercio.negocio.IComercio;
+import com.example.DA2Back.repartidor.dto.RepartidorCreateDTO;
+import com.example.DA2Back.repartidor.negocio.IRepartidorService;
 import com.example.DA2Back.comercio.comercioDTOs.ComercioCreateDTO;
 
 import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
@@ -22,6 +24,7 @@ public class UsuarioFactory {
 
     private final PasswordEncoder passwordEncoder;
     private final IComercio comercioService;
+    private final IRepartidorService repartidorService;
 
     public Usuario crearDesdeRegistro(RegisterDTO dto) {
         if (dto.getRol() == Rol.ADMIN) {
@@ -74,6 +77,9 @@ public class UsuarioFactory {
         if (dto instanceof RegistroComercioDTO comercioDTO) {
             comercioService.crear(mapearComercio(comercioDTO), usuarioId);
         }
+        else if (dto instanceof RegistroRepartidorDTO repartidorDTO) {
+            repartidorService.crear(mapearRepartidor(repartidorDTO, usuarioId));
+        }
     }
 
     private Usuario.UsuarioBuilder construirUsuarioBase(RegisterDTO dto, Rol rol) {
@@ -96,6 +102,14 @@ public class UsuarioFactory {
         d.setCuit(dto.getCuit());
         d.setTelefono(dto.getTelefono());
         d.setEmail(dto.getEmail());
+        return d;
+    }
+
+    private RepartidorCreateDTO mapearRepartidor(RegistroRepartidorDTO dto, Long usuarioId) {
+        RepartidorCreateDTO d = new RepartidorCreateDTO();
+        d.setUsuarioId(usuarioId); 
+        d.setPatente(dto.getPatente());
+        d.setZona(dto.getZona());
         return d;
     }
 }

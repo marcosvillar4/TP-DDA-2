@@ -82,10 +82,6 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
         }
 
-        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
-            throw new IllegalStateException("El usuario repartidor debe estar validado antes de crear su perfil operativo");
-        }
-
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
             throw new IllegalStateException("El usuario ya está asociado a un repartidor");
         }

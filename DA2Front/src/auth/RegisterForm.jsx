@@ -1,27 +1,31 @@
-import { Building2, Navigation, Mail, Lock, User, Phone, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import logo from '../assets/Logo.png';
-import { useRegister } from '../../hooks/useRegister';
-import './styles/RegisterForm.css';
+import { Building2, Navigation, Mail, User, Phone, MapPin, Hash } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useRegister } from "../../hooks/useRegister";
+import { TextField } from "./components/TextField";
+import { PasswordField } from "./components/PasswordField";
+import { Button } from "./components/Button";
+import { AuthLayout } from "./AuthLayout";
+import "./styles/RegisterForm.css";
 
 const roles = [
   {
-    id: 'COMERCIO',
-    title: 'Comercio',
+    id: "COMERCIO",
+    title: "Comercio",
     icon: <Building2 size={22} />,
-    description: 'Gestiona pedidos e inventario para tus envíos.',
+    description: "Gestiona pedidos e inventario para tus envíos.",
   },
   {
-    id: 'REPARTIDOR',
-    title: 'Repartidor',
+    id: "REPARTIDOR",
+    title: "Repartidor",
     icon: <Navigation size={22} />,
-    description: 'Toma pedidos y realiza la entrega de última milla.',
+    description: "Toma pedidos y realiza la entrega de última milla.",
   },
 ];
 
 export default function RegisterForm() {
   const {
     baseData,
+    extraData,
     userType,
     loading,
     setUserType,
@@ -35,19 +39,14 @@ export default function RegisterForm() {
 
   return (
     <div className="register-page">
-
-      {/* ── TopBar (mismo estilo que InventarioTopBar) ── */}
       <header className="register-topbar">
-        <div className="register-topbar-brand">
-          <span clasesName="register-brand-mark"> 
-            Logi<span className="text-red">Red</span> 
-          </span>
-        </div>
-        <p className="register-topbar-title">Crear una cuenta nueva</p>
+        <span className="register-brand-mark">
+          Logi<span className="text-red">Red</span>
+        </span>
       </header>
 
-      {/* ── Contenido ── */}
       <main className="register-content">
+        
         <div>
           <h1 className="register-header-title">Registrate en LogiRed</h1>
           <p className="register-header-subtitle">
@@ -55,67 +54,52 @@ export default function RegisterForm() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-          {/* ── Panel 1: Datos de acceso ── */}
-          <div className="register-panel">
+        <form onSubmit={handleSubmit} className="register-form">
+          {/* Panel 1: datos de acceso */}
+          <section className="register-panel">
             <div className="register-panel-bar" />
             <h2 className="register-panel-title">1. Datos de acceso</h2>
             <div className="register-fields-group">
-
-              <div className="register-field">
-                <label className="register-label">Correo Electrónico</label>
-                <div className="register-input-wrapper">
-                  <Mail className="register-input-icon" size={16} />
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="register-input has-icon"
-                    placeholder="tu@correo.com"
-                    value={baseData.email}
-                    onChange={handleBaseChange}
-                  />
-                </div>
-              </div>
-
+              <TextField
+                id="email"
+                name="email"
+                type="email"
+                label="Correo electrónico"
+                icon={Mail}
+                required
+                placeholder="tu@correo.com"
+                autoComplete="username"
+                value={baseData.email}
+                onChange={handleBaseChange}
+              />
               <div className="register-grid-2">
-                <div className="register-field">
-                  <label className="register-label">Contraseña</label>
-                  <div className="register-input-wrapper">
-                    <Lock className="register-input-icon" size={16} />
-                    <input
-                      type="password"
-                      name="password"
-                      required
-                      className="register-input has-icon"
-                      placeholder="••••••••"
-                      value={baseData.password}
-                      onChange={handleBaseChange}
-                    />
-                  </div>
-                </div>
-                <div className="register-field">
-                  <label className="register-label">Confirmar Contraseña</label>
-                  <div className="register-input-wrapper">
-                    <Lock className="register-input-icon" size={16} />
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      required
-                      className="register-input has-icon"
-                      placeholder="••••••••"
-                      value={baseData.confirmPassword}
-                      onChange={handleBaseChange}
-                    />
-                  </div>
-                </div>
+                <PasswordField
+                  id="password"
+                  name="password"
+                  label="Contraseña"
+                  required
+                  minLength={8}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  value={baseData.password}
+                  onChange={handleBaseChange}
+                />
+                <PasswordField
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  label="Confirmar contraseña"
+                  required
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  value={baseData.confirmPassword}
+                  onChange={handleBaseChange}
+                />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* ── Panel 2: Selección de perfil ── */}
-          <div className="register-panel">
+          {/* Panel 2: selección de perfil */}
+          <section className="register-panel">
             <div className="register-panel-bar" />
             <h2 className="register-panel-title">2. Seleccioná tu perfil</h2>
             <div className="register-role-cards">
@@ -127,7 +111,7 @@ export default function RegisterForm() {
                     setUserType(role.id);
                     setExtraData({});
                   }}
-                  className={`register-role-card${userType === role.id ? ' active' : ''}`}
+                  className={`register-role-card${userType === role.id ? " active" : ""}`}
                 >
                   <div className="register-role-icon">{role.icon}</div>
                   <div className="register-role-title">{role.title}</div>
@@ -135,145 +119,174 @@ export default function RegisterForm() {
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* ── Panel 3: Datos personales (comunes a cualquier rol) ── */}
+          {/* Panel 3: datos personales */}
           {userType && (
-            <div className="register-panel">
+            <section className="register-panel">
               <div className="register-panel-bar" />
               <h2 className="register-panel-title">3. Tus datos personales</h2>
               <div className="register-fields-group">
                 <div className="register-grid-2">
-                  <div className="register-field">
-                    <label className="register-label">Nombre</label>
-                    <div className="register-input-wrapper">
-                      <User className="register-input-icon" size={16} />
-                      <input
-                        type="text"
-                        name="nombre"
-                        required
-                        className="register-input has-icon"
-                        placeholder="Carlos"
-                        value={baseData.nombre}
-                        onChange={handleBaseChange}
-                      />
-                    </div>
-                  </div>
-                  <div className="register-field">
-                    <label className="register-label">Apellido</label>
-                    <input
-                      type="text"
-                      name="apellido"
-                      required
-                      className="register-input"
-                      placeholder="Ruiz"
-                      value={baseData.apellido}
-                      onChange={handleBaseChange}
-                    />
-                  </div>
+                  <TextField
+                    id="nombre"
+                    name="nombre"
+                    label="Nombre"
+                    icon={User}
+                    required
+                    placeholder="Carlos"
+                    value={baseData.nombre}
+                    onChange={handleBaseChange}
+                  />
+                  <TextField
+                    id="apellido"
+                    name="apellido"
+                    label="Apellido"
+                    required
+                    placeholder="Ruiz"
+                    value={baseData.apellido}
+                    onChange={handleBaseChange}
+                  />
                 </div>
                 <div className="register-grid-2">
-                  <div className="register-field">
-                    <label className="register-label">DNI</label>
-                    <input
-                      type="text"
-                      name="dni"
-                      required
-                      className="register-input"
-                      placeholder="XX.XXX.XXX"
-                      value={baseData.dni}
-                      onChange={handleBaseChange}
-                    />
-                  </div>
-                  <div className="register-field">
-                    <label className="register-label">Teléfono</label>
-                    <div className="register-input-wrapper">
-                      <Phone className="register-input-icon" size={16} />
-                      <input
-                        type="tel"
-                        name="telefono"
-                        required
-                        className="register-input has-icon"
-                        placeholder="+54 11 XXXX-XXXX"
-                        value={baseData.telefono}
-                        onChange={handleBaseChange}
-                      />
-                    </div>
-                  </div>
+                  <TextField
+                    id="dni"
+                    name="dni"
+                    label="DNI"
+                    required
+                    placeholder="XX.XXX.XXX"
+                    value={baseData.dni}
+                    onChange={handleBaseChange}
+                  />
+                  <TextField
+                    id="telefono"
+                    name="telefono"
+                    type="tel"
+                    label="Teléfono"
+                    icon={Phone}
+                    required
+                    placeholder="+54 11 XXXX-XXXX"
+                    value={baseData.telefono}
+                    onChange={handleBaseChange}
+                  />
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
-          {/* ── Panel 4: Datos específicos por rol ── */}
+          {/* Panel 4: datos específicos del rol */}
           {userType && (
-            <div className="register-panel">
+            <section className="register-panel">
               <div className="register-panel-bar" />
-              <h2 className="register-panel-title">
-                4. Datos de {activeRole?.title}
-              </h2>
+              <h2 className="register-panel-title">4. Datos de {activeRole?.title}</h2>
 
-              {/* COMERCIO */}
-              {userType === 'COMERCIO' && (
+              {userType === "COMERCIO" && (
                 <div className="register-fields-group">
                   <div className="register-grid-2">
-                    <div className="register-field">
-                      <label className="register-label">Nombre Comercial</label>
-                      <input type="text" name="nombreComercial" required className="register-input" placeholder="Ej: Urban Shoes" onChange={handleExtraChange} />
-                    </div>
-                    <div className="register-field">
-                      <label className="register-label">Razón Social</label>
-                      <input type="text" name="razonSocial" required className="register-input" placeholder="Ej: Urban Shoes S.A." onChange={handleExtraChange} />
-                    </div>
+                    <TextField
+                      id="nombreComercial"
+                      name="nombreComercial"
+                      label="Nombre comercial"
+                      required
+                      placeholder="Ej: Urban Shoes"
+                      value={extraData.nombreComercial ?? ""}
+                      onChange={handleExtraChange}
+                    />
+                    <TextField
+                      id="razonSocial"
+                      name="razonSocial"
+                      label="Razón social"
+                      required
+                      placeholder="Ej: Urban Shoes S.A."
+                      value={extraData.razonSocial ?? ""}
+                      onChange={handleExtraChange}
+                    />
                   </div>
-                  <div className="register-field">
-                    <label className="register-label">CUIT</label>
-                    <input type="text" name="cuit" required className="register-input" placeholder="30-XXXXXXXX-X" onChange={handleExtraChange} />
-                  </div>
-                  <div className="register-field">
-                    <label className="register-label">Dirección de Retiro</label>
-                    <div className="register-input-wrapper">
-                      <MapPin className="register-input-icon" size={16} />
-                      <input type="text" name="direccion" required className="register-input has-icon" placeholder="Av. Principal 123, Ciudad" onChange={handleExtraChange} />
-                    </div>
-                  </div>
+                  <TextField
+                    id="cuit"
+                    name="cuit"
+                    label="CUIT"
+                    required
+                    placeholder="30-XXXXXXXX-X"
+                    value={extraData.cuit ?? ""}
+                    onChange={handleExtraChange}
+                  />
+                  <TextField
+                    id="direccion"
+                    name="direccion"
+                    label="Dirección de retiro"
+                    icon={MapPin}
+                    required
+                    placeholder="Av. Principal 123, Ciudad"
+                    value={extraData.direccion ?? ""}
+                    onChange={handleExtraChange}
+                  />
                 </div>
               )}
 
-              {/* REPARTIDOR */}
-              {userType === 'REPARTIDOR' && (
+              {userType === "REPARTIDOR" && (
                 <div className="register-fields-group">
                   <div className="register-field">
-                    <label className="register-label">Tipo de Vehículo</label>
-                    <select name="vehiculo" required className="register-select" onChange={handleExtraChange} defaultValue="">
-                      <option value="" disabled>Seleccione...</option>
+                    <label htmlFor="vehiculo" className="register-label">
+                      Tipo de vehículo
+                    </label>
+                    <select
+                      id="vehiculo"
+                      name="vehiculo"
+                      required
+                      className="register-select"
+                      value={extraData.vehiculo ?? ""}
+                      onChange={handleExtraChange}
+                    >
+                      <option value="" disabled>
+                        Seleccione...
+                      </option>
                       <option value="MOTO">Moto</option>
                       <option value="AUTO">Auto / Utilitario</option>
                       <option value="BICI">Bicicleta</option>
                     </select>
                   </div>
+                  <div className="register-grid-2">
+                    <TextField
+                      id="patente"
+                      name="patente"
+                      label="Patente"
+                      icon={Hash}
+                      required
+                      maxLength={7}
+                      placeholder="AB123CD"
+                      title="Formato AAA999 o AA999AA"
+                      value={extraData.patente ?? ""}
+                      onChange={handleExtraChange}
+                    />
+                    <TextField
+                      id="zona"
+                      name="zona"
+                      label="Zona de reparto"
+                      icon={MapPin}
+                      required
+                      placeholder="Ej: Zona Sur"
+                      value={extraData.zona ?? ""}
+                      onChange={handleExtraChange}
+                    />
+                  </div>
                 </div>
               )}
-            </div>
+            </section>
           )}
 
-          {/* ── Panel submit ── */}
-          <div className="register-panel">
-            <button
-              type="submit"
-              disabled={!userType || loading}
-              className="register-submit-btn"
-            >
-              {loading
-                ? 'Creando cuenta...'
-                : `Crear cuenta${activeRole ? ` como ${activeRole.title}` : ''}`}
-            </button>
-          </div>
+          <Button
+            type="submit"
+            loading={loading}
+            loadingText="Creando cuenta..."
+            disabled={!userType || loading}
+          >
+            {`Crear cuenta${activeRole ? ` como ${activeRole.title}` : ""}`}
+          </Button>
         </form>
 
         <p className="register-footer">
-          ¿Ya tenés una cuenta?{' '}
-          <Link to="/">Iniciá sesión aquí</Link>
+          ¿Ya tenés una cuenta? <Link to="/">Iniciá sesión aquí</Link>
         </p>
       </main>
     </div>

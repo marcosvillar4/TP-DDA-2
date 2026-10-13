@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import "../styles/PasswordField.css";
  
-export function PasswordField({ label, id, value, onChange, placeholder }) {
+export function PasswordField({ label, id, ...props }) {
   const [visible, setVisible] = useState(false);
  
   return (
@@ -14,10 +14,8 @@ export function PasswordField({ label, id, value, onChange, placeholder }) {
         <input
           id={id}
           type={visible ? "text" : "password"}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
           className="password-field-input"
+          {...props}
         />
         <button
           type="button"
@@ -31,4 +29,3 @@ export function PasswordField({ label, id, value, onChange, placeholder }) {
     </div>
   );
 }
- 

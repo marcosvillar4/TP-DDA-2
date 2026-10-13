@@ -12,7 +12,7 @@ public final class RepartidorMapper {
     public static Repartidor toEntity(RepartidorCreateDTO dto, Long usuarioId) {
         return Repartidor.builder()
                 .usuarioId(usuarioId)
-                .patente(normalizar(dto.getPatente()))
+                .patente(normalizar(dto.getPatente()).toUpperCase())
                 .zona(normalizar(dto.getZona()))
                 .estado(EstadoRepartidor.DISPONIBLE)
                 .activo(true)
