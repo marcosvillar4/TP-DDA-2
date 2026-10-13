@@ -1,7 +1,12 @@
 package com.example.DA2Back.pedidos.dato;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +17,10 @@ import java.util.Optional;
  */
 @Repository
 public interface PedidosRepository extends JpaRepository<Pedido, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Pedido p where p.id = :id")
+    Optional<Pedido> findByIdForUpdate(@Param("id") Long id);
 
     List<Pedido> findByComercioId(Long comercioId);
 

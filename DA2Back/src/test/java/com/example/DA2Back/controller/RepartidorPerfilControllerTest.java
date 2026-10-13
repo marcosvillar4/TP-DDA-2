@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.repartidor.dto.EntregaHistorialDTO;
 import com.example.DA2Back.repartidor.dto.RepartidorResponseDTO;
 import com.example.DA2Back.repartidor.negocio.IRepartidorService;
@@ -81,5 +83,48 @@ class RepartidorPerfilControllerTest {
         assertEquals(50L, response.getBody().get(0).getPedidoId());
         verify(repartidorService).obtenerPorUsuarioId(1L);
         verify(repartidorService).obtenerHistorial(10L);
+    }
+
+    @Test
+    @DisplayName("GET /repartidor/me/pedidos-disponibles debe usar el usuario autenticado")
+    void obtenerMisPedidosDisponibles_resuelvePorUsuarioAutenticado() {
+        PedidoResponseDTO pedido = PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .direccionDestino("Av. Córdoba 123")
+                .build();
+
+        when(repartidorService.obtenerPedidosDisponiblesParaUsuario(1L)).thenReturn(List.of(pedido));
+
+        ResponseEntity<List<PedidoResponseDTO>> response =
+                controller.obtenerMisPedidosDisponibles(usuarioAutenticado);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(1, response.getBody().size());
+        assertEquals(70L, response.getBody().get(0).getId());
+        assertEquals(EstadoPedido.LISTO_PARA_RETIRAR, response.getBody().get(0).getEstado());
+        verify(repartidorService).obtenerPedidosDisponiblesParaUsuario(1L);
+    }
+
+    @Test
+    @DisplayName("PATCH /repartidor/me/pedidos/{id}/tomar debe usar el usuario autenticado")
+    void tomarPedido_resuelvePorUsuarioAutenticado() {
+        PedidoResponseDTO pedido = PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.ASIGNADO)
+                .repartidorId(10L)
+                .direccionDestino("Av. Córdoba 123")
+                .build();
+
+        when(repartidorService.tomarPedidoParaUsuario(1L, 70L)).thenReturn(pedido);
+
+        ResponseEntity<PedidoResponseDTO> response =
+                controller.tomarPedido(usuarioAutenticado, 70L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(70L, response.getBody().getId());
+        assertEquals(EstadoPedido.ASIGNADO, response.getBody().getEstado());
+        assertEquals(10L, response.getBody().getRepartidorId());
+        verify(repartidorService).tomarPedidoParaUsuario(1L, 70L);
     }
 }

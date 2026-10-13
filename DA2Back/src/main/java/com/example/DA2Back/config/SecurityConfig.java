@@ -129,7 +129,7 @@ public class SecurityConfig {
     .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/listo-para-retirar")
         .hasAnyRole("DEPOSITO", "COMERCIO", "ADMIN")
     .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/asignar/*")
-        .hasAnyRole("REPARTIDOR", "ADMIN")
+        .hasRole("ADMIN")
     .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/retirar")
         .hasAnyRole("REPARTIDOR", "ADMIN")
     .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/iniciar-viaje")

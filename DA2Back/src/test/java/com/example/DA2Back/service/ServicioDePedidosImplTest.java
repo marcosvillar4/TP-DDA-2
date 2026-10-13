@@ -1,6 +1,7 @@
 package com.example.DA2Back.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -141,6 +142,138 @@ class ServicioDePedidosImplTest {
         org.mockito.Mockito.verify(itemInventarioRepository).save(item);
         org.mockito.Mockito.verify(estadoMock).cancelar(pedido);
         org.mockito.Mockito.verify(pedidosRepository).save(pedido);
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe asignar pedido listo y cambiar repartidor a EN_ENTREGA")
+    void asignarRepartidor_pedidoListo() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .build();
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
+                10L,
+                java.util.List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(false);
+        when(resolverEstado.resolver(EstadoPedido.LISTO_PARA_RETIRAR))
+                .thenReturn(new com.example.DA2Back.pedidos.negocio.state.EstadoListoParaRetirar());
+
+        PedidoResponseDTO response = servicioDePedidos.asignarRepartidor(50L, 10L);
+
+        assertEquals(EstadoPedido.ASIGNADO, pedido.getEstado());
+        assertEquals(EstadoPedido.ASIGNADO, response.getEstado());
+        assertEquals(10L, response.getRepartidorId());
+        assertEquals(EstadoRepartidor.EN_ENTREGA, repartidor.getEstado());
+        org.mockito.Mockito.verify(pedidosRepository).save(pedido);
+        org.mockito.Mockito.verify(repartidorRepository).save(repartidor);
+        org.mockito.Mockito.verify(historialRepository).save(org.mockito.Mockito.argThat(historial ->
+                historial.getPedido() == pedido && historial.getEstado() == EstadoPedido.ASIGNADO));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar pedido inexistente")
+    void asignarRepartidor_pedidoInexistente() {
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.empty());
+
+        assertThrows(java.util.NoSuchElementException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar pedido que no está listo para retirar")
+    void asignarRepartidor_pedidoNoDisponible() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.CREADO)
+                .build();
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
+                10L,
+                java.util.List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(false);
+        when(resolverEstado.resolver(EstadoPedido.CREADO))
+                .thenReturn(new com.example.DA2Back.pedidos.negocio.state.EstadoCreado());
+
+        assertThrows(com.example.DA2Back.pedidos.excepcion.TransicionInvalidaPedidoException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar pedido ya asignado")
+    void asignarRepartidor_pedidoYaAsignado() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .repartidor(repartidor)
+                .build();
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+
+        assertThrows(IllegalStateException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar repartidor inactivo")
+    void asignarRepartidor_repartidorInactivo() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .build();
+        repartidor.setActivo(false);
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+
+        assertThrows(IllegalStateException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar repartidor no disponible")
+    void asignarRepartidor_repartidorNoDisponible() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .build();
+        repartidor.setEstado(EstadoRepartidor.NO_DISPONIBLE);
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+
+        assertThrows(IllegalStateException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
+    }
+
+    @Test
+    @DisplayName("asignarRepartidor debe rechazar repartidor con pedido activo")
+    void asignarRepartidor_repartidorConPedidoActivo() {
+        Pedido pedido = Pedido.builder()
+                .id(50L)
+                .comercioId(100L)
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .build();
+
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(repartidorRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.existsByRepartidorIdAndEstadoIn(
+                10L,
+                java.util.List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(true);
+
+        assertThrows(IllegalStateException.class,
+                () -> servicioDePedidos.asignarRepartidor(50L, 10L));
     }
 
     @Test

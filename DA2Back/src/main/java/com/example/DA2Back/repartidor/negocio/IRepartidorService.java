@@ -35,5 +35,9 @@ public interface IRepartidorService {
 
     List<PedidoResponseDTO> obtenerPedidosAsignables();
 
+    List<PedidoResponseDTO> obtenerPedidosDisponiblesParaUsuario(Long usuarioId);
+
+    PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId);
+
     List<UsuarioRepartidorDisponibleDTO> listarUsuariosRepartidoresDisponibles();
 }

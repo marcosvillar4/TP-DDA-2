@@ -82,6 +82,10 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
         }
 
+        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario repartidor debe estar VALIDADO para crear el perfil operativo");
+        }
+
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
             throw new IllegalStateException("El usuario ya está asociado a un repartidor");
         }
@@ -186,6 +190,37 @@ public class RepartidorService implements IRepartidorService {
                 .stream()
                 .map(this::toPedidoResponseDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerPedidosDisponiblesParaUsuario(Long usuarioId) {
+        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+
+        if (!repartidor.isActivo()) {
+            throw new IllegalStateException("El perfil de repartidor está inactivo");
+        }
+
+        if (repartidor.getEstado() != EstadoRepartidor.DISPONIBLE) {
+            throw new IllegalStateException(
+                    "El repartidor debe estar DISPONIBLE para consultar pedidos disponibles");
+        }
+
+        return servicioDePedidos.listarPendientesAsignables();
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+
+        return servicioDePedidos.asignarRepartidor(pedidoId, repartidor.getId());
     }
 
     @Override

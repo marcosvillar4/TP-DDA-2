@@ -170,13 +170,31 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional
     public PedidoResponseDTO asignarRepartidor(Long pedidoId, Long repartidorId) {
-        Pedido pedido = buscarPedido(pedidoId);
-        Repartidor repartidor = repartidorRepository.findById(repartidorId)
+        Pedido pedido = buscarPedidoParaAsignar(pedidoId);
+        Repartidor repartidor = repartidorRepository.findByIdForUpdate(repartidorId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Repartidor con id=" + repartidorId + " no encontrado"));
 
+        if (pedido.getRepartidor() != null) {
+            throw new IllegalStateException("El pedido ya tiene un repartidor asignado");
+        }
+
+        if (!repartidor.isActivo()) {
+            throw new IllegalStateException("No se puede asignar el pedido a un repartidor inactivo");
+        }
+
+        if (repartidor.getEstado() != EstadoRepartidor.DISPONIBLE) {
+            throw new IllegalStateException(
+                    "El repartidor debe estar DISPONIBLE para tomar o recibir un pedido");
+        }
+
+        if (pedidosRepository.existsByRepartidorIdAndEstadoIn(repartidor.getId(), ESTADOS_ACTIVOS)) {
+            throw new IllegalStateException("El repartidor ya tiene un pedido activo");
+        }
+
         // El estado actual del pedido valida si la transición es legal
         resolverEstado.resolver(pedido.getEstado()).asignarRepartidor(pedido, repartidor);
+        repartidor.setEstado(EstadoRepartidor.EN_ENTREGA);
 
         pedidosRepository.save(pedido);
         repartidorRepository.save(repartidor);
@@ -252,6 +270,12 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     private Pedido buscarPedido(Long id) {
         return pedidosRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Pedido con id=" + id + " no encontrado"));
+    }
+
+    private Pedido buscarPedidoParaAsignar(Long id) {
+        return pedidosRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Pedido con id=" + id + " no encontrado"));
     }
