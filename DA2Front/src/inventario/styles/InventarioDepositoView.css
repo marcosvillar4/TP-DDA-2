@@ -1,0 +1,48 @@
+.inventario-deposito-info {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-600);
+}
+
+.inventario-deposito-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+
+.inventario-deposito-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-slate-50);
+}
+
+.inventario-deposito-stat strong {
+  font-size: 1.5rem;
+  color: var(--color-navy);
+}
+
+.inventario-deposito-stat span {
+  font-size: 0.8125rem;
+  color: var(--color-slate-500);
+}
+
+.inventario-deposito-badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inventario-deposito-badge-ok {
+  background-color: var(--color-green-light);
+  color: var(--color-green);
+}
+
+.inventario-deposito-badge-bajo {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}

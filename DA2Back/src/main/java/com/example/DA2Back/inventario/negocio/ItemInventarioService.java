@@ -90,6 +90,22 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    public List<ItemInventario> obtenerPorDeposito(Long depositoId, Usuario usuario) {
+
+        validarUsuarioAutenticado(usuario);
+
+        if (depositoId == null) {
+            throw new IllegalArgumentException(
+                    "El ID del depósito no puede ser nulo"
+            );
+        }
+
+        validarPuedeVerDeposito(depositoId, usuario);
+
+        return itemInventarioRepository.findByDepositoId(depositoId);
+    }
+
+    @Override
     public List<ItemInventario> obtenerPorProducto(Long productoId) {
 
         if (productoId == null) {
@@ -355,6 +371,33 @@ public class ItemInventarioService implements IItemInventario {
         }
 
         throw new AccessDeniedException("No tenés permisos para configurar el stock mínimo de este item");
+    }
+
+    /**
+     * ADMIN ve cualquier depósito; COMERCIO solo los de su comercio y
+     * DEPOSITO únicamente el depósito que tiene asignado.
+     */
+    private void validarPuedeVerDeposito(Long depositoId, Usuario usuario) {
+        if (usuario.getRol() == Rol.ADMIN) {
+            return;
+        }
+
+        DepositoResponseDTO deposito = depositoService.obtenerPorId(depositoId);
+
+        if (usuario.getRol() == Rol.DEPOSITO
+                && Objects.equals(deposito.getUsuarioId(), usuario.getId())) {
+            return;
+        }
+
+        if (usuario.getRol() == Rol.COMERCIO) {
+            Long comercioId = comercioService.obtenerPorUsuarioId(usuario.getId()).getId();
+
+            if (Objects.equals(deposito.getComercioId(), comercioId)) {
+                return;
+            }
+        }
+
+        throw new AccessDeniedException("No tenés permisos para ver el inventario de este depósito");
     }
 
     private void validarMismoComercio(
