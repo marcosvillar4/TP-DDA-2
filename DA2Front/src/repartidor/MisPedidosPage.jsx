@@ -39,6 +39,7 @@ export default function MisPedidosPage() {
   const [operacionActiva, setOperacionActiva] = useState(null);
   const [mensajeExito, setMensajeExito] = useState(null);
   const mountedRef = useRef(false);
+  const operacionEnCursoRef = useRef(false);
 
   const cargarPerfil = useCallback(async () => {
     setLoadingPerfil(true);
@@ -138,26 +139,27 @@ export default function MisPedidosPage() {
 
   async function ejecutarOperacion({ tipo, pedido, titulo, texto, confirmarTexto, api, exito }) {
     const pedidoId = pedido?.id;
-    if (!pedidoId || operacionActiva) return;
+    if (!pedidoId || operacionEnCursoRef.current) return;
 
-    const confirmacion = await Swal.fire({
-      icon: "question",
-      title: titulo,
-      text: texto,
-      showCancelButton: true,
-      confirmButtonText: confirmarTexto,
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#16223f",
-      cancelButtonColor: "#64748b",
-    });
-
-    if (!confirmacion.isConfirmed || !mountedRef.current) return;
-
+    operacionEnCursoRef.current = true;
     setOperacionActiva(`${tipo}-${pedidoId}`);
-    setErrorOperacion(null);
-    setMensajeExito(null);
-
     try {
+      const confirmacion = await Swal.fire({
+        icon: "question",
+        title: titulo,
+        text: texto,
+        showCancelButton: true,
+        confirmButtonText: confirmarTexto,
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#16223f",
+        cancelButtonColor: "#64748b",
+      });
+
+      if (!confirmacion.isConfirmed || !mountedRef.current) return;
+
+      setErrorOperacion(null);
+      setMensajeExito(null);
+
       const pedidoActualizado = await api(pedidoId);
       if (!mountedRef.current) return;
 
@@ -193,6 +195,7 @@ export default function MisPedidosPage() {
         confirmButtonColor: "#16223f",
       });
     } finally {
+      operacionEnCursoRef.current = false;
       if (mountedRef.current) {
         setOperacionActiva(null);
       }
@@ -214,9 +217,16 @@ export default function MisPedidosPage() {
   function operarPedidoActual(accion) {
     if (!pedidoActual) return Promise.resolve();
 
-    const config = ACCIONES_PEDIDO[accion];
+    const config = ACCIONES_PEDIDO[pedidoActual.estado];
+    if (!config || config.accion !== accion) {
+      setErrorOperacion({
+        titulo: "Operación no disponible",
+        texto: "La acción no corresponde al estado actual del pedido. Actualizá la pantalla.",
+      });
+      return Promise.resolve();
+    }
     return ejecutarOperacion({
-      tipo: accion,
+      tipo: config.accion,
       pedido: pedidoActual,
       titulo: config.titulo(pedidoActual),
       texto: config.texto,
@@ -625,8 +635,7 @@ function combinarPedidoActual(pedidoPerfil, pedidoDetalle) {
 
   return {
     ...pedidoDetalle,
-    estado: pedidoPerfil.estado ?? pedidoDetalle.estado,
-    direccionDestino: pedidoPerfil.direccionDestino ?? pedidoDetalle.direccionDestino,
+    ...pedidoPerfil,
   };
 }
 
