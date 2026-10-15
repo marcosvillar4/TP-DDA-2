@@ -5,10 +5,22 @@ import { InventarioButton } from "./components/InventarioButton";
 import { InventarioSummary } from "./components/InventarioSummary";
 import { ItemInventarioForm } from "./components/ItemInventarioForm";
 import { ItemInventarioTable } from "./components/ItemInventarioTable";
+import { InventarioDepositoView } from "./components/InventarioDepositoView";
 import "./styles/InventarioPage.css";
 
 export default function InventarioPage() {
   const authUser = useAuthUser();
+
+  // DEPOSITO solo consulta el stock de su propio depósito.
+  if (authUser?.rol === "DEPOSITO") {
+    return <InventarioDepositoView />;
+  }
+
+  return <InventarioGestion authUser={authUser} />;
+}
+
+/** Gestión de inventario por comercio (ADMIN elige comercio; COMERCIO ve el suyo). */
+function InventarioGestion({ authUser }) {
   const esComercio = authUser?.rol === "COMERCIO";
 
   const {
