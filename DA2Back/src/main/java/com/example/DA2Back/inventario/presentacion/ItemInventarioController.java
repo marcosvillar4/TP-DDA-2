@@ -82,11 +82,12 @@ public class ItemInventarioController {
 
     @GetMapping("/deposito/{depositoId}")
     public ResponseEntity<List<ItemInventarioResponseDTO>> obtenerPorDeposito(
-            @PathVariable Long depositoId) {
+            @PathVariable Long depositoId,
+            @AuthenticationPrincipal Usuario usuario) {
 
         List<ItemInventarioResponseDTO> items =
                 itemInventarioService
-                        .obtenerPorDeposito(depositoId)
+                        .obtenerPorDeposito(depositoId, usuario)
                         .stream()
                         .map(ItemInventarioMapper::toResponseDTO)
                         .collect(Collectors.toList());
