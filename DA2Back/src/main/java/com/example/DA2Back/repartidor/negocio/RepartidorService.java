@@ -289,6 +289,10 @@ public class RepartidorService implements IRepartidorService {
                         .id(pedido.getId())
                         .estado(pedido.getEstado())
                         .direccionDestino(pedido.getDireccionDestino())
+                        .direccionOrigen(pedido.getDireccionOrigen())
+                        .fechaCreacion(pedido.getFechaCreacion())
+                        .depositoId(pedido.getDepositoId())
+                        .detalles(pedidosRepository.buscarDetallesParaRespuesta(pedido.getId()))
                         .build())
                 .orElse(null);
     }

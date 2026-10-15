@@ -427,6 +427,25 @@ class RepartidorServiceTest {
     }
 
     @Test
+    void perfilNoInventaDatosAusentesEnPedidoAntiguo() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        var pedido = Pedido.builder().id(50L).estado(EstadoPedido.ASIGNADO)
+                .direccionDestino("Destino antiguo").build();
+        when(pedidosRepository.findFirstByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(Optional.of(pedido));
+        when(pedidosRepository.buscarDetallesParaRespuesta(50L)).thenReturn(List.of());
+
+        var actual = repartidorService.obtenerPorUsuarioId(1L).getPedidoActual();
+        assertEquals(50L, actual.getId());
+        assertEquals("Destino antiguo", actual.getDireccionDestino());
+        assertNull(actual.getDireccionOrigen());
+        assertNull(actual.getFechaCreacion());
+        assertNull(actual.getDepositoId());
+        assertTrue(actual.getDetalles().isEmpty());
+    }
+
+    @Test
     @DisplayName("Repartidor DISPONIBLE obtiene pedidos LISTO_PARA_RETIRAR sin asignar")
     void obtenerPedidosDisponibles_repartidorDisponible() {
         var pedidoListo = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()

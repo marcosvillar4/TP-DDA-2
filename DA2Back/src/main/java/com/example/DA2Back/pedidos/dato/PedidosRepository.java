@@ -19,6 +19,16 @@ import java.util.Optional;
 public interface PedidosRepository extends JpaRepository<Pedido, Long> {
 
     @Query("""
+            select new com.example.DA2Back.pedidos.dto.DetallePedidoResponseDTO(
+                d.id, p.id, p.nombre, d.cantidad)
+            from DetallePedido d join d.producto p
+            where d.pedido.id = :pedidoId
+            order by d.id
+            """)
+    List<com.example.DA2Back.pedidos.dto.DetallePedidoResponseDTO> buscarDetallesParaRespuesta(
+            @Param("pedidoId") Long pedidoId);
+
+    @Query("""
             select p from Pedido p
             where (:comercioId is null or p.comercioId = :comercioId)
               and (:depositoId is null or p.depositoId = :depositoId)

@@ -1,6 +1,9 @@
 package com.example.DA2Back.repartidor.dto;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dto.DetallePedidoResponseDTO;
+import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +19,8 @@ public class PedidoActualDTO {
     private Long id;
     private EstadoPedido estado;
     private String direccionDestino;
+    private String direccionOrigen;
+    private LocalDateTime fechaCreacion;
+    private Long depositoId;
+    private List<DetallePedidoResponseDTO> detalles;
 }
