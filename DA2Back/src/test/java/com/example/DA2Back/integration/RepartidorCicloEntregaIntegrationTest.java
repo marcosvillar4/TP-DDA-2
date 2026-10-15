@@ -248,7 +248,7 @@ class RepartidorCicloEntregaIntegrationTest {
 
     private void assertHistorial(Long pedidoId, EstadoPedido estado, int cantidad) {
         long ocurrencias = historialRepository.findByPedidoIdOrderByFechaHoraDesc(pedidoId).stream()
-                .filter(historial -> historial.getEstado() == estado)
+                .filter(historial -> historial.getEstado().name().equals(estado.name()))
                 .count();
         assertEquals(cantidad, ocurrencias);
     }

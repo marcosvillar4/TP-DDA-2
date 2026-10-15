@@ -1,8 +1,11 @@
 package com.example.DA2Back.pedidos.negocio;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoHistoricoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedidoRepository;
 import com.example.DA2Back.inventario.dato.Inventario;
@@ -32,6 +35,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -58,6 +63,8 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final IInventario inventarioService;
     private final ItemInventarioRepository itemInventarioRepository;
     private final ProductoRepository productoRepository;
+    private final DepositoRepository depositoRepository;
+    private final AccesoPedidos accesoPedidos;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -65,9 +72,45 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
         @Override
     @Transactional
-    public PedidoResponseDTO crearPedido(CrearPedidoDTO dto) {
+    public PedidoResponseDTO crearPedido(CrearPedidoDTO dto, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
+        if (dto == null) throw new IllegalArgumentException("El pedido es obligatorio");
+        Long comercioId = alcance.comercioId() != null ? alcance.comercioId() : dto.getComercioId();
+        if (dto.getComercioId() != null) alcance.validarComercio(dto.getComercioId());
+        validarDepositoDelComercio(comercioId, dto.getDepositoId());
+
+        // Resolver y validar todos los items antes de descontar una sola unidad.
+        Map<Long, Integer> cantidades = new LinkedHashMap<>();
+        if (dto.getDetalles() != null) {
+            for (DetallePedidoDTO d : dto.getDetalles()) {
+                if (d == null || d.getProductoId() == null || d.getCantidad() == null || d.getCantidad() <= 0) {
+                    throw new IllegalArgumentException("Cada detalle requiere producto y cantidad positiva");
+                }
+                long total = (long) cantidades.getOrDefault(d.getProductoId(), 0) + d.getCantidad();
+                if (total > Integer.MAX_VALUE) throw new IllegalArgumentException("Cantidad fuera de rango");
+                cantidades.put(d.getProductoId(), (int) total);
+            }
+        }
+        Map<Long, ItemInventario> items = new LinkedHashMap<>();
+        if (!cantidades.isEmpty()) {
+            Inventario inv = inventarioService.obtenerPorComercio(comercioId);
+            validarComercioRelacionado(comercioId, inv.getComercio() == null ? null : inv.getComercio().getId());
+            for (var entrada : cantidades.entrySet()) {
+                Producto prod = productoRepository.findById(entrada.getKey())
+                        .orElseThrow(() -> new NoSuchElementException("Producto no encontrado"));
+                validarComercioRelacionado(comercioId, prod.getComercio() == null ? null : prod.getComercio().getId());
+                ItemInventario item = itemInventarioRepository
+                        .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
+                        .orElseThrow(() -> new IllegalStateException("Producto sin stock en el deposito seleccionado"));
+                validarItemDelComercio(item, comercioId);
+                if (item.getCantidad() == null || item.getCantidad() < entrada.getValue()) {
+                    throw new IllegalStateException("Stock insuficiente para el producto: " + prod.getNombre());
+                }
+                items.put(prod.getId(), item);
+            }
+        }
         Pedido pedido = Pedido.builder()
-                .comercioId(dto.getComercioId())
+                .comercioId(comercioId)
                 .depositoId(dto.getDepositoId())
                 .direccionDestino(dto.getDireccionDestino())
                 .direccionOrigen(dto.getDireccionOrigen())
@@ -76,19 +119,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .build();
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-            Inventario inv = inventarioService.obtenerPorComercio(dto.getComercioId());
             for (DetallePedidoDTO d : dto.getDetalles()) {
-                Producto prod = productoRepository.findById(d.getProductoId())
-                        .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + d.getProductoId()));
-
-                ItemInventario item = itemInventarioRepository
-                        .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
-                        .orElseThrow(() -> new IllegalStateException("El producto " + prod.getNombre() + " no esta en el deposito seleccionado"));
-
-                if (item.getCantidad() < d.getCantidad()) {
-                    throw new IllegalStateException("Stock insuficiente para el producto: " + prod.getNombre());
-                }
-
+                ItemInventario item = items.get(d.getProductoId());
+                Producto prod = item.getProducto();
                 item.setCantidad(item.getCantidad() - d.getCantidad());
                 itemInventarioRepository.save(item);
 
@@ -112,30 +145,44 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
     @Override
     @Transactional(readOnly = true)
-    public PedidoResponseDTO obtenerPorId(Long id) {
-        return toResponseDTO(buscarPedido(id));
+    public PedidoResponseDTO obtenerPorId(Long id, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO);
+        Pedido pedido = buscarPedido(id);
+        alcance.validarPedido(pedido);
+        return toResponseDTO(pedido);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PedidoResponseDTO> listarTodos() {
-        return pedidosRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
+    public List<PedidoResponseDTO> listarTodos(Usuario usuario) {
+        return consultarEnAlcance(usuario, null, null, false);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PedidoResponseDTO> listarPorComercio(Long comercioId) {
-        return pedidosRepository.findByComercioId(comercioId).stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
+    public List<PedidoResponseDTO> listarPorComercio(Long comercioId, Usuario usuario) {
+        return consultarEnAlcance(usuario, comercioId, null, false);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PedidoResponseDTO> listarPorEstado(EstadoPedido estado) {
-        return pedidosRepository.findByEstado(estado).stream()
+    public List<PedidoResponseDTO> listarPorEstado(EstadoPedido estado, Usuario usuario) {
+        return consultarEnAlcance(usuario, null, estado, false);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> listarPendientesAsignables(Usuario usuario) {
+        return consultarEnAlcance(usuario, null, EstadoPedido.LISTO_PARA_RETIRAR, true);
+    }
+
+    private List<PedidoResponseDTO> consultarEnAlcance(Usuario usuario, Long comercioId,
+                                                     EstadoPedido estado, boolean sinRepartidor) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO);
+        if (comercioId != null) alcance.validarComercio(comercioId);
+        return pedidosRepository.buscarEnAlcance(
+                alcance.comercioId() != null ? alcance.comercioId() : comercioId,
+                alcance.depositoId(), estado, sinRepartidor).stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -160,8 +207,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
      */
         @Override
     @Transactional
-    public PedidoResponseDTO marcarListoParaRetirar(Long id) {
-        Pedido pedido = buscarPedido(id);
+    public PedidoResponseDTO marcarListoParaRetirar(Long id, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        alcance.validarPedido(pedido);
+        validarDepositoDelComercio(pedido.getComercioId(), pedido.getDepositoId());
         resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
@@ -292,8 +342,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
      */
     @Override
     @Transactional
-    public PedidoResponseDTO cancelar(Long id) {
-        Pedido pedido = buscarPedido(id);
+    public PedidoResponseDTO cancelar(Long id, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        alcance.validarPedido(pedido);
+        validarEntidadesParaRestaurar(pedido);
         resolverEstado.resolver(pedido.getEstado()).cancelar(pedido);
         restaurarStock(pedido);
         pedidosRepository.save(pedido);
@@ -353,7 +406,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private void registrarHistorial(Pedido pedido, EstadoPedido estado) {
         HistorialEstadoPedido historial = HistorialEstadoPedido.builder()
                 .pedido(pedido)
-                .estado(estado)
+                .estado(EstadoHistoricoPedido.desdeOperativo(estado))
                 .fechaHora(LocalDateTime.now())
                 .build();
         historialRepository.save(historial);
@@ -450,7 +503,42 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         if (usuarioId == null) return null;
         return usuarioRepository.findById(usuarioId).orElse(null);
     }
+
+    private void validarDepositoDelComercio(Long comercioId, Long depositoId) {
+        if (comercioId == null || depositoId == null) {
+            throw new IllegalArgumentException("Comercio y deposito son obligatorios");
+        }
+        var deposito = depositoRepository.findById(depositoId)
+                .orElseThrow(() -> new NoSuchElementException("Deposito no encontrado"));
+        validarComercioRelacionado(comercioId, deposito.getComercio() == null ? null : deposito.getComercio().getId());
+    }
+
+    private void validarComercioRelacionado(Long esperado, Long real) {
+        if (esperado == null || !esperado.equals(real)) {
+            throw new AccessDeniedException("Las entidades no pertenecen al comercio autorizado");
+        }
+    }
+
+    private void validarItemDelComercio(ItemInventario item, Long comercioId) {
+        validarComercioRelacionado(comercioId, item.getInventario().getComercio() == null
+                ? null : item.getInventario().getComercio().getId());
+        validarComercioRelacionado(comercioId, item.getProducto().getComercio() == null
+                ? null : item.getProducto().getComercio().getId());
+        validarComercioRelacionado(comercioId, item.getDeposito().getComercio() == null
+                ? null : item.getDeposito().getComercio().getId());
+    }
+
+    private void validarEntidadesParaRestaurar(Pedido pedido) {
+        validarDepositoDelComercio(pedido.getComercioId(), pedido.getDepositoId());
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) return;
+        Inventario inv = inventarioService.obtenerPorComercio(pedido.getComercioId());
+        validarComercioRelacionado(pedido.getComercioId(), inv.getComercio() == null ? null : inv.getComercio().getId());
+        for (DetallePedido detalle : pedido.getDetalles()) {
+            validarComercioRelacionado(pedido.getComercioId(), detalle.getProducto().getComercio() == null
+                    ? null : detalle.getProducto().getComercio().getId());
+            itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(
+                    inv.getId(), detalle.getProducto().getId(), pedido.getDepositoId())
+                    .ifPresent(item -> validarItemDelComercio(item, pedido.getComercioId()));
+        }
+    }
 }
-
-
-

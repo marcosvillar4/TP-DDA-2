@@ -15,6 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.pedidos.negocio.AccesoPedidos;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
+import com.example.DA2Back.comercio.dato.Comercio;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedidoRepository;
@@ -57,6 +62,10 @@ class ServicioDePedidosImplTest {
     @InjectMocks
     private ServicioDePedidosImpl servicioDePedidos;
 
+    @Mock private AccesoPedidos accesoPedidos;
+    @Mock private DepositoRepository depositoRepository;
+    private final Usuario admin = Usuario.builder().id(2L).rol(Rol.ADMIN).build();
+
     private Usuario usuarioRepartidor;
     private Repartidor repartidor;
 
@@ -92,7 +101,9 @@ class ServicioDePedidosImplTest {
         when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedido));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioRepartidor));
 
-        PedidoResponseDTO response = servicioDePedidos.obtenerPorId(50L);
+        when(accesoPedidos.resolver(admin, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO))
+                .thenReturn(new AccesoPedidos.Alcance(null, null));
+        PedidoResponseDTO response = servicioDePedidos.obtenerPorId(50L, admin);
 
         assertEquals(10L, response.getRepartidorId());
         assertEquals("Carlos Ruiz", response.getRepartidorNombre());
@@ -104,6 +115,11 @@ class ServicioDePedidosImplTest {
         com.example.DA2Back.producto.dato.Producto producto = new com.example.DA2Back.producto.dato.Producto();
         producto.setId(101L);
         producto.setNombre("Zapatillas");
+        Comercio comercio = Comercio.builder().id(100L).build();
+        producto.setComercio(comercio);
+        Deposito deposito = new Deposito();
+        deposito.setId(10L);
+        deposito.setComercio(comercio);
 
         com.example.DA2Back.pedidos.dato.DetallePedido detalle = com.example.DA2Back.pedidos.dato.DetallePedido.builder()
                 .id(1L)
@@ -123,20 +139,27 @@ class ServicioDePedidosImplTest {
 
         com.example.DA2Back.inventario.dato.Inventario inv = new com.example.DA2Back.inventario.dato.Inventario();
         inv.setId(5L);
+        inv.setComercio(comercio);
 
         com.example.DA2Back.inventario.dato.ItemInventario item = new com.example.DA2Back.inventario.dato.ItemInventario();
         item.setId(20L);
         item.setCantidad(7);
+        item.setInventario(inv);
+        item.setProducto(producto);
+        item.setDeposito(deposito);
 
         com.example.DA2Back.pedidos.negocio.state.IEstadoPedido estadoMock = org.mockito.Mockito.mock(com.example.DA2Back.pedidos.negocio.state.IEstadoPedido.class);
 
-        when(pedidosRepository.findById(50L)).thenReturn(Optional.of(pedido));
+        when(pedidosRepository.findByIdForUpdate(50L)).thenReturn(Optional.of(pedido));
+        when(accesoPedidos.resolver(admin, Rol.ADMIN, Rol.COMERCIO))
+                .thenReturn(new AccesoPedidos.Alcance(null, null));
+        when(depositoRepository.findById(10L)).thenReturn(Optional.of(deposito));
         when(resolverEstado.resolver(EstadoPedido.CREADO)).thenReturn(estadoMock);
         when(inventarioService.obtenerPorComercio(100L)).thenReturn(inv);
         when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(5L, 101L, 10L))
                 .thenReturn(Optional.of(item));
 
-        servicioDePedidos.cancelar(50L);
+        servicioDePedidos.cancelar(50L, admin);
 
         assertEquals(10, item.getCantidad());
         org.mockito.Mockito.verify(itemInventarioRepository).save(item);
@@ -171,7 +194,7 @@ class ServicioDePedidosImplTest {
         org.mockito.Mockito.verify(pedidosRepository).save(pedido);
         org.mockito.Mockito.verify(repartidorRepository).save(repartidor);
         org.mockito.Mockito.verify(historialRepository).save(org.mockito.Mockito.argThat(historial ->
-                historial.getPedido() == pedido && historial.getEstado() == EstadoPedido.ASIGNADO));
+                historial.getPedido() == pedido && historial.getEstado().name().equals(EstadoPedido.ASIGNADO.name())));
     }
 
     @Test

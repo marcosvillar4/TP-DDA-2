@@ -138,8 +138,8 @@ public class SecurityConfig {
         .hasRole("ADMIN")
     .requestMatchers(HttpMethod.DELETE, "/api/pedidos/*/cancelar")
         .hasAnyRole("COMERCIO", "ADMIN")
-    .requestMatchers("/api/pedidos/**")
-        .authenticated()
+    .requestMatchers("/api/pedidos", "/api/pedidos/**")
+        .hasAnyRole("ADMIN", "COMERCIO", "DEPOSITO")
 
     .anyRequest().authenticated()
 )

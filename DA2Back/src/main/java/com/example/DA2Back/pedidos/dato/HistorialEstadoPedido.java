@@ -37,7 +37,7 @@ public class HistorialEstadoPedido {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
-    private EstadoPedido estado;
+    private EstadoHistoricoPedido estado;
 
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;

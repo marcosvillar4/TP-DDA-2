@@ -18,6 +18,18 @@ import java.util.Optional;
 @Repository
 public interface PedidosRepository extends JpaRepository<Pedido, Long> {
 
+    @Query("""
+            select p from Pedido p
+            where (:comercioId is null or p.comercioId = :comercioId)
+              and (:depositoId is null or p.depositoId = :depositoId)
+              and (:estado is null or p.estado = :estado)
+              and (:sinRepartidor = false or p.repartidor is null)
+            """)
+    List<Pedido> buscarEnAlcance(@Param("comercioId") Long comercioId,
+                               @Param("depositoId") Long depositoId,
+                               @Param("estado") EstadoPedido estado,
+                               @Param("sinRepartidor") boolean sinRepartidor);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Pedido p where p.id = :id")
     Optional<Pedido> findByIdForUpdate(@Param("id") Long id);
