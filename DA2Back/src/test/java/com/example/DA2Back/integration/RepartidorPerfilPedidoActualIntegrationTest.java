@@ -3,6 +3,8 @@ package com.example.DA2Back.integration;
 import com.example.DA2Back.Seguridad.dato.*;
 import com.example.DA2Back.Seguridad.negocio.JwtService;
 import com.example.DA2Back.comercio.dato.*;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.pedidos.dato.*;
 import com.example.DA2Back.producto.dato.*;
 import com.example.DA2Back.repartidor.dato.*;
@@ -38,6 +40,7 @@ class RepartidorPerfilPedidoActualIntegrationTest {
     @Autowired private PedidosRepository pedidos;
     @Autowired private ComercioRepository comercios;
     @Autowired private ProductoRepository productos;
+    @Autowired private DepositoRepository depositos;
     @Autowired private JdbcTemplate jdbc;
 
     @ParameterizedTest
@@ -51,7 +54,11 @@ class RepartidorPerfilPedidoActualIntegrationTest {
                 .direccion("Direccion").telefono("123").email(usuario.getEmail()).build());
         Producto producto = productos.save(new Producto(null, "SKU", "Producto real", null,
                 "Categoria", EstadoProducto.ACTIVO, comercio));
+        Deposito deposito = deposito(comercio, "Deposito del pedido", "Direccion del deposito");
         Pedido pedido = pedido(repartidor, origen);
+        pedido.setComercioId(comercio.getId());
+        pedido.setDepositoId(deposito.getId());
+        pedidos.saveAndFlush(pedido);
         jdbc.update("insert into detalles_pedido (pedido_id, producto_id, cantidad) values (?, ?, ?)",
                 pedido.getId(), producto.getId(), 3);
         Long detalleId = jdbc.queryForObject("select id from detalles_pedido where pedido_id = ?", Long.class, pedido.getId());
@@ -66,7 +73,9 @@ class RepartidorPerfilPedidoActualIntegrationTest {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.pedidoActual.id").value(pedido.getId().intValue()))
                         .andExpect(jsonPath("$.pedidoActual.estado").value(estados[i]))
-                        .andExpect(jsonPath("$.pedidoActual.depositoId").value(1))
+                        .andExpect(jsonPath("$.pedidoActual.depositoId").value(deposito.getId().intValue()))
+                        .andExpect(jsonPath("$.pedidoActual.depositoNombre").value("Deposito del pedido"))
+                        .andExpect(jsonPath("$.pedidoActual.depositoDireccion").value("Direccion del deposito"))
                         .andExpect(jsonPath("$.pedidoActual.direccionDestino").value("Destino real"))
                         .andExpect(jsonPath("$.pedidoActual.fechaCreacion").value("2026-10-15T10:30:00"))
                         .andExpect(jsonPath("$.pedidoActual.detalles[0].id").value(detalleId.intValue()))
@@ -101,10 +110,92 @@ class RepartidorPerfilPedidoActualIntegrationTest {
                 "select estado from historial_estado_pedido where pedido_id = ?", String.class, pedido.getId()));
     }
 
+    @Test
+    void depositoInexistenteNoImpideConsultarElPerfil() throws Exception {
+        Usuario usuario = usuario();
+        Pedido pedido = pedido(perfil(usuario), "Origen independiente");
+        pedido.setDepositoId(Long.MAX_VALUE);
+        pedidos.saveAndFlush(pedido);
+
+        mvc.perform(get("/repartidor/me").header("Authorization", "Bearer " + jwt.generateToken(usuario)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedidoActual.id").value(pedido.getId().intValue()))
+                .andExpect(jsonPath("$.pedidoActual.depositoId").value(Long.MAX_VALUE))
+                .andExpect(jsonPath("$.pedidoActual.depositoNombre").value(nullValue()))
+                .andExpect(jsonPath("$.pedidoActual.depositoDireccion").value(nullValue()))
+                .andExpect(jsonPath("$.pedidoActual.direccionOrigen").value("Origen independiente"));
+    }
+
+    @Test
+    void perfilSinPedidoActivoSigueDisponible() throws Exception {
+        Usuario usuario = usuario();
+        Repartidor repartidor = perfil(usuario);
+        repartidor.setEstado(EstadoRepartidor.DISPONIBLE);
+        repartidores.saveAndFlush(repartidor);
+
+        mvc.perform(get("/repartidor/me").header("Authorization", "Bearer " + jwt.generateToken(usuario)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("DISPONIBLE"))
+                .andExpect(jsonPath("$.pedidoActual").value(nullValue()));
+    }
+
+    @Test
+    void perfilSoloExponeDepositoDelPedidoPropioAunqueSeManipulenIds() throws Exception {
+        Comercio comercio = comercio(usuario(Rol.COMERCIO));
+        Usuario usuarioA = usuario();
+        Usuario usuarioB = usuario();
+        Deposito depositoA = deposito(comercio, "Deposito A", "Direccion A");
+        Deposito depositoB = deposito(comercio, "Deposito B", "Direccion B");
+        Pedido pedidoA = pedido(perfil(usuarioA), "Origen A");
+        pedidoA.setComercioId(comercio.getId());
+        pedidoA.setDepositoId(depositoA.getId());
+        pedidos.saveAndFlush(pedidoA);
+        Pedido pedidoB = pedido(perfil(usuarioB), "Origen B");
+        pedidoB.setComercioId(comercio.getId());
+        pedidoB.setDepositoId(depositoB.getId());
+        pedidos.saveAndFlush(pedidoB);
+
+        mvc.perform(get("/repartidor/me")
+                        .param("repartidorId", pedidoB.getRepartidor().getId().toString())
+                        .param("depositoId", depositoB.getId().toString())
+                        .header("Authorization", "Bearer " + jwt.generateToken(usuarioA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedidoActual.id").value(pedidoA.getId().intValue()))
+                .andExpect(jsonPath("$.pedidoActual.depositoId").value(depositoA.getId().intValue()))
+                .andExpect(jsonPath("$.pedidoActual.depositoNombre").value("Deposito A"))
+                .andExpect(jsonPath("$.pedidoActual.depositoDireccion").value("Direccion A"))
+                .andExpect(jsonPath("$.pedidoActual.usuarioId").doesNotExist())
+                .andExpect(jsonPath("$.pedidoActual.usuarioEmail").doesNotExist());
+        mvc.perform(get("/repartidor/me").header("Authorization", "Bearer " + jwt.generateToken(usuarioB)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedidoActual.id").value(pedidoB.getId().intValue()))
+                .andExpect(jsonPath("$.pedidoActual.depositoNombre").value("Deposito B"))
+                .andExpect(jsonPath("$.pedidoActual.depositoDireccion").value("Direccion B"));
+    }
+
     private Usuario usuario() {
+        return usuario(Rol.REPARTIDOR);
+    }
+
+    private Usuario usuario(Rol rol) {
         return usuarios.save(Usuario.builder().email(UUID.randomUUID() + "@perfil.test").password("unused")
                 .DNI(UUID.randomUUID().toString()).nombre("Test").apellido("Perfil").telefono("123")
-                .rol(Rol.REPARTIDOR).estado(EstadoUsuario.VALIDADO).build());
+                .rol(rol).estado(EstadoUsuario.VALIDADO).build());
+    }
+
+    private Comercio comercio(Usuario usuario) {
+        return comercios.save(Comercio.builder().usuarioId(usuario.getId())
+                .nombreComercial("Comercio de prueba").razonSocial("Prueba").CUIT(UUID.randomUUID().toString())
+                .direccion("Direccion").telefono("123").email(usuario.getEmail()).build());
+    }
+
+    private Deposito deposito(Comercio comercio, String nombre, String direccion) {
+        Deposito deposito = new Deposito();
+        deposito.setNombre(nombre);
+        deposito.setDireccion(direccion);
+        deposito.setComercio(comercio);
+        deposito.setUsuarioId(usuario(Rol.DEPOSITO).getId());
+        return depositos.saveAndFlush(deposito);
     }
 
     private Repartidor perfil(Usuario usuario) {

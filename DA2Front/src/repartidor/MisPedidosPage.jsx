@@ -490,6 +490,9 @@ function PedidoActual({ pedido, operacionActiva, onAccion }) {
       </div>
 
       <div className="mis-pedidos-info-list">
+        <Info label="Depósito" value={pedido.depositoNombre || "Nombre no disponible"} />
+        <Info label="ID del depósito" value={pedido.depositoId != null ? `#${pedido.depositoId}` : "ID no disponible"} />
+        <Info icon={MapPin} label="Dirección del depósito" value={pedido.depositoDireccion || "Dirección no disponible"} />
         <Info icon={Route} label="Dirección de origen" value={pedido.direccionOrigen} />
         <Info icon={MapPin} label="Dirección de destino" value={pedido.direccionDestino} />
         <Info icon={Clock} label="Fecha de creación" value={formatFecha(pedido.fechaCreacion)} />

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -28,6 +29,9 @@ import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException;
+import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
@@ -55,6 +59,9 @@ class RepartidorServiceTest {
 
     @Mock
     private com.example.DA2Back.pedidos.negocio.ServicioDePedidos servicioDePedidos;
+
+    @Mock
+    private IDeposito depositoService;
 
     @InjectMocks
     private RepartidorService repartidorService;
@@ -442,7 +449,86 @@ class RepartidorServiceTest {
         assertNull(actual.getDireccionOrigen());
         assertNull(actual.getFechaCreacion());
         assertNull(actual.getDepositoId());
+        assertNull(actual.getDepositoNombre());
+        assertNull(actual.getDepositoDireccion());
         assertTrue(actual.getDetalles().isEmpty());
+        verifyNoInteractions(depositoService);
+    }
+
+    @Test
+    void perfilIncluyeDepositoSinReemplazarOrigenDelPedido() {
+        Pedido pedido = pedidoActivoConDeposito(30L);
+        pedido.setDireccionOrigen("Origen del pedido");
+        Deposito deposito = new Deposito();
+        deposito.setId(30L);
+        deposito.setNombre("Deposito real");
+        deposito.setDireccion("Direccion del deposito");
+        prepararPerfilConPedido(pedido);
+        when(depositoService.obtenerEntidadPorId(30L)).thenReturn(deposito);
+
+        var actual = repartidorService.obtenerPorUsuarioId(1L).getPedidoActual();
+
+        assertEquals(30L, actual.getDepositoId());
+        assertEquals("Deposito real", actual.getDepositoNombre());
+        assertEquals("Direccion del deposito", actual.getDepositoDireccion());
+        assertEquals("Origen del pedido", actual.getDireccionOrigen());
+        verify(depositoService).obtenerEntidadPorId(30L);
+    }
+
+    @Test
+    void perfilConDepositoInexistenteConservaId() {
+        prepararPerfilConPedido(pedidoActivoConDeposito(999L));
+        when(depositoService.obtenerEntidadPorId(999L))
+                .thenThrow(new RecursoNoEncontradoException("Deposito eliminado"));
+
+        var actual = repartidorService.obtenerPorUsuarioId(1L).getPedidoActual();
+
+        assertEquals(999L, actual.getDepositoId());
+        assertNull(actual.getDepositoNombre());
+        assertNull(actual.getDepositoDireccion());
+    }
+
+    @Test
+    void perfilSinPedidoActivoNoConsultaDepositos() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+
+        assertNull(repartidorService.obtenerPorUsuarioId(1L).getPedidoActual());
+
+        verifyNoInteractions(depositoService);
+    }
+
+    @Test
+    void listadoAdministrativoNoAgregaConsultasDeDepositos() {
+        when(repartidorRepository.findAll()).thenReturn(List.of(repartidor));
+        when(pedidosRepository.findFirstByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(Optional.of(pedidoActivoConDeposito(30L)));
+
+        var listado = repartidorService.listarTodos();
+
+        assertEquals(1, listado.size());
+        assertEquals(30L, listado.get(0).getPedidoActual().getDepositoId());
+        verifyNoInteractions(depositoService);
+    }
+
+    @Test
+    void perfilNoOcultaErroresInesperadosAlConsultarDeposito() {
+        prepararPerfilConPedido(pedidoActivoConDeposito(30L));
+        when(depositoService.obtenerEntidadPorId(30L)).thenThrow(new IllegalStateException("Servicio no disponible"));
+
+        assertThrows(IllegalStateException.class, () -> repartidorService.obtenerPorUsuarioId(1L));
+    }
+
+    private Pedido pedidoActivoConDeposito(Long depositoId) {
+        return Pedido.builder().id(50L).estado(EstadoPedido.ASIGNADO)
+                .depositoId(depositoId).direccionDestino("Destino").build();
+    }
+
+    private void prepararPerfilConPedido(Pedido pedido) {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.findFirstByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(Optional.of(pedido));
     }
 
     @Test

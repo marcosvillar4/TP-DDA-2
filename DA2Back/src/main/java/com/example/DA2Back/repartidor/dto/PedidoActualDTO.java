@@ -22,5 +22,7 @@ public class PedidoActualDTO {
     private String direccionOrigen;
     private LocalDateTime fechaCreacion;
     private Long depositoId;
+    private String depositoNombre;
+    private String depositoDireccion;
     private List<DetallePedidoResponseDTO> detalles;
 }
