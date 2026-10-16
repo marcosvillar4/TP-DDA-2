@@ -20,9 +20,14 @@ import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.RegistroDepositoDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.ActualizarPerfilAdminDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.PerfilAdminDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.UsuarioAdminDetalleDTO;
 import com.example.DA2Back.Seguridad.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.Seguridad.excepcion.UsuarioYaExisteException;
 import com.example.DA2Back.Seguridad.negocio.State.ResolverEstadoUsuario;
+import com.example.DA2Back.Seguridad.negocio.StrategyPerfilAdmin.IPerfilAdmin;
+import com.example.DA2Back.Seguridad.negocio.StrategyPerfilAdmin.ResolverPerfilAdmin;
 import com.example.DA2Back.Seguridad.negocio.State.IEstadoUsuario;
 
 import jakarta.transaction.Transactional;
@@ -35,6 +40,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioFactory usuarioFactory;
     private final ResolverEstadoUsuario resolverEstadoUsuario;
+    private final ResolverPerfilAdmin resolverPerfilAdmin;
     private final IDeposito depositoService;
     private final IComercio comercioService;
     private final PasswordEncoder passwordEncoder;
@@ -174,5 +180,41 @@ public class UsuarioServiceImpl implements IUsuarioService {
         transicion.accept(estadoActual, usuario);
 
         return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuario));
+    }
+
+    @Override
+    public UsuarioAdminDetalleDTO obtenerDetalleAdmin(Long id) {
+        return armarDetalleAdmin(buscarUsuario(id));
+    }
+
+    @Override
+    @Transactional
+    public UsuarioAdminDetalleDTO actualizarPerfilAdmin(Long id, ActualizarPerfilAdminDTO dto) {
+        Usuario usuario = buscarUsuario(id);
+ 
+        IPerfilAdmin perfil = resolverPerfilAdmin.resolver(usuario.getRol())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Los usuarios con rol " + usuario.getRol() + " no tienen datos de perfil editables"));
+ 
+        perfil.actualizar(usuario, dto);
+        usuarioRepository.save(usuario); // el vehículo del repartidor vive en Usuario
+ 
+        return armarDetalleAdmin(usuario);
+    }
+ 
+    private UsuarioAdminDetalleDTO armarDetalleAdmin(Usuario usuario) {
+        PerfilAdminDTO perfil = resolverPerfilAdmin.resolver(usuario.getRol())
+                .flatMap(p -> p.obtener(usuario))
+                .orElse(null);
+ 
+        return UsuarioAdminDetalleDTO.builder()
+                .usuario(UsuarioMapper.toResponseDTO(usuario))
+                .perfil(perfil)
+                .build();
+    }
+ 
+    private Usuario buscarUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + id));
     }
 }

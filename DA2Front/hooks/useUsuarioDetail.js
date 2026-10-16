@@ -8,44 +8,69 @@ import {
   desbloquearUsuario,
 } from "../api/usuariosApi";
 
+const toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 2200,
+  timerProgressBar: true,
+});
+
 export function useUsuarioDetail(id) {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [accionEnCurso, setAccionEnCurso] = useState(false);
+  const [recarga, setRecarga] = useState(0);
 
-  async function cargar() {
+  useEffect(() => {
+    // "cancelado" evita pisar el estado con la respuesta de un id anterior
+    // si el usuario navega rápido entre detalles (cola de revisión).
+    let cancelado = false;
     setLoading(true);
     setError(null);
-    try {
-      setUsuario(await fetchUsuarioPorId(id));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+    fetchUsuarioPorId(id)
+      .then((data) => !cancelado && setUsuario(data))
+      .catch((err) => !cancelado && setError(err.message))
+      .finally(() => !cancelado && setLoading(false));
+    return () => {
+      cancelado = true;
+    };
+  }, [id, recarga]);
 
-  useEffect(() => { cargar(); }, [id]);
+  const recargar = () => setRecarga((n) => n + 1);
 
-  async function ejecutar(accionFn, confirmacion) {
+  /** Devuelve true si la acción se confirmó y se ejecutó bien. */
+  async function ejecutar(accionFn, { titulo, texto, confirmar, exito, peligro = false }) {
     const resultado = await Swal.fire({
-      icon: "question",
-      title: confirmacion.titulo,
-      text: confirmacion.texto,
+      icon: peligro ? "warning" : "question",
+      title: titulo,
+      text: texto,
       showCancelButton: true,
-      confirmButtonText: confirmacion.confirmar,
+      confirmButtonText: confirmar,
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#16223f",
+      confirmButtonColor: peligro ? "#d6273c" : "#16223f",
+      reverseButtons: true,
     });
-    if (!resultado.isConfirmed) return;
+    if (!resultado.isConfirmed) return false;
 
     setAccionEnCurso(true);
     try {
-      setUsuario(await accionFn(id));
-      Swal.fire({ icon: "success", title: "Listo", confirmButtonColor: "#16223f" });
+      const actualizado = await accionFn(id);
+      // Se mezcla con el estado previo para no perder datos que la respuesta
+      // de la transición no trae (por ejemplo, el "perfil" del rol).
+      if (actualizado) setUsuario((prev) => ({ ...prev, ...actualizado }));
+      else recargar();
+      toast.fire({ icon: "success", title: exito });
+      return true;
     } catch (err) {
-      Swal.fire({ icon: "error", title: "No se pudo completar", text: err.message, confirmButtonColor: "#16223f" });
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo completar",
+        text: err.message,
+        confirmButtonColor: "#16223f",
+      });
+      return false;
     } finally {
       setAccionEnCurso(false);
     }
@@ -53,13 +78,40 @@ export function useUsuarioDetail(id) {
 
   return {
     usuario,
-    setUsuario, // se expone para que useEditarUsuarioAdmin pueda actualizarlo tras guardar
+    setUsuario,
     loading,
     error,
     accionEnCurso,
-    validar: () => ejecutar(validarUsuario, { titulo: "¿Validar usuario?", texto: "Podrá iniciar sesión una vez validado.", confirmar: "Sí, validar" }),
-    rechazar: () => ejecutar(rechazarUsuario, { titulo: "¿Rechazar usuario?", texto: "No podrá volver a intentar validarse.", confirmar: "Sí, rechazar" }),
-    bloquear: () => ejecutar(bloquearUsuario, { titulo: "¿Bloquear usuario?", texto: "No podrá iniciar sesión hasta ser desbloqueado.", confirmar: "Sí, bloquear" }),
-    desbloquear: () => ejecutar(desbloquearUsuario, { titulo: "¿Desbloquear usuario?", texto: "Podrá volver a iniciar sesión.", confirmar: "Sí, desbloquear" }),
+    recargar,
+    validar: () =>
+      ejecutar(validarUsuario, {
+        titulo: "¿Validar usuario?",
+        texto: "Podrá iniciar sesión una vez validado.",
+        confirmar: "Sí, validar",
+        exito: "Usuario validado",
+      }),
+    rechazar: () =>
+      ejecutar(rechazarUsuario, {
+        titulo: "¿Rechazar usuario?",
+        texto: "No podrá volver a intentar validarse.",
+        confirmar: "Sí, rechazar",
+        exito: "Usuario rechazado",
+        peligro: true,
+      }),
+    bloquear: () =>
+      ejecutar(bloquearUsuario, {
+        titulo: "¿Bloquear usuario?",
+        texto: "No podrá iniciar sesión hasta ser desbloqueado.",
+        confirmar: "Sí, bloquear",
+        exito: "Usuario bloqueado",
+        peligro: true,
+      }),
+    desbloquear: () =>
+      ejecutar(desbloquearUsuario, {
+        titulo: "¿Desbloquear usuario?",
+        texto: "Podrá volver a iniciar sesión.",
+        confirmar: "Sí, desbloquear",
+        exito: "Usuario desbloqueado",
+      }),
   };
 }
