@@ -87,3 +87,17 @@ export async function resetearPasswordAdmin(id, dto) {
   }
   return handleResponse(response, "No se pudo resetear la contraseña.");
 }
+
+export async function actualizarPerfilAdmin(id, dto) {
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/admin/${id}/perfil`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(dto),
+    });
+  } catch {
+    throw new Error("No se pudo conectar con el servidor.");
+  }
+  return handleResponse(response, "No se pudieron guardar los datos del perfil.");
+}
