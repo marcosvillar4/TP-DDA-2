@@ -56,7 +56,7 @@ export default function MisPedidosPage() {
       if (!mountedRef.current) return;
       setPerfil(null);
       setPedidoActualDetalle(null);
-      setErrorPerfil(normalizarError(err));
+      setErrorPerfil(normalizarError(err, "perfil"));
     } finally {
       if (mountedRef.current) {
         setLoadingPerfil(false);
@@ -75,7 +75,7 @@ export default function MisPedidosPage() {
     } catch (err) {
       if (!mountedRef.current) return;
       setHistorial([]);
-      setErrorHistorial(normalizarError(err));
+      setErrorHistorial(normalizarError(err, "historial"));
     } finally {
       if (mountedRef.current) {
         setLoadingHistorial(false);
@@ -94,7 +94,7 @@ export default function MisPedidosPage() {
     } catch (err) {
       if (!mountedRef.current) return;
       setPedidosDisponibles([]);
-      setErrorDisponibles(normalizarError(err));
+      setErrorDisponibles(normalizarError(err, "disponibles"));
     } finally {
       if (mountedRef.current) {
         setLoadingDisponibles(false);
@@ -186,8 +186,13 @@ export default function MisPedidosPage() {
       });
     } catch (err) {
       if (!mountedRef.current) return;
-      const error = normalizarError(err);
+      const error = normalizarError(err, "operacion");
       setErrorOperacion(error);
+      if (err?.status === 409) {
+        // El cambio de perfil refresca o limpia disponibles mediante el efecto existente.
+        await cargarPerfil();
+        if (!mountedRef.current) return;
+      }
       await Swal.fire({
         icon: "error",
         title: error.titulo,
@@ -585,11 +590,36 @@ function EstadoPagina({ titulo, texto, accion, error = false }) {
   );
 }
 
-function normalizarError(err) {
+function normalizarError(err, contexto) {
+  const titulos = {
+    perfil: "No pudimos cargar tu perfil",
+    historial: "No pudimos cargar tu historial",
+    disponibles: "No pudimos cargar los pedidos disponibles",
+    operacion: "No pudimos actualizar el pedido",
+  };
+  const permisos = {
+    perfil: "Tu usuario no tiene permiso para consultar el perfil de repartidor.",
+    historial: "No tenés permiso para consultar este historial de pedidos.",
+    disponibles: "No tenés permiso para consultar pedidos disponibles.",
+    operacion: "No tenés permiso para realizar esta operación sobre el pedido.",
+  };
+  const mensaje = typeof err?.message === "string" ? err.message.trim() : "";
+  const detalle = mensaje === "Ocurrió un error inesperado. Intentá nuevamente." ? "" : mensaje;
+
+  if (err?.status === 400) {
+    return {
+      titulo: "Solicitud inválida",
+      texto: detalle || (contexto === "operacion"
+        ? "No se pudo procesar la operación. Revisá los datos del pedido e intentá nuevamente."
+        : "No se pudo procesar la consulta. Actualizá la información e intentá nuevamente."),
+      reintentar: true,
+    };
+  }
+
   if (err?.status === 401) {
     return {
       titulo: "Sesión expirada",
-      texto: "Iniciá sesión nuevamente para consultar tus pedidos.",
+      texto: "Iniciá sesión nuevamente para continuar.",
       reintentar: false,
     };
   }
@@ -597,30 +627,39 @@ function normalizarError(err) {
   if (err?.status === 403) {
     return {
       titulo: "Acceso denegado",
-      texto: "Tu usuario no tiene permiso para consultar el perfil de repartidor.",
+      texto: detalle || permisos[contexto],
       reintentar: false,
     };
   }
 
   if (err?.status === 404) {
     return {
-      titulo: "Perfil operativo pendiente",
-      texto: err?.message || "Todavía no tenés un perfil de repartidor configurado. Un administrador debe crearlo antes de operar.",
+      titulo: contexto === "perfil" ? "Perfil operativo pendiente"
+        : contexto === "operacion" ? "Pedido no encontrado" : "Información no encontrada",
+      texto: detalle || (contexto === "perfil"
+        ? "Todavía no tenés un perfil de repartidor configurado. Un administrador debe crearlo antes de operar."
+        : contexto === "operacion"
+          ? "El pedido ya no existe o no está disponible para esta operación."
+          : "No se encontró la información solicitada. Actualizá la consulta e intentá nuevamente."),
       reintentar: true,
     };
   }
 
   if (err?.status === 409) {
     return {
-      titulo: "Operación no disponible",
-      texto: err?.message || "El pedido o tu perfil cambiaron de estado. Actualizá la pantalla e intentá nuevamente.",
+      titulo: contexto === "operacion" ? "Operación no disponible" : "Consulta no disponible",
+      texto: detalle || (contexto === "operacion"
+        ? "El pedido o tu disponibilidad cambiaron de estado. Revisá la información antes de reintentar."
+        : "El estado actual no permite completar esta consulta."),
       reintentar: true,
     };
   }
 
   return {
-    titulo: "No pudimos cargar tus pedidos",
-    texto: err?.message || "Ocurrió un error al consultar el backend.",
+    titulo: titulos[contexto],
+    texto: detalle || (contexto === "operacion"
+      ? "No se pudo completar la operación. Intentá nuevamente."
+      : "No se pudo consultar el servidor. Intentá nuevamente."),
     reintentar: true,
   };
 }
