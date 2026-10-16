@@ -82,6 +82,10 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
         }
 
+        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario repartidor debe estar VALIDADO para crear el perfil operativo");
+        }
+
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
             throw new IllegalStateException("El usuario ya está asociado a un repartidor");
         }
@@ -190,6 +194,55 @@ public class RepartidorService implements IRepartidorService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerPedidosDisponiblesParaUsuario(Long usuarioId) {
+        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+
+        if (!repartidor.isActivo()) {
+            throw new IllegalStateException("El perfil de repartidor está inactivo");
+        }
+
+        if (repartidor.getEstado() != EstadoRepartidor.DISPONIBLE) {
+            throw new IllegalStateException(
+                    "El repartidor debe estar DISPONIBLE para consultar pedidos disponibles");
+        }
+
+        return servicioDePedidos.listarPendientesAsignables();
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+
+        return servicioDePedidos.asignarRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO retirarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.marcarRetiradoPorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO iniciarViajeParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.iniciarViajePorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO entregarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.entregarPorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<UsuarioRepartidorDisponibleDTO> listarUsuariosRepartidoresDisponibles() {
         return usuarioRepository.findAll()
                 .stream()
@@ -204,6 +257,13 @@ public class RepartidorService implements IRepartidorService {
         return repartidorRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException(
                         "Repartidor con id=" + id + " no encontrado"));
+    }
+
+    private Repartidor buscarRepartidorPorUsuarioId(Long usuarioId) {
+        return repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
     }
 
     private RepartidorResponseDTO toResponseDTO(Repartidor repartidor) {
@@ -229,6 +289,10 @@ public class RepartidorService implements IRepartidorService {
                         .id(pedido.getId())
                         .estado(pedido.getEstado())
                         .direccionDestino(pedido.getDireccionDestino())
+                        .direccionOrigen(pedido.getDireccionOrigen())
+                        .fechaCreacion(pedido.getFechaCreacion())
+                        .depositoId(pedido.getDepositoId())
+                        .detalles(pedidosRepository.buscarDetallesParaRespuesta(pedido.getId()))
                         .build())
                 .orElse(null);
     }

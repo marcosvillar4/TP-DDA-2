@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -87,6 +88,17 @@ public class GlobalExceptionHandler {
             NoSuchElementException ex) {
 
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    /**
+     * AccessDeniedException → 403 Forbidden
+     * Ejemplo: un repartidor intenta operar un pedido asignado a otro repartidor.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException ex) {
+
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     /**

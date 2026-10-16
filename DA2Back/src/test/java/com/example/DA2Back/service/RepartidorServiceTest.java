@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -272,13 +273,97 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe asignar pedido PENDIENTE_COTIZACION a repartidor DISPONIBLE")
+    @DisplayName("Debe delegar asignación administrativa a Pedidos")
     void asignarPedido_valido() {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         
         repartidorService.asignarPedido(10L, 50L);
 
         verify(servicioDePedidos).asignarRepartidor(50L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe tomar pedido usando el perfil del usuario autenticado")
+    void tomarPedido_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoAsignado = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.ASIGNADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.asignarRepartidor(70L, 10L)).thenReturn(pedidoAsignado);
+
+        var response = repartidorService.tomarPedidoParaUsuario(1L, 70L);
+
+        assertEquals(70L, response.getId());
+        assertEquals(EstadoPedido.ASIGNADO, response.getEstado());
+        assertEquals(10L, response.getRepartidorId());
+        verify(servicioDePedidos).asignarRepartidor(70L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe rechazar tomar pedido si el usuario no tiene perfil operativo")
+    void tomarPedido_sinPerfil() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class,
+                () -> repartidorService.tomarPedidoParaUsuario(1L, 70L));
+        verify(servicioDePedidos, never()).asignarRepartidor(any(), any());
+    }
+
+    @Test
+    @DisplayName("Debe retirar pedido usando el perfil del usuario autenticado")
+    void retirarPedido_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoRetirado = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.RETIRADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.marcarRetiradoPorRepartidor(70L, 10L)).thenReturn(pedidoRetirado);
+
+        var response = repartidorService.retirarPedidoParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.RETIRADO, response.getEstado());
+        verify(servicioDePedidos).marcarRetiradoPorRepartidor(70L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe iniciar viaje usando el perfil del usuario autenticado")
+    void iniciarViaje_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoEnCamino = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.EN_CAMINO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.iniciarViajePorRepartidor(70L, 10L)).thenReturn(pedidoEnCamino);
+
+        var response = repartidorService.iniciarViajeParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.EN_CAMINO, response.getEstado());
+        verify(servicioDePedidos).iniciarViajePorRepartidor(70L, 10L);
+    }
+
+    @Test
+    @DisplayName("Debe entregar pedido usando el perfil del usuario autenticado")
+    void entregarPedido_resuelveRepartidorPorUsuarioAutenticado() {
+        var pedidoEntregado = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .estado(EstadoPedido.ENTREGADO)
+                .repartidorId(10L)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.entregarPorRepartidor(70L, 10L)).thenReturn(pedidoEntregado);
+
+        var response = repartidorService.entregarPedidoParaUsuario(1L, 70L);
+
+        assertEquals(EstadoPedido.ENTREGADO, response.getEstado());
+        verify(servicioDePedidos).entregarPorRepartidor(70L, 10L);
     }
 
     @Test
@@ -339,6 +424,92 @@ class RepartidorServiceTest {
         assertEquals(1L, detalle.getUsuarioId());
         assertEquals("Carlos Ruiz", detalle.getNombreCompleto());
         verify(repartidorRepository).findByUsuarioId(1L);
+    }
+
+    @Test
+    void perfilNoInventaDatosAusentesEnPedidoAntiguo() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        var pedido = Pedido.builder().id(50L).estado(EstadoPedido.ASIGNADO)
+                .direccionDestino("Destino antiguo").build();
+        when(pedidosRepository.findFirstByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO)))
+                .thenReturn(Optional.of(pedido));
+        when(pedidosRepository.buscarDetallesParaRespuesta(50L)).thenReturn(List.of());
+
+        var actual = repartidorService.obtenerPorUsuarioId(1L).getPedidoActual();
+        assertEquals(50L, actual.getId());
+        assertEquals("Destino antiguo", actual.getDireccionDestino());
+        assertNull(actual.getDireccionOrigen());
+        assertNull(actual.getFechaCreacion());
+        assertNull(actual.getDepositoId());
+        assertTrue(actual.getDetalles().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Repartidor DISPONIBLE obtiene pedidos LISTO_PARA_RETIRAR sin asignar")
+    void obtenerPedidosDisponibles_repartidorDisponible() {
+        var pedidoListo = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
+                .id(70L)
+                .direccionDestino("Av. Córdoba 123")
+                .estado(EstadoPedido.LISTO_PARA_RETIRAR)
+                .build();
+
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.listarPendientesAsignables())
+                .thenReturn(List.of(pedidoListo));
+
+        var disponibles = repartidorService.obtenerPedidosDisponiblesParaUsuario(1L);
+
+        assertEquals(1, disponibles.size());
+        assertEquals(70L, disponibles.get(0).getId());
+        assertEquals(EstadoPedido.LISTO_PARA_RETIRAR, disponibles.get(0).getEstado());
+        assertNull(disponibles.get(0).getRepartidorId());
+        verify(servicioDePedidos).listarPendientesAsignables();
+    }
+
+    @Test
+    @DisplayName("No devuelve pedidos cuando no hay LISTO_PARA_RETIRAR sin asignar")
+    void obtenerPedidosDisponibles_listaVacia() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+        when(servicioDePedidos.listarPendientesAsignables())
+                .thenReturn(List.of());
+
+        var disponibles = repartidorService.obtenerPedidosDisponiblesParaUsuario(1L);
+
+        assertTrue(disponibles.isEmpty());
+        verify(servicioDePedidos).listarPendientesAsignables();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar consulta de pedidos disponibles si el usuario no tiene perfil")
+    void obtenerPedidosDisponibles_sinPerfil() {
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class,
+                () -> repartidorService.obtenerPedidosDisponiblesParaUsuario(1L));
+        verify(servicioDePedidos, never()).listarPendientesAsignables();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar consulta de pedidos disponibles si el perfil está inactivo")
+    void obtenerPedidosDisponibles_repartidorInactivo() {
+        repartidor.setActivo(false);
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+
+        assertThrows(IllegalStateException.class,
+                () -> repartidorService.obtenerPedidosDisponiblesParaUsuario(1L));
+        verify(servicioDePedidos, never()).listarPendientesAsignables();
+    }
+
+    @Test
+    @DisplayName("Debe rechazar consulta de pedidos disponibles si el repartidor no está DISPONIBLE")
+    void obtenerPedidosDisponibles_repartidorNoDisponible() {
+        repartidor.setEstado(EstadoRepartidor.NO_DISPONIBLE);
+        when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
+
+        assertThrows(IllegalStateException.class,
+                () -> repartidorService.obtenerPedidosDisponiblesParaUsuario(1L));
+        verify(servicioDePedidos, never()).listarPendientesAsignables();
     }
 
     @Test
