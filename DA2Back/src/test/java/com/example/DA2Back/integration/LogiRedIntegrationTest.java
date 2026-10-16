@@ -1,6 +1,10 @@
 package com.example.DA2Back.integration;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.negocio.UsuarioFactory;
@@ -37,8 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * gracias a @TestInstance(PER_CLASS).
  *
  * Nota: usa /auth/** (mapping de main) en lugar de /api/auth/**.
- * No depende de ComercioRepository ya que ese módulo no tiene
- * repositorio en main. El comercioId del pedido es un Long simple.
+ * Crea comercio y deposito reales de prueba para validar la coherencia del pedido.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -58,13 +61,16 @@ class LogiRedIntegrationTest {
 
     @Autowired
     private PedidosRepository pedidosRepository;
+    @Autowired private ComercioRepository comercios;
+    @Autowired private DepositoRepository depositos;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** Estado compartido entre tests ordenados */
     private String tokenJwt;
     private Long pedidoId;
-    private final Long COMERCIO_ID = 1L; // ID referencial, no FK real
+    private Long COMERCIO_ID;
+    private Long depositoId;
 
     private static final String ADMIN_EMAIL = "admin@da2back.com";
     private static final String ADMIN_PASSWORD = "admin123";
@@ -74,6 +80,16 @@ class LogiRedIntegrationTest {
 
     @BeforeAll
     void sembrarDatos() {
+        var comercio = comercios.save(Comercio.builder().usuarioId(900001L)
+                .nombreComercial("E2E").razonSocial("E2E").direccion("Direccion")
+                .CUIT("e2e").telefono("123").email("e2e@test.com").build());
+        var deposito = new Deposito();
+        deposito.setNombre("E2E");
+        deposito.setDireccion("Direccion");
+        deposito.setUsuarioId(900002L);
+        deposito.setComercio(comercio);
+        COMERCIO_ID = comercio.getId();
+        depositoId = depositos.save(deposito).getId();
         boolean existeAdmin = usuarioRepository.findAll().stream()
                 .anyMatch(u -> u.getRol() == Rol.ADMIN);
 
@@ -168,10 +184,10 @@ class LogiRedIntegrationTest {
         String body = String.format("""
                 {
                   "comercioId": %d,
-                  "depositoId": 1,
+                  "depositoId": %d,
                   "direccionDestino": "Av. Rivadavia 5000, CABA"
                 }
-                """, COMERCIO_ID);
+                """, COMERCIO_ID, depositoId);
 
         MvcResult result = mockMvc.perform(post("/api/pedidos")
                         .contentType(MediaType.APPLICATION_JSON)

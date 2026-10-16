@@ -1,6 +1,6 @@
 package com.example.DA2Back.pedidos.dto;
 
-import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoHistoricoPedido;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +13,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistorialEstadoDTO {
     private Long id;
-    private EstadoPedido estado;
+    private EstadoHistoricoPedido estado;
     private LocalDateTime fechaHora;
 }

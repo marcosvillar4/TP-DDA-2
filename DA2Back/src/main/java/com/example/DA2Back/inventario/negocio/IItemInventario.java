@@ -14,6 +14,9 @@ public interface IItemInventario {
 
     List<ItemInventario> obtenerPorDeposito(Long depositoId);
 
+    /** Ítems de un depósito, validando que el usuario tenga permiso para verlo. */
+    List<ItemInventario> obtenerPorDeposito(Long depositoId, Usuario usuario);
+
     List<ItemInventario> obtenerPorProducto(Long productoId);
 
     ItemInventario crear(
