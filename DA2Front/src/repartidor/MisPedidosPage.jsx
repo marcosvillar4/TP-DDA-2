@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Clock, MapPin, PackageCheck, RefreshCw, Route, Truck } from "lucide-react";
 import { getMiHistorialRepartidor, getMiPerfilRepartidor } from "../../api/repartidorPerfilApi";
 import BadgeEstado from "../pedidos/components/BadgeEstado";
@@ -54,46 +55,13 @@ export default function MisPedidosPage() {
 
   useEffect(() => {
     mountedRef.current = true;
-
-    async function cargarPerfilInicial() {
-      try {
-        const perfilData = await getMiPerfilRepartidor();
-        if (!mountedRef.current) return;
-        setPerfil(perfilData);
-      } catch (err) {
-        if (!mountedRef.current) return;
-        setPerfil(null);
-        setErrorPerfil(normalizarError(err));
-      } finally {
-        if (mountedRef.current) {
-          setLoadingPerfil(false);
-        }
-      }
-    }
-
-    async function cargarHistorialInicial() {
-      try {
-        const historialData = await getMiHistorialRepartidor();
-        if (!mountedRef.current) return;
-        setHistorial(Array.isArray(historialData) ? historialData : []);
-      } catch (err) {
-        if (!mountedRef.current) return;
-        setHistorial([]);
-        setErrorHistorial(normalizarError(err));
-      } finally {
-        if (mountedRef.current) {
-          setLoadingHistorial(false);
-        }
-      }
-    }
-
-    cargarPerfilInicial();
-    cargarHistorialInicial();
+    cargarPerfil();
+    cargarHistorial();
 
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [cargarPerfil, cargarHistorial]);
 
   if (loadingPerfil) {
     return <EstadoPagina titulo="Cargando tus pedidos..." texto="Estamos consultando tu perfil operativo." />;
@@ -204,7 +172,7 @@ export default function MisPedidosPage() {
                     <td className="mis-pedidos-id">#{item.pedidoId}</td>
                     <td>{item.direccionEntrega || "—"}</td>
                     <td>{formatResultado(item.resultado)}</td>
-                    <td>{item.fecha || "—"}</td>
+                    <td>{formatFecha(item.fecha)}</td>
                   </tr>
                 ))}
                 {!loadingHistorial && historial.length === 0 && (
@@ -224,11 +192,21 @@ export default function MisPedidosPage() {
 }
 
 function PedidoActual({ pedido }) {
+  const navigate = useNavigate();
+
   return (
     <div className="mis-pedidos-current-body">
       <div className="mis-pedidos-current-main">
         <span className="mis-pedidos-id">#{pedido.id}</span>
         <BadgeEstado estado={pedido.estado} />
+        <button
+          type="button"
+          className="mis-pedidos-btn"
+          style={{ marginLeft: "auto" }}
+          onClick={() => navigate(`/pedidos/${pedido.id}`)}
+        >
+          Ver detalle del pedido
+        </button>
       </div>
 
       <div className="mis-pedidos-info-list">

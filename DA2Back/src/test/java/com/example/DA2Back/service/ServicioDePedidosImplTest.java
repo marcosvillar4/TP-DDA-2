@@ -53,6 +53,12 @@ class ServicioDePedidosImplTest {
     @Mock
     private com.example.DA2Back.producto.dato.ProductoRepository productoRepository;
 
+    @Mock
+    private com.example.DA2Back.comercio.dato.ComercioRepository comercioRepository;
+
+    @Mock
+    private com.example.DA2Back.deposito.dato.DepositoRepository depositoRepository;
+
     @InjectMocks
     private ServicioDePedidosImpl servicioDePedidos;
 

@@ -101,6 +101,7 @@ public class SecurityConfig {
                 .requestMatchers(POST, "/depositos").hasRole(COMERCIO)
                 .requestMatchers(PATCH, "/depositos/asociar").hasAnyRole(ADMIN, COMERCIO)
                 .requestMatchers(PUT, "/depositos/*").hasAnyRole(ADMIN, DEPOSITO)
+                .requestMatchers(GET, "/depositos/*").authenticated()
                 .requestMatchers("/depositos/**").hasRole(ADMIN)
 
                 // ───────── Productos ─────────

@@ -5,12 +5,17 @@ import com.example.DA2Back.producto.dato.Producto;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table(name = "items_inventario")
-@Data
+@Table(
+        name = "items_inventario",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"inventario_id", "producto_id", "deposito_id"})
+)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemInventario {

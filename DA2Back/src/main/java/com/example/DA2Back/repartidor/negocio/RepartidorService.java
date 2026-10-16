@@ -1,7 +1,9 @@
 package com.example.DA2Back.repartidor.negocio;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
@@ -80,6 +83,10 @@ public class RepartidorService implements IRepartidorService {
 
         if (usuario.getRol() != Rol.REPARTIDOR) {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
+        }
+
+        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario indicado no se encuentra en estado VALIDADO");
         }
 
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
@@ -170,22 +177,34 @@ public class RepartidorService implements IRepartidorService {
                         ESTADOS_PEDIDO_FINALIZADO
                 )
                 .stream()
-                .map(pedido -> EntregaHistorialDTO.builder()
-                        .fecha(null)
-                        .pedidoId(pedido.getId())
-                        .direccionEntrega(pedido.getDireccionDestino())
-                        .resultado(pedido.getEstado())
-                        .build())
+                .map(pedido -> {
+                    LocalDateTime fechaFinal = null;
+                    if (pedido.getHistorial() != null) {
+                        fechaFinal = pedido.getHistorial().stream()
+                                .filter(h -> h.getEstado() != null && ESTADOS_PEDIDO_FINALIZADO.contains(h.getEstado()))
+                                .map(HistorialEstadoPedido::getFechaHora)
+                                .filter(Objects::nonNull)
+                                .max(LocalDateTime::compareTo)
+                                .orElse(null);
+                    }
+                    if (fechaFinal == null) {
+                        fechaFinal = pedido.getFechaCreacion();
+                    }
+
+                    return EntregaHistorialDTO.builder()
+                            .fecha(fechaFinal != null ? fechaFinal.toString() : null)
+                            .pedidoId(pedido.getId())
+                            .direccionEntrega(pedido.getDireccionDestino())
+                            .resultado(pedido.getEstado())
+                            .build();
+                })
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosAsignables() {
-        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.LISTO_PARA_RETIRAR)
-                .stream()
-                .map(this::toPedidoResponseDTO)
-                .toList();
+        return servicioDePedidos.listarPendientesAsignables();
     }
 
     @Override
@@ -229,26 +248,10 @@ public class RepartidorService implements IRepartidorService {
                         .id(pedido.getId())
                         .estado(pedido.getEstado())
                         .direccionDestino(pedido.getDireccionDestino())
+                        .direccionOrigen(pedido.getDireccionOrigen())
+                        .fechaCreacion(pedido.getFechaCreacion())
                         .build())
                 .orElse(null);
-    }
-
-    private PedidoResponseDTO toPedidoResponseDTO(Pedido pedido) {
-        Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
-        String repartidorNombre = null;
-        if (pedido.getRepartidor() != null) {
-            Usuario usuario = buscarUsuario(pedido.getRepartidor().getUsuarioId());
-            repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
-        }
-
-        return PedidoResponseDTO.builder()
-                .id(pedido.getId())
-                .comercioId(pedido.getComercioId())
-                .direccionDestino(pedido.getDireccionDestino())
-                .estado(pedido.getEstado())
-                .repartidorId(repartidorId)
-                .repartidorNombre(repartidorNombre)
-                .build();
     }
 
     private boolean tienePedidoActivo(Long repartidorId) {

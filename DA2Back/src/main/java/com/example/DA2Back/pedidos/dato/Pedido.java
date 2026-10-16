@@ -56,7 +56,7 @@ public class Pedido {
     @Column(name = "estado", nullable = false)
     private EstadoPedido estado;
 
-    @ManyToOne
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
     @JoinColumn(name = "repartidor_id")
     private Repartidor repartidor;
 

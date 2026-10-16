@@ -1,7 +1,12 @@
 package com.example.DA2Back.pedidos.negocio;
 
+import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedidoRepository;
@@ -24,6 +29,11 @@ import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +53,7 @@ import java.util.stream.Collectors;
  * defina qué transiciones son válidas, eliminando if/switch en este
  * servicio y garantizando consistencia con el módulo de Repartidores.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ServicioDePedidosImpl implements ServicioDePedidos {
@@ -49,9 +61,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private static final List<EstadoPedido> ESTADOS_ACTIVOS =
             List.of(EstadoPedido.ASIGNADO, EstadoPedido.RETIRADO, EstadoPedido.EN_CAMINO);
 
-        private final PedidosRepository pedidosRepository;
+    private final PedidosRepository pedidosRepository;
     private final RepartidorRepository repartidorRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ComercioRepository comercioRepository;
+    private final DepositoRepository depositoRepository;
     private final HistorialEstadoPedidoRepository historialRepository;
     private final ResolverEstadoPedido resolverEstado;
     private final IInventario inventarioService;
@@ -62,9 +76,22 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     // Creación
     // -------------------------------------------------------------------------
 
-        @Override
+    @Override
     @Transactional
     public PedidoResponseDTO crearPedido(CrearPedidoDTO dto) {
+        if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
+            throw new IllegalArgumentException("El pedido debe incluir al menos un producto");
+        }
+
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                    .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+            if (!Objects.equals(dto.getComercioId(), com.getId())) {
+                throw new AccessDeniedException("No podés crear pedidos para otro comercio");
+            }
+        }
+
         Pedido pedido = Pedido.builder()
                 .comercioId(dto.getComercioId())
                 .depositoId(dto.getDepositoId())
@@ -74,30 +101,32 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .estado(EstadoPedido.CREADO)
                 .build();
 
-        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-            Inventario inv = inventarioService.obtenerPorComercio(dto.getComercioId());
-            for (DetallePedidoDTO d : dto.getDetalles()) {
-                Producto prod = productoRepository.findById(d.getProductoId())
-                        .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + d.getProductoId()));
-
-                ItemInventario item = itemInventarioRepository
-                        .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
-                        .orElseThrow(() -> new IllegalStateException("El producto " + prod.getNombre() + " no esta en el deposito seleccionado"));
-
-                if (item.getCantidad() < d.getCantidad()) {
-                    throw new IllegalStateException("Stock insuficiente para el producto: " + prod.getNombre());
-                }
-
-                item.setCantidad(item.getCantidad() - d.getCantidad());
-                itemInventarioRepository.save(item);
-
-                DetallePedido detalle = DetallePedido.builder()
-                        .pedido(pedido)
-                        .producto(prod)
-                        .cantidad(d.getCantidad())
-                        .build();
-                pedido.getDetalles().add(detalle);
+        Inventario inv = inventarioService.obtenerPorComercio(dto.getComercioId());
+        for (DetallePedidoDTO d : dto.getDetalles()) {
+            if (d.getCantidad() == null || d.getCantidad() <= 0) {
+                throw new IllegalArgumentException("La cantidad del producto debe ser mayor a 0");
             }
+
+            Producto prod = productoRepository.findById(d.getProductoId())
+                    .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: " + d.getProductoId()));
+
+            ItemInventario item = itemInventarioRepository
+                    .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
+                    .orElseThrow(() -> new IllegalStateException("El producto " + prod.getNombre() + " no esta en el deposito seleccionado"));
+
+            if (item.getCantidad() < d.getCantidad()) {
+                throw new IllegalStateException("Stock insuficiente para el producto: " + prod.getNombre());
+            }
+
+            item.setCantidad(item.getCantidad() - d.getCantidad());
+            itemInventarioRepository.save(item);
+
+            DetallePedido detalle = DetallePedido.builder()
+                    .pedido(pedido)
+                    .producto(prod)
+                    .cantidad(d.getCantidad())
+                    .build();
+            pedido.getDetalles().add(detalle);
         }
 
         Pedido guardado = pedidosRepository.save(pedido);
@@ -112,12 +141,45 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional(readOnly = true)
     public PedidoResponseDTO obtenerPorId(Long id) {
-        return toResponseDTO(buscarPedido(id));
+        Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null) {
+            if (usuario.getRol() == Rol.COMERCIO) {
+                Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+                if (!Objects.equals(pedido.getComercioId(), com.getId())) {
+                    throw new AccessDeniedException("No podés consultar este pedido");
+                }
+            } else if (usuario.getRol() == Rol.DEPOSITO) {
+                Deposito dep = depositoRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró depósito asociado al usuario"));
+                if (!Objects.equals(pedido.getDepositoId(), dep.getId())) {
+                    throw new AccessDeniedException("No podés consultar pedidos de otro depósito");
+                }
+            }
+        }
+        return toResponseDTO(pedido);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarTodos() {
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null) {
+            if (usuario.getRol() == Rol.COMERCIO) {
+                Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+                return pedidosRepository.findByComercioId(com.getId()).stream()
+                        .map(this::toResponseDTO)
+                        .collect(Collectors.toList());
+            } else if (usuario.getRol() == Rol.DEPOSITO) {
+                Deposito dep = depositoRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró depósito asociado al usuario"));
+                return pedidosRepository.findByDepositoId(dep.getId()).stream()
+                        .map(this::toResponseDTO)
+                        .collect(Collectors.toList());
+            }
+        }
         return pedidosRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -126,6 +188,14 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarPorComercio(Long comercioId) {
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                    .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+            if (!Objects.equals(comercioId, com.getId())) {
+                throw new AccessDeniedException("No podés consultar pedidos de otro comercio");
+            }
+        }
         return pedidosRepository.findByComercioId(comercioId).stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -151,16 +221,26 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     // Transiciones de estado (via patrón State)
     // -------------------------------------------------------------------------
 
-    /**
-     * Asigna un repartidor a un pedido.
-     * Delegado al patrón State: solo CREADO admite esta transición.
-     * Este es el punto único de asignación — RepartidorService debe
-     * llamar aquí en lugar de mutar el pedido directamente.
-     */
-        @Override
+    @Override
     @Transactional
     public PedidoResponseDTO marcarListoParaRetirar(Long id) {
         Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null) {
+            if (usuario.getRol() == Rol.COMERCIO) {
+                Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+                if (!Objects.equals(pedido.getComercioId(), com.getId())) {
+                    throw new AccessDeniedException("No podés modificar este pedido");
+                }
+            } else if (usuario.getRol() == Rol.DEPOSITO) {
+                Deposito dep = depositoRepository.findByUsuarioId(usuario.getId())
+                        .orElseThrow(() -> new AccessDeniedException("No se encontró depósito asociado al usuario"));
+                if (!Objects.equals(pedido.getDepositoId(), dep.getId())) {
+                    throw new AccessDeniedException("No podés marcar listo para retirar un pedido de otro depósito");
+                }
+            }
+        }
         resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
@@ -175,6 +255,13 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .orElseThrow(() -> new NoSuchElementException(
                         "Repartidor con id=" + repartidorId + " no encontrado"));
 
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.REPARTIDOR) {
+            if (!Objects.equals(repartidor.getUsuarioId(), usuario.getId())) {
+                throw new AccessDeniedException("No podés asignar un pedido a otro repartidor");
+            }
+        }
+
         // El estado actual del pedido valida si la transición es legal
         resolverEstado.resolver(pedido.getEstado()).asignarRepartidor(pedido, repartidor);
 
@@ -187,10 +274,16 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     /**
      * El repartidor inicia el viaje: ASIGNADO → EN_CAMINO.
      */
-        @Override
+    @Override
     @Transactional
     public PedidoResponseDTO marcarRetirado(Long id) {
         Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.REPARTIDOR) {
+            if (pedido.getRepartidor() != null && !Objects.equals(pedido.getRepartidor().getUsuarioId(), usuario.getId())) {
+                throw new AccessDeniedException("No podés operar sobre un pedido asignado a otro repartidor");
+            }
+        }
         resolverEstado.resolver(pedido.getEstado()).marcarRetirado(pedido);
         if (pedido.getRepartidor() != null) {
             pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
@@ -205,6 +298,12 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Transactional
     public PedidoResponseDTO iniciarViaje(Long id) {
         Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.REPARTIDOR) {
+            if (pedido.getRepartidor() != null && !Objects.equals(pedido.getRepartidor().getUsuarioId(), usuario.getId())) {
+                throw new AccessDeniedException("No podés operar sobre un pedido asignado a otro repartidor");
+            }
+        }
         resolverEstado.resolver(pedido.getEstado()).iniciarViaje(pedido);
         if (pedido.getRepartidor() != null) {
             pedido.getRepartidor().setEstado(EstadoRepartidor.EN_ENTREGA);
@@ -223,6 +322,12 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Transactional
     public PedidoResponseDTO entregar(Long id) {
         Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.REPARTIDOR) {
+            if (pedido.getRepartidor() != null && !Objects.equals(pedido.getRepartidor().getUsuarioId(), usuario.getId())) {
+                throw new AccessDeniedException("No podés operar sobre un pedido asignado a otro repartidor");
+            }
+        }
         resolverEstado.resolver(pedido.getEstado()).entregar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.ENTREGADO);
@@ -238,6 +343,14 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     @Transactional
     public PedidoResponseDTO cancelar(Long id) {
         Pedido pedido = buscarPedido(id);
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            Comercio com = comercioRepository.findByUsuarioId(usuario.getId())
+                    .orElseThrow(() -> new AccessDeniedException("No se encontró comercio asociado al usuario"));
+            if (!Objects.equals(pedido.getComercioId(), com.getId())) {
+                throw new AccessDeniedException("No podés cancelar este pedido");
+            }
+        }
         resolverEstado.resolver(pedido.getEstado()).cancelar(pedido);
         restaurarStock(pedido);
         pedidosRepository.save(pedido);
@@ -262,7 +375,10 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .estado(estado)
                 .fechaHora(LocalDateTime.now())
                 .build();
-        historialRepository.save(historial);
+        HistorialEstadoPedido guardado = historialRepository.save(historial);
+        if (pedido.getHistorial() != null) {
+            pedido.getHistorial().add(guardado != null ? guardado : historial);
+        }
     }
 
     /**
@@ -294,7 +410,8 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
 
         List<HistorialEstadoDTO> historialDTO = pedido.getHistorial() != null
                 ? pedido.getHistorial().stream()
-                    .sorted(Comparator.comparing(HistorialEstadoPedido::getFechaHora).reversed())
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(HistorialEstadoPedido::getFechaHora, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                     .map(h -> HistorialEstadoDTO.builder()
                         .id(h.getId())
                         .estado(h.getEstado())
@@ -348,13 +465,31 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 }
             }
         } catch (Exception e) {
-            // Manejo defensivo en caso de inconsistencia de datos
+            log.error("Error al restaurar stock del pedido {}: {}", pedido.getId(), e.getMessage(), e);
         }
     }
 
     private Usuario buscarUsuario(Long usuarioId) {
         if (usuarioId == null) return null;
         return usuarioRepository.findById(usuarioId).orElse(null);
+    }
+
+    private Usuario getUsuarioAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        if (principal instanceof Usuario u) {
+            return u;
+        }
+        if (principal instanceof UserDetails ud) {
+            return usuarioRepository.findByEmail(ud.getUsername()).orElse(null);
+        }
+        if (principal instanceof String email) {
+            return usuarioRepository.findByEmail(email).orElse(null);
+        }
+        return null;
     }
 }
 

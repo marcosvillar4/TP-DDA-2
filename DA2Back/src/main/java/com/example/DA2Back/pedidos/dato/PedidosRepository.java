@@ -15,6 +15,8 @@ public interface PedidosRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByComercioId(Long comercioId);
 
+    List<Pedido> findByDepositoId(Long depositoId);
+
     List<Pedido> findByEstado(EstadoPedido estado);
 
     List<Pedido> findByEstadoAndRepartidorIsNull(EstadoPedido estado);

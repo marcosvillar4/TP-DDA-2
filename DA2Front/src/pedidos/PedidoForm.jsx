@@ -2,12 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { getComercios } from '../../api/inventarioApi';
+import { getMiComercio } from '../../api/comerciosApi';
 import { getDepositosPorComercio, getItemsInventarioPorDeposito } from '../../api/depositosApi';
 import { crearPedido } from '../../api/pedidosApi';
+import { useAuthUser } from '../../hooks/useAuthUser';
 import Swal from 'sweetalert2';
 
 export default function PedidoForm() {
   const navigate = useNavigate();
+  const user = useAuthUser();
+  const isComercio = user?.rol === 'COMERCIO';
+
   const [comercios, setComercios] = useState([]);
   const [depositos, setDepositos] = useState([]);
   const [itemsInventario, setItemsInventario] = useState([]);
@@ -23,15 +28,26 @@ export default function PedidoForm() {
   const [detalles, setDetalles] = useState([]);
 
   useEffect(() => {
-    getComercios()
-      .then(data => {
-        setComercios(data);
-        if (data.length > 0) {
-          handleComercioChange(data[0].id);
-        }
-      })
-      .catch(err => console.error("Error cargando comercios:", err));
-  }, []);
+    if (isComercio) {
+      getMiComercio()
+        .then(miComercio => {
+          if (miComercio) {
+            setComercios([miComercio]);
+            handleComercioChange(miComercio.id);
+          }
+        })
+        .catch(err => console.error("Error cargando mi comercio:", err));
+    } else {
+      getComercios()
+        .then(data => {
+          setComercios(data);
+          if (data.length > 0) {
+            handleComercioChange(data[0].id);
+          }
+        })
+        .catch(err => console.error("Error cargando comercios:", err));
+    }
+  }, [isComercio]);
 
   const handleComercioChange = async (comercioId) => {
     setFormData(prev => ({ ...prev, comercioId, depositoId: '' }));
@@ -155,13 +171,16 @@ export default function PedidoForm() {
                 name="comercioId" 
                 value={formData.comercioId} 
                 onChange={handleChange}
+                disabled={isComercio}
                 style={{
                   padding: '0.625rem', borderRadius: '0.375rem', 
-                  border: '1px solid var(--color-slate-300)', outline: 'none'
+                  border: '1px solid var(--color-slate-300)', outline: 'none',
+                  backgroundColor: isComercio ? 'var(--color-slate-100)' : 'white',
+                  cursor: isComercio ? 'not-allowed' : 'default'
                 }}
                 required
               >
-                <option value="" disabled>Seleccione un comercio...</option>
+                {!isComercio && <option value="" disabled>Seleccione un comercio...</option>}
                 {comercios.map(c => (
                   <option key={c.id} value={c.id}>{c.nombreComercial}</option>
                 ))}

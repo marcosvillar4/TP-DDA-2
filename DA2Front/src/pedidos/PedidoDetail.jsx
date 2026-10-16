@@ -6,6 +6,7 @@ import { getComercios } from '../../api/inventarioApi';
 import { getDepositoPorId } from '../../api/depositosApi';
 import BadgeEstado from './components/BadgeEstado';
 import StepperHistorial from './components/StepperHistorial';
+import { useAuthUser } from '../../hooks/useAuthUser';
 import './styles/PedidoDetail.css';
 import Swal from 'sweetalert2';
 
@@ -13,6 +14,17 @@ export default function PedidoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   
+  const user = useAuthUser();
+  const rol = user?.rol;
+  const isAdmin = rol === 'ADMIN';
+  const isComercio = rol === 'COMERCIO';
+  const isDeposito = rol === 'DEPOSITO';
+  const isRepartidor = rol === 'REPARTIDOR';
+
+  const puedeMarcarListo = isAdmin || isComercio || isDeposito;
+  const puedeOperarRepartidor = isAdmin || isRepartidor;
+  const puedeCancelar = isAdmin || isComercio;
+
   const [pedido, setPedido] = useState(null);
   const [comercioNombre, setComercioNombre] = useState('');
   const [depositoNombre, setDepositoNombre] = useState('');
@@ -131,37 +143,37 @@ export default function PedidoDetail() {
         </div>
         <div className="pedido-detail-actions" style={{display: 'flex', gap: '0.5rem'}}>
           
-          {pedido.estado === 'CREADO' && (
+          {puedeMarcarListo && pedido.estado === 'CREADO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(marcarListoParaRetirar, 'Marcar Listo')} style={{backgroundColor: 'var(--color-orange)', color: 'white', border: 'none'}}>
               <PackageCheck size={16} /> Marcar Listo Para Retirar
             </button>
           )}
 
-          {pedido.estado === 'LISTO_PARA_RETIRAR' && (
+          {puedeOperarRepartidor && pedido.estado === 'LISTO_PARA_RETIRAR' && (
             <button className="pedido-btn-asignar" onClick={handleAsignarRepartidor}>
               <UserPlus size={16} /> Asignar repartidor
             </button>
           )}
 
-          {pedido.estado === 'ASIGNADO' && (
+          {puedeOperarRepartidor && pedido.estado === 'ASIGNADO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(marcarRetirado, 'Marcar Retirado')} style={{backgroundColor: 'var(--color-violet)', color: 'white', border: 'none'}}>
               <PackageOpen size={16} /> Marcar Retirado
             </button>
           )}
 
-          {pedido.estado === 'RETIRADO' && (
+          {puedeOperarRepartidor && pedido.estado === 'RETIRADO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(iniciarViajePedido, 'Iniciar Viaje')} style={{backgroundColor: 'var(--color-blue)', color: 'white', border: 'none'}}>
               <Truck size={16} /> Iniciar Viaje
             </button>
           )}
 
-          {pedido.estado === 'EN_CAMINO' && (
+          {puedeOperarRepartidor && pedido.estado === 'EN_CAMINO' && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(entregarPedido, 'Entrega')} style={{backgroundColor: 'var(--color-green)', color: 'white', border: 'none'}}>
               <CheckCircle size={16} /> Marcar Entregado
             </button>
           )}
 
-          {['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO'].includes(pedido.estado) && (
+          {puedeCancelar && ['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO'].includes(pedido.estado) && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(cancelarPedido, 'Cancelación')} style={{borderColor: 'var(--color-red)', color: 'var(--color-red)'}}>
               <XCircle size={16} /> Cancelar
             </button>

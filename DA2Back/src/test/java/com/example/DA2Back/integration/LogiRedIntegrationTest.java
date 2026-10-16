@@ -59,12 +59,29 @@ class LogiRedIntegrationTest {
     @Autowired
     private PedidosRepository pedidosRepository;
 
+    @Autowired
+    private com.example.DA2Back.comercio.dato.ComercioRepository comercioRepository;
+
+    @Autowired
+    private com.example.DA2Back.deposito.dato.DepositoRepository depositoRepository;
+
+    @Autowired
+    private com.example.DA2Back.producto.dato.ProductoRepository productoRepository;
+
+    @Autowired
+    private com.example.DA2Back.inventario.dato.InventarioRepository inventarioRepository;
+
+    @Autowired
+    private com.example.DA2Back.inventario.dato.ItemInventarioRepository itemInventarioRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** Estado compartido entre tests ordenados */
     private String tokenJwt;
     private Long pedidoId;
-    private final Long COMERCIO_ID = 1L; // ID referencial, no FK real
+    private Long comercioId;
+    private Long depositoId;
+    private Long productoId;
 
     private static final String ADMIN_EMAIL = "admin@da2back.com";
     private static final String ADMIN_PASSWORD = "admin123";
@@ -74,24 +91,75 @@ class LogiRedIntegrationTest {
 
     @BeforeAll
     void sembrarDatos() {
-        boolean existeAdmin = usuarioRepository.findAll().stream()
-                .anyMatch(u -> u.getRol() == Rol.ADMIN);
-
-        if (existeAdmin || usuarioRepository.existsByEmail(ADMIN_EMAIL)) {
-            return;
+        if (!usuarioRepository.existsByEmail(ADMIN_EMAIL)) {
+            Usuario admin = usuarioFactory.crearAdministrador(
+                    ADMIN_EMAIL,
+                    ADMIN_PASSWORD,
+                    "Administrador",
+                    "LogiRed",
+                    "00000000",
+                    "0000000000"
+            );
+            usuarioRepository.save(admin);
         }
 
-        Usuario admin = usuarioFactory.crearAdministrador(
-                ADMIN_EMAIL,
-                ADMIN_PASSWORD,
-                "Administrador",
-                "LogiRed",
-                "00000000",
-                "0000000000"
-        );
+        Usuario usuarioComercio = usuarioRepository.findByEmail("comercio.test.integ@logired.com")
+                .orElseGet(() -> usuarioRepository.save(Usuario.builder()
+                        .email("comercio.test.integ@logired.com")
+                        .password("password123")
+                        .nombre("Comercio")
+                        .apellido("Test")
+                        .DNI("40000001")
+                        .telefono("1122334455")
+                        .rol(Rol.COMERCIO)
+                        .estado(com.example.DA2Back.Seguridad.dato.EstadoUsuario.VALIDADO)
+                        .build()));
 
-        usuarioRepository.save(admin);
-    
+        com.example.DA2Back.comercio.dato.Comercio comercio = comercioRepository.findByUsuarioId(usuarioComercio.getId())
+                .orElseGet(() -> comercioRepository.save(com.example.DA2Back.comercio.dato.Comercio.builder()
+                        .nombreComercial("Comercio Test")
+                        .razonSocial("Comercio Test SA")
+                        .direccion("Calle 123")
+                        .CUIT("30-12345678-9")
+                        .telefono("1122334455")
+                        .email("comercio.test.integ@logired.com")
+                        .usuarioId(usuarioComercio.getId())
+                        .build()));
+        comercioId = comercio.getId();
+
+        Usuario usuarioDeposito = usuarioRepository.findByEmail("deposito.test.integ@logired.com")
+                .orElseGet(() -> usuarioRepository.save(Usuario.builder()
+                        .email("deposito.test.integ@logired.com")
+                        .password("password123")
+                        .nombre("Deposito")
+                        .apellido("Test")
+                        .DNI("40000002")
+                        .telefono("1122334456")
+                        .rol(Rol.DEPOSITO)
+                        .estado(com.example.DA2Back.Seguridad.dato.EstadoUsuario.VALIDADO)
+                        .build()));
+
+        com.example.DA2Back.deposito.dato.Deposito deposito = depositoRepository.findByUsuarioId(usuarioDeposito.getId())
+                .orElseGet(() -> {
+                    com.example.DA2Back.deposito.dato.Deposito d = new com.example.DA2Back.deposito.dato.Deposito();
+                    d.setNombre("Deposito Test");
+                    d.setDireccion("Av Central 100");
+                    d.setComercio(comercio);
+                    d.setUsuarioId(usuarioDeposito.getId());
+                    return depositoRepository.save(d);
+                });
+        depositoId = deposito.getId();
+
+        com.example.DA2Back.inventario.dato.Inventario inventario = inventarioRepository.findByComercioId(comercio.getId())
+                .orElseGet(() -> inventarioRepository.save(new com.example.DA2Back.inventario.dato.Inventario(null, comercio, new java.util.ArrayList<>())));
+
+        com.example.DA2Back.producto.dato.Producto producto = productoRepository.findByComercioId(comercio.getId()).stream().findFirst()
+                .orElseGet(() -> productoRepository.save(new com.example.DA2Back.producto.dato.Producto(null, "SKU-TEST-1", "Prod Test", "Desc", "General", com.example.DA2Back.producto.dato.EstadoProducto.ACTIVO, comercio)));
+        productoId = producto.getId();
+
+        if (itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(inventario.getId(), producto.getId(), deposito.getId()).isEmpty()) {
+            itemInventarioRepository.save(new com.example.DA2Back.inventario.dato.ItemInventario(null, inventario, producto, deposito, 100, 5));
+        }
     }
 
     // ==================================================================
@@ -168,10 +236,16 @@ class LogiRedIntegrationTest {
         String body = String.format("""
                 {
                   "comercioId": %d,
-                  "depositoId": 1,
-                  "direccionDestino": "Av. Rivadavia 5000, CABA"
+                  "depositoId": %d,
+                  "direccionDestino": "Av. Rivadavia 5000, CABA",
+                  "detalles": [
+                    {
+                      "productoId": %d,
+                      "cantidad": 2
+                    }
+                  ]
                 }
-                """, COMERCIO_ID);
+                """, comercioId, depositoId, productoId);
 
         MvcResult result = mockMvc.perform(post("/api/pedidos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -179,7 +253,7 @@ class LogiRedIntegrationTest {
                         .content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.comercioId", is(COMERCIO_ID.intValue())))
+                .andExpect(jsonPath("$.comercioId", is(comercioId.intValue())))
                 .andExpect(jsonPath("$.estado", is("CREADO")))
                 .andReturn();
 
@@ -219,10 +293,10 @@ class LogiRedIntegrationTest {
     void listarPorComercio_devuelve200() throws Exception {
         assertNotNull(tokenJwt);
 
-        mockMvc.perform(get("/api/pedidos/comercio/" + COMERCIO_ID)
+        mockMvc.perform(get("/api/pedidos/comercio/" + comercioId)
                         .header("Authorization", "Bearer " + tokenJwt))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].comercioId", is(COMERCIO_ID.intValue())));
+                .andExpect(jsonPath("$[0].comercioId", is(comercioId.intValue())));
     }
 
     @Test
