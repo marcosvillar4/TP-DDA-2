@@ -2,6 +2,7 @@ package com.example.DA2Back.repartidor.negocio;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,8 @@ import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoHistoricoPedido;
+import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
@@ -179,12 +182,24 @@ public class RepartidorService implements IRepartidorService {
                 )
                 .stream()
                 .map(pedido -> EntregaHistorialDTO.builder()
-                        .fecha(null)
+                        .fecha(obtenerFechaFinalizacion(pedido))
                         .pedidoId(pedido.getId())
                         .direccionEntrega(pedido.getDireccionDestino())
                         .resultado(pedido.getEstado())
                         .build())
                 .toList();
+    }
+
+    private String obtenerFechaFinalizacion(Pedido pedido) {
+        if (pedido.getHistorial() == null) return null;
+        EstadoHistoricoPedido estadoFinal = EstadoHistoricoPedido.desdeOperativo(pedido.getEstado());
+        return pedido.getHistorial().stream()
+                .filter(registro -> registro.getEstado() == estadoFinal)
+                .map(HistorialEstadoPedido::getFechaHora)
+                .filter(Objects::nonNull)
+                .max(java.time.LocalDateTime::compareTo)
+                .map(java.time.LocalDateTime::toString)
+                .orElse(null);
     }
 
     @Override

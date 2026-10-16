@@ -409,7 +409,7 @@ export default function MisPedidosPage() {
                   <th>ID</th>
                   <th>Dirección de entrega</th>
                   <th>Estado final</th>
-                  <th>Fecha</th>
+                  <th>Fecha de finalización</th>
                 </tr>
               </thead>
               <tbody>
@@ -425,7 +425,9 @@ export default function MisPedidosPage() {
                     <td className="mis-pedidos-id">#{item.pedidoId}</td>
                     <td>{item.direccionEntrega || "—"}</td>
                     <td>{formatResultado(item.resultado)}</td>
-                    <td>{item.fecha || "—"}</td>
+                    <td>{item.fecha && !Number.isNaN(new Date(item.fecha).getTime())
+                      ? formatFecha(item.fecha)
+                      : "No disponible"}</td>
                   </tr>
                 ))}
                 {!loadingHistorial && historial.length === 0 && (

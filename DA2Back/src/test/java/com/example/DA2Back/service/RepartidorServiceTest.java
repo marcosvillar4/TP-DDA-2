@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -33,6 +36,8 @@ import com.example.DA2Back.deposito.dato.Deposito;
 import com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoHistoricoPedido;
+import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
@@ -404,6 +409,57 @@ class RepartidorServiceTest {
         assertEquals(EstadoPedido.ENTREGADO, historial.get(0).getResultado());
         assertEquals(61L, historial.get(1).getPedidoId());
         assertEquals(EstadoPedido.CANCELADO, historial.get(1).getResultado());
+        assertNull(historial.get(0).getFecha());
+        assertNull(historial.get(1).getFecha());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EstadoPedido.class, names = {"ENTREGADO", "CANCELADO"})
+    void obtenerHistorial_usaUltimaFechaDelEstadoFinalSinReemplazos(EstadoPedido estado) {
+        LocalDateTime creacion = LocalDateTime.of(2026, 10, 1, 9, 0);
+        LocalDateTime finalizacion = creacion.plusDays(2);
+        EstadoHistoricoPedido estadoFinal = EstadoHistoricoPedido.desdeOperativo(estado);
+        Pedido pedido = Pedido.builder().id(60L).estado(estado).fechaCreacion(creacion)
+                .historial(List.of(
+                        HistorialEstadoPedido.builder().estado(estadoFinal).fechaHora(finalizacion).build(),
+                        HistorialEstadoPedido.builder().estado(EstadoHistoricoPedido.CREADO).fechaHora(creacion).build(),
+                        HistorialEstadoPedido.builder().estado(estadoFinal).fechaHora(null).build(),
+                        HistorialEstadoPedido.builder().estado(estadoFinal).fechaHora(finalizacion.minusHours(1)).build(),
+                        HistorialEstadoPedido.builder().estado(EstadoHistoricoPedido.ASIGNADO)
+                                .fechaHora(finalizacion.plusDays(1)).build()))
+                .build();
+        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.findByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO))).thenReturn(List.of(pedido));
+
+        assertEquals(finalizacion.toString(), repartidorService.obtenerHistorial(10L).get(0).getFecha());
+    }
+
+    @Test
+    void obtenerHistorial_legacySinFechaFinalNoInventaFecha() {
+        Pedido pedido = Pedido.builder().id(60L).estado(EstadoPedido.ENTREGADO)
+                .fechaCreacion(LocalDateTime.of(2026, 10, 1, 9, 0))
+                .historial(List.of(
+                        HistorialEstadoPedido.builder().estado(EstadoHistoricoPedido.PENDIENTE_COTIZACION)
+                                .fechaHora(LocalDateTime.of(2026, 10, 2, 9, 0)).build(),
+                        HistorialEstadoPedido.builder().estado(EstadoHistoricoPedido.ENTREGADO).build()))
+                .build();
+        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.findByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO))).thenReturn(List.of(pedido));
+
+        assertNull(repartidorService.obtenerHistorial(10L).get(0).getFecha());
+        pedido.setHistorial(null);
+        assertNull(repartidorService.obtenerHistorial(10L).get(0).getFecha());
+    }
+
+    @Test
+    void obtenerHistorial_sinPedidosDevuelveListaVacia() {
+        when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
+        when(pedidosRepository.findByRepartidorIdAndEstadoIn(10L,
+                List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO))).thenReturn(List.of());
+
+        assertTrue(repartidorService.obtenerHistorial(10L).isEmpty());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.example.DA2Back.pedidos.dato;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,6 +51,7 @@ public interface PedidosRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByEstadoAndRepartidorIsNull(EstadoPedido estado);
 
+    @EntityGraph(attributePaths = "historial")
     List<Pedido> findByRepartidorIdAndEstadoIn(Long repartidorId, List<EstadoPedido> estados);
 
     Optional<Pedido> findFirstByRepartidorIdAndEstadoIn(Long repartidorId, List<EstadoPedido> estados);

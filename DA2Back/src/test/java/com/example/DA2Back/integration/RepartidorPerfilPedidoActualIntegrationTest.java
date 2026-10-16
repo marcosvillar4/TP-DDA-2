@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -22,9 +24,11 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,6 +46,78 @@ class RepartidorPerfilPedidoActualIntegrationTest {
     @Autowired private ProductoRepository productos;
     @Autowired private DepositoRepository depositos;
     @Autowired private JdbcTemplate jdbc;
+
+    @ParameterizedTest
+    @EnumSource(value = EstadoPedido.class, names = {"ENTREGADO", "CANCELADO"})
+    void historialUsaFechaFinalPersistidaSinDuplicadosNiPedidosAjenos(EstadoPedido estado) throws Exception {
+        Usuario usuarioA = usuario();
+        Usuario usuarioB = usuario();
+        Repartidor perfilA = perfil(usuarioA);
+        Repartidor perfilB = perfil(usuarioB);
+        Pedido propio = pedido(perfilA, null);
+        propio.setEstado(estado);
+        pedidos.saveAndFlush(propio);
+        Pedido ajeno = pedido(perfilB, null);
+        ajeno.setEstado(estado);
+        pedidos.saveAndFlush(ajeno);
+        LocalDateTime fechaFinal = LocalDateTime.of(2026, 10, 16, 15, 45, 30);
+        insertarHistorial(propio, "PENDIENTE_COTIZACION", fechaFinal.minusDays(3));
+        insertarHistorial(propio, estado.name(), fechaFinal);
+        insertarHistorial(propio, estado.name(), fechaFinal.minusHours(1));
+        insertarHistorial(ajeno, estado.name(), fechaFinal.plusHours(1));
+
+        // El repositorio devuelve la coleccion inicializada incluso fuera de su transaccion.
+        List<Pedido> resultado = pedidos.findByRepartidorIdAndEstadoIn(perfilA.getId(),
+                List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO));
+        assertEquals(1, resultado.size());
+        assertEquals(propio.getId(), resultado.get(0).getId());
+        assertTrue(Hibernate.isInitialized(resultado.get(0).getHistorial()));
+        assertEquals(3, resultado.get(0).getHistorial().size());
+
+        mvc.perform(get("/repartidor/me/historial")
+                        .param("repartidorId", perfilB.getId().toString())
+                        .header("Authorization", "Bearer " + jwt.generateToken(usuarioA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].pedidoId").value(propio.getId().intValue()))
+                .andExpect(jsonPath("$[0].resultado").value(estado.name()))
+                .andExpect(jsonPath("$[0].fecha").value(fechaFinal.toString()));
+        mvc.perform(get("/repartidor/me/historial")
+                        .header("Authorization", "Bearer " + jwt.generateToken(usuarioB)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].pedidoId").value(ajeno.getId().intValue()))
+                .andExpect(jsonPath("$[0].fecha").value(fechaFinal.plusHours(1).toString()));
+    }
+
+    @Test
+    void historialIncompletoConservaFechaNulaYPerfilSinEntregasDevuelveListaVacia() throws Exception {
+        Usuario usuario = usuario();
+        Repartidor perfil = perfil(usuario);
+        String token = "Bearer " + jwt.generateToken(usuario);
+        mvc.perform(get("/repartidor/me/historial").header("Authorization", token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        Pedido legacy = pedido(perfil, null);
+        legacy.setEstado(EstadoPedido.ENTREGADO);
+        pedidos.saveAndFlush(legacy);
+        insertarHistorial(legacy, "PENDIENTE_COTIZACION", LocalDateTime.of(2026, 10, 1, 12, 0));
+        Pedido sinHistorial = pedido(perfil, null);
+        sinHistorial.setEstado(EstadoPedido.CANCELADO);
+        pedidos.saveAndFlush(sinHistorial);
+
+        mvc.perform(get("/repartidor/me/historial").header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].fecha").value(nullValue()))
+                .andExpect(jsonPath("$[1].fecha").value(nullValue()));
+        assertEquals("PENDIENTE_COTIZACION", jdbc.queryForObject(
+                "select estado from historial_estado_pedido where pedido_id = ?", String.class, legacy.getId()));
+    }
+
+    private void insertarHistorial(Pedido pedido, String estado, LocalDateTime fecha) {
+        jdbc.update("insert into historial_estado_pedido (pedido_id, estado, fecha_hora) values (?, ?, ?)",
+                pedido.getId(), estado, fecha);
+    }
 
     @ParameterizedTest
     @NullSource
@@ -93,6 +169,14 @@ class RepartidorPerfilPedidoActualIntegrationTest {
                 .andExpect(jsonPath("$.pedidoActual").value(nullValue()));
         assertEquals(3, jdbc.queryForObject("select count(*) from historial_estado_pedido where pedido_id = ?",
                 Integer.class, pedido.getId()));
+        String fechaEntrega = jdbc.queryForObject(
+                "select fecha_hora from historial_estado_pedido where pedido_id = ? and estado = 'ENTREGADO'",
+                (rs, row) -> rs.getTimestamp(1).toLocalDateTime().toString(), pedido.getId());
+        mvc.perform(get("/repartidor/me/historial").header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].pedidoId").value(pedido.getId().intValue()))
+                .andExpect(jsonPath("$[0].fecha").value(fechaEntrega));
     }
 
     @Test
