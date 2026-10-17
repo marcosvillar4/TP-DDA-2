@@ -26,6 +26,7 @@ import com.example.DA2Back.pedidos.negocio.state.ResolverEstadoPedido;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
+import com.example.DA2Back.notificacion.negocio.NotificacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final ProductoRepository productoRepository;
     private final DepositoRepository depositoRepository;
     private final AccesoPedidos accesoPedidos;
+    private final NotificacionService notificacionService;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -122,8 +124,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
             for (DetallePedidoDTO d : dto.getDetalles()) {
                 ItemInventario item = items.get(d.getProductoId());
                 Producto prod = item.getProducto();
+                int cantidadDisponibleAntes = item.getCantidad();
                 item.setCantidad(item.getCantidad() - d.getCantidad());
                 itemInventarioRepository.save(item);
+                notificacionService.notificarSiCruzoStockMinimo(
+                        item, cantidadDisponibleAntes, item.getCantidad());
 
                 DetallePedido detalle = DetallePedido.builder()
                         .pedido(pedido)
@@ -410,6 +415,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .fechaHora(LocalDateTime.now())
                 .build();
         historialRepository.save(historial);
+        if (estado != EstadoPedido.CREADO && notificacionService != null) {
+            notificacionService.notificarActualizacionPedido(pedido, estado);
+        }
     }
 
     /**

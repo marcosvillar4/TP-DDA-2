@@ -141,6 +141,9 @@ public class SecurityConfig {
                 .requestMatchers("/repartidores/**").hasRole(ADMIN)
                 .requestMatchers("/repartidor/**").hasRole(REPARTIDOR)
 
+                // Notificaciones propias del usuario autenticado.
+                .requestMatchers("/notificaciones/**").authenticated()
+
                 // Todo lo demás: solo ADMIN.
                 .anyRequest().hasRole(ADMIN)
             )

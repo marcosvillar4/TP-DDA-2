@@ -151,6 +151,12 @@ public class GlobalExceptionHandler {
                 .body(Map.of("message", ex.getMessage()));
     }
 
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<Map<String, String>> handleBloqueado(UsuarioBloqueadoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(TransicionInvalidaException.class)
     public ResponseEntity<Map<String, String>> handleTransicionInvalida(TransicionInvalidaException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

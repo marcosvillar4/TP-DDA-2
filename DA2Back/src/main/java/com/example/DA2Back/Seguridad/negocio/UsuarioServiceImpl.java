@@ -23,6 +23,7 @@ import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 import com.example.DA2Back.Seguridad.dto.perfilAdmin.ActualizarPerfilAdminDTO;
 import com.example.DA2Back.Seguridad.dto.perfilAdmin.PerfilAdminDTO;
 import com.example.DA2Back.Seguridad.dto.perfilAdmin.UsuarioAdminDetalleDTO;
+import com.example.DA2Back.notificacion.negocio.NotificacionService;
 import com.example.DA2Back.Seguridad.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.Seguridad.excepcion.UsuarioYaExisteException;
 import com.example.DA2Back.Seguridad.negocio.State.ResolverEstadoUsuario;
@@ -44,6 +45,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final IDeposito depositoService;
     private final IComercio comercioService;
     private final PasswordEncoder passwordEncoder;
+    private final NotificacionService notificacionService;
 
     @Override
     @Transactional
@@ -56,6 +58,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
 
         usuarioFactory.crearEntidadRelacionada(dto, guardado.getId());
+        notificacionService.notificarSolicitudRegistro(guardado);
 
         return UsuarioMapper.toResponseDTO(guardado);
     }

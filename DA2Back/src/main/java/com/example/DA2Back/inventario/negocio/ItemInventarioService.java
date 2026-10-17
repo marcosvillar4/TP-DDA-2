@@ -30,19 +30,22 @@ public class ItemInventarioService implements IItemInventario {
     private final IProductoService productoService;
     private final IDeposito depositoService;
     private final IComercio comercioService;
+    private final com.example.DA2Back.notificacion.negocio.NotificacionService notificacionService;
 
     public ItemInventarioService(
             ItemInventarioRepository itemInventarioRepository,
             IInventario inventarioService,
             IProductoService productoService,
             IDeposito depositoService,
-            IComercio comercioService) {
+            IComercio comercioService,
+            com.example.DA2Back.notificacion.negocio.NotificacionService notificacionService) {
 
         this.itemInventarioRepository = itemInventarioRepository;
         this.inventarioService = inventarioService;
         this.productoService = productoService;
         this.depositoService = depositoService;
         this.comercioService = comercioService;
+        this.notificacionService = notificacionService;
     }
 
     @Override
@@ -230,10 +233,14 @@ public class ItemInventarioService implements IItemInventario {
         }
 
         ItemInventario item = obtenerPorId(id);
-
+        int cantidadAnterior = item.getCantidad();
         item.setCantidad(cantidad);
-
-        return itemInventarioRepository.save(item);
+        ItemInventario actualizado = itemInventarioRepository.save(item);
+        if (notificacionService != null) {
+            notificacionService.notificarSiCruzoStockMinimo(
+                    actualizado, cantidadAnterior, actualizado.getCantidad());
+        }
+        return actualizado;
     }
 
     @Override
@@ -322,9 +329,15 @@ public class ItemInventarioService implements IItemInventario {
 
         item.setProducto(productoFinal);
         item.setDeposito(depositoFinal);
+        int cantidadAnterior = item.getCantidad();
         item.setCantidad(cantidad);
 
-        return itemInventarioRepository.save(item);
+        ItemInventario actualizado = itemInventarioRepository.save(item);
+        if (notificacionService != null) {
+            notificacionService.notificarSiCruzoStockMinimo(
+                    actualizado, cantidadAnterior, actualizado.getCantidad());
+        }
+        return actualizado;
     }
 
     private Integer normalizarStockMinimoOpcional(Integer stockMinimo) {
@@ -460,4 +473,3 @@ public class ItemInventarioService implements IItemInventario {
                 });
     }
 }
-
