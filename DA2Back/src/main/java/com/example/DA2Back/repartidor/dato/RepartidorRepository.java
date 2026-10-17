@@ -1,5 +1,6 @@
 package com.example.DA2Back.repartidor.dato;
 
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.LockModeType;
@@ -22,4 +23,7 @@ public interface RepartidorRepository extends JpaRepository<Repartidor, Long> {
     boolean existsByUsuarioId(Long usuarioId);
 
     boolean existsByPatenteIgnoreCase(String patente);
+
+    // Candidatos para la asignacion automatica (consumidor de la cola de pedidos).
+    List<Repartidor> findByActivoTrueAndEstadoOrderByIdAsc(EstadoRepartidor estado);
 }
