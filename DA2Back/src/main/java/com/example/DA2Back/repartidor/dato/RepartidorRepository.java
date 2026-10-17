@@ -1,5 +1,6 @@
 package com.example.DA2Back.repartidor.dato;
 
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.LockModeType;
@@ -18,6 +19,9 @@ public interface RepartidorRepository extends JpaRepository<Repartidor, Long> {
     Optional<Repartidor> findByIdForUpdate(@Param("id") Long id);
 
     Optional<Repartidor> findByUsuarioId(Long usuarioId);
+
+    /** Repartidores candidatos para el despacho automatico (activos y disponibles). */
+    List<Repartidor> findByActivoTrueAndEstadoOrderByIdAsc(EstadoRepartidor estado);
 
     boolean existsByUsuarioId(Long usuarioId);
 

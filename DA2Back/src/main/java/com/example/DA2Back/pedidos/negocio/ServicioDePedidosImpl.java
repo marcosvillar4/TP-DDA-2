@@ -26,7 +26,9 @@ import com.example.DA2Back.pedidos.negocio.state.ResolverEstadoPedido;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
+import com.example.DA2Back.pedidos.negocio.evento.PedidoListoParaRetirarEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +67,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final ProductoRepository productoRepository;
     private final DepositoRepository depositoRepository;
     private final AccesoPedidos accesoPedidos;
+    private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -215,6 +218,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
+        // Mensajeria asincronica: el evento se publica al broker recien cuando la
+        // transaccion hace commit (ver PedidoDespachoPublisher).
+        eventPublisher.publishEvent(new PedidoListoParaRetirarEvent(pedido.getId()));
         return toResponseDTO(pedido);
     }
 

@@ -1,0 +1,23 @@
+# Broker de mensajeria para LogiRed (RabbitMQ).
+#   docker compose up -d
+# Consola de administracion: http://localhost:15672  (logired / logired)
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: logired-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: logired
+      RABBITMQ_DEFAULT_PASS: logired
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rabbitmq_data:
