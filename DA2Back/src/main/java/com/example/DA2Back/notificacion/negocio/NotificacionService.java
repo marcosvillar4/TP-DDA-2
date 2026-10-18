@@ -12,6 +12,7 @@ import com.example.DA2Back.notificacion.dato.TipoNotificacion;
 import com.example.DA2Back.notificacion.dto.NotificacionResponseDTO;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
+import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,27 @@ public class NotificacionService {
         guardar(usuario, TipoNotificacion.SOLICITUD_REGISTRO, CanalNotificacion.EMAIL,
                 "Solicitud de cuenta recibida", mensaje, usuario.getId(),
                 false, usuario.getEmail());
+    }
+
+    @Transactional
+    public void notificarActualizacionEstadoUsuario(Usuario usuario) {
+        EstadoUsuario estado = usuario.getEstado();
+        String estadoLegible = switch (estado) {
+            case VALIDADO -> "validada";
+            case RECHAZADO -> "rechazada";
+            case BLOQUEADO -> "bloqueada";
+            default -> null;
+        };
+
+        if (estadoLegible == null) {
+            return;
+        }
+
+        String mensaje = "Tu cuenta fue " + estadoLegible
+                + " por un administrador.";
+        guardar(usuario, TipoNotificacion.ACTUALIZACION_ESTADO_USUARIO,
+                CanalNotificacion.EMAIL, "Actualización del estado de tu cuenta",
+                mensaje, usuario.getId(), false, usuario.getEmail());
     }
 
     @Transactional

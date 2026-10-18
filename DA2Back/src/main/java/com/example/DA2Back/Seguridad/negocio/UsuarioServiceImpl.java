@@ -182,7 +182,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
         IEstadoUsuario estadoActual = resolverEstadoUsuario.resolver(usuario.getEstado());
         transicion.accept(estadoActual, usuario);
 
-        return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuario));
+        Usuario guardado = usuarioRepository.save(usuario);
+        notificacionService.notificarActualizacionEstadoUsuario(guardado);
+        return UsuarioMapper.toResponseDTO(guardado);
     }
 
     @Override
