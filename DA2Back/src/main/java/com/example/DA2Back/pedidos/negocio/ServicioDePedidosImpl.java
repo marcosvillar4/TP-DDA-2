@@ -27,7 +27,9 @@ import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import com.example.DA2Back.notificacion.negocio.NotificacionService;
+import com.example.DA2Back.pedidos.negocio.evento.PedidoListoParaRetirarEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +69,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final DepositoRepository depositoRepository;
     private final AccesoPedidos accesoPedidos;
     private final NotificacionService notificacionService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -220,6 +223,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
+        // Dispara el proceso asincronico: tras el commit se publica en la cola de ActiveMQ
+        // y un consumidor asigna automaticamente un repartidor disponible.
+        eventPublisher.publishEvent(new PedidoListoParaRetirarEvent(pedido.getId()));
         return toResponseDTO(pedido);
     }
 
