@@ -13,10 +13,6 @@ export function UsuarioDetalleHeader({ usuario }) {
           {usuario.telefono && <span><Phone size={14} /> {usuario.telefono}</span>}
         </div>
       </div>
-      <div className="detalle-badges">
-        <RolBadge rol={usuario.rol} />
-        <EstadoBadge estado={usuario.estado} />
-      </div>
     </div>
   );
 }
