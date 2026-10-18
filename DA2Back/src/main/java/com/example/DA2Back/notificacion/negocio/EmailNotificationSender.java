@@ -75,6 +75,7 @@ public class EmailNotificationSender {
             case SOLICITUD_REGISTRO -> "solicitud-registro.html";
             case ACTUALIZACION_ESTADO_USUARIO -> "estado-usuario.html";
             case ACTUALIZACION_PEDIDO -> "actualizacion-pedido.html";
+            case PEDIDO_ASIGNADO -> "pedido-asignado.html";
             case STOCK_BAJO -> "stock-bajo.html";
         };
 

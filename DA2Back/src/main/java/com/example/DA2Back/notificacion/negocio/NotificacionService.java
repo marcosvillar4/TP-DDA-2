@@ -12,6 +12,7 @@ import com.example.DA2Back.notificacion.dato.TipoNotificacion;
 import com.example.DA2Back.notificacion.dto.NotificacionResponseDTO;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
+import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -51,6 +52,29 @@ public class NotificacionService {
                 "Actualización de pedido", mensaje, pedido.getId(), true, null);
         guardar(usuario, TipoNotificacion.ACTUALIZACION_PEDIDO, CanalNotificacion.EMAIL,
                 "Actualización del pedido #" + pedido.getId(), mensaje, pedido.getId(),
+                false, usuario.getEmail());
+    }
+
+    @Transactional
+    public void notificarPedidoAsignado(Pedido pedido, Repartidor repartidor) {
+        Usuario usuario = usuarioRepository.findById(repartidor.getUsuarioId()).orElse(null);
+        if (usuario == null) {
+            log.warn("No se pudo notificar la asignación del pedido {}: "
+                    + "no existe el usuario del repartidor {}",
+                    pedido.getId(), repartidor.getId());
+            return;
+        }
+
+        String mensaje = "Se te asignó el pedido #" + pedido.getId() + ".\n"
+                + "Dirección de retiro: " + valorOrDefecto(pedido.getDireccionOrigen()) + ".\n"
+                + "Dirección de entrega: " + valorOrDefecto(pedido.getDireccionDestino()) + ".\n"
+                + "Fecha de creación: " + valorOrDefecto(pedido.getFechaCreacion()) + ".\n"
+                + "Ingresá a tu perfil para retirar el pedido e iniciar la entrega.";
+
+        guardar(usuario, TipoNotificacion.PEDIDO_ASIGNADO, CanalNotificacion.APP,
+                "Nuevo pedido asignado", mensaje, pedido.getId(), true, null);
+        guardar(usuario, TipoNotificacion.PEDIDO_ASIGNADO, CanalNotificacion.EMAIL,
+                "Nuevo pedido asignado #" + pedido.getId(), mensaje, pedido.getId(),
                 false, usuario.getEmail());
     }
 
@@ -180,5 +204,9 @@ public class NotificacionService {
                 .titulo(n.getTitulo()).mensaje(n.getMensaje())
                 .referenciaId(n.getReferenciaId()).leida(n.isLeida())
                 .enviada(n.isEnviada()).fechaCreacion(n.getFechaCreacion()).build();
+    }
+
+    private String valorOrDefecto(Object valor) {
+        return valor == null ? "No informado" : valor.toString();
     }
 }

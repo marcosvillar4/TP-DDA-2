@@ -261,6 +261,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         pedidosRepository.save(pedido);
         repartidorRepository.save(repartidor);
         registrarHistorial(pedido, EstadoPedido.ASIGNADO);
+        if (notificacionService != null) {
+            notificacionService.notificarPedidoAsignado(pedido, repartidor);
+        }
         return toResponseDTO(pedido);
     }
 
