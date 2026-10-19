@@ -1,5 +1,4 @@
 import { Mail, Phone } from "lucide-react";
-import { EstadoBadge, RolBadge } from "./UsuarioBadge";
 import { iniciales } from "../utils/usuarioLabels";
 
 export function UsuarioDetalleHeader({ usuario }) {

@@ -10,7 +10,6 @@ import lombok.Setter;
 public class ActualizarPerfilRepartidorAdminDTO extends ActualizarPerfilAdminDTO {
  
     @NotBlank
-    @Pattern(regexp = "MOTO|AUTO", message = "Vehículo inválido")
     private String vehiculo;
  
     @NotBlank

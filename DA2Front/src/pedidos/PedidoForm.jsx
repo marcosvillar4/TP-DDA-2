@@ -184,7 +184,7 @@ export default function PedidoForm() {
               >
                 <option value="" disabled>Seleccione un depósito...</option>
                 {depositos.map(d => (
-                  <option key={d.id} value={d.id}>{d.nombreDeposito} ({d.direccion})</option>
+                  <option key={d.id} value={d.id}>{d.nombre} ({d.direccion})</option>
                 ))}
               </select>
             </div>

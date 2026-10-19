@@ -241,9 +241,9 @@ export default function RegisterForm() {
                       <option value="" disabled>
                         Seleccione...
                       </option>
-                      <option value="MOTO">Moto</option>
-                      <option value="AUTO">Auto / Utilitario</option>
-                      <option value="BICI">Bicicleta</option>
+                      <option value="FURGONES_Y_UTILITARIOS_LIVIANOS">Furgones y utilitarios livianos</option>
+                      <option value="CAMIONES_RIGIDOS">Camiones rígidos</option>
+                      <option value="CAMIONES_ARTICULADOS">Camiones articulados</option>
                     </select>
                   </div>
                   <div className="register-grid-2">

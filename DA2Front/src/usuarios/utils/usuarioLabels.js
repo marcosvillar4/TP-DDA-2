@@ -13,8 +13,9 @@ export const ESTADO_CLASES = {
 };
 
 export const VEHICULO_LABELS = {
-  MOTO: "Moto",
-  AUTO: "Auto / Utilitario",
+  FURGONES_Y_UTILITARIOS_LIVIANOS: "Furgones y utilitarios livianos",
+  CAMIONES_RIGIDOS: "Camiones rígidos",
+  CAMIONES_ARTICULADOS: "Camiones articulados",
 };
 
 export const ESTADO_REPARTIDOR_LABELS = {
