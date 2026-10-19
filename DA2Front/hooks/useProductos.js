@@ -60,6 +60,7 @@ export function useProductos() {
   const [comercios, setComercios] = useState([]);
   const [filtros, setFiltros] = useState(initialFiltros);
   const [loading, setLoading] = useState(true);
+  const [loadingComercios, setLoadingComercios] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [detalleProducto, setDetalleProducto] = useState(null);
 
@@ -89,6 +90,8 @@ export function useProductos() {
           text: err.message,
           confirmButtonColor: CONFIRM_COLOR,
         });
+      } finally {
+        setLoadingComercios(false);
       }
     }
 
@@ -290,6 +293,7 @@ export function useProductos() {
     filtros,
     kpis,
     loading,
+    loadingComercios,
     submitting,
     detalleProducto,
     setDetalleProducto,

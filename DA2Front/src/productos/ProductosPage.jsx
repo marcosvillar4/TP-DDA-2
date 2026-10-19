@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Package, PackageCheck, PackageX, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import KpiCard from "../dashboard/components/KpiCard";
+import { useAuthUser } from "../../hooks/useAuthUser";
 import { useProductos } from "../../hooks/useProductos";
 import { ProductoDetailModal } from "./components/ProductoDetailModal";
 import { ProductoFilters } from "./components/ProductoFilters";
@@ -11,6 +12,8 @@ import "./styles/ProductosPage.css";
 
 export default function ProductosPage() {
   const navigate = useNavigate();
+  const authUser = useAuthUser();
+  const esComercio = authUser?.rol === "COMERCIO";
   const {
     productos,
     comercios,
@@ -18,6 +21,7 @@ export default function ProductosPage() {
     filtros,
     kpis,
     loading,
+    loadingComercios,
     submitting,
     detalleProducto,
     setDetalleProducto,
@@ -28,6 +32,11 @@ export default function ProductosPage() {
     verDetalle,
     cambiarEstado,
   } = useProductos();
+  const comercioPropio = esComercio
+    ? comercios.find(
+        (comercio) => String(comercio.usuarioId) === String(authUser.id),
+      )
+    : null;
 
   const [formMode, setFormMode] = useState(null);
   const [productoEditando, setProductoEditando] = useState(null);
@@ -71,9 +80,10 @@ export default function ProductosPage() {
           type="button"
           onClick={abrirCrear}
           className="producto-button producto-button-primary productos-new-button"
+          disabled={esComercio && loadingComercios}
         >
           <Plus size={16} />
-          Nuevo producto
+          {esComercio && loadingComercios ? "Cargando comercios..." : "Nuevo producto"}
         </button>
       </div>
 
@@ -123,6 +133,8 @@ export default function ProductosPage() {
           mode={formMode}
           producto={productoEditando}
           comercios={comercios}
+          esComercio={esComercio}
+          comercioPropio={comercioPropio}
           categorias={categorias}
           submitting={submitting}
           onClose={cerrarFormulario}
