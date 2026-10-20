@@ -79,6 +79,6 @@ public class AdminSeeder implements CommandLineRunner {
 
         usuarioRepository.save(admin);
 
-        log.info("Usuario ADMIN creado -> email: {} / password: {}", adminEmail, adminPassword);
+        log.info("Usuario ADMIN creado");
     }
 }
