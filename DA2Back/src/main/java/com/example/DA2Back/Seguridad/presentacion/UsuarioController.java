@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
 import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.ActualizarPerfilAdminDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.UsuarioAdminDetalleDTO;
 import com.example.DA2Back.Seguridad.negocio.IUsuarioService;
 
 import jakarta.validation.Valid;
@@ -39,8 +41,8 @@ public class UsuarioController {
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<UsuarioResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(usuarioService.obtenerPorId(id));
+    public ResponseEntity<UsuarioAdminDetalleDTO> obtenerDetalleAdmin(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.obtenerDetalleAdmin(id));
     }
 
     @PatchMapping("/admin/{id}")
@@ -48,6 +50,13 @@ public class UsuarioController {
             @PathVariable Long id,
             @Valid @RequestBody ActualizarUsuarioAdminDTO dto) {
         return ResponseEntity.ok(usuarioService.actualizarUsuarioAdmin(id, dto));
+    }
+
+    @PatchMapping("/admin/{id}/perfil")
+    public ResponseEntity<UsuarioAdminDetalleDTO> actualizarPerfilAdmin(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarPerfilAdminDTO dto) {
+        return ResponseEntity.ok(usuarioService.actualizarPerfilAdmin(id, dto));
     }
 
     @PatchMapping("/admin/{id}/password")

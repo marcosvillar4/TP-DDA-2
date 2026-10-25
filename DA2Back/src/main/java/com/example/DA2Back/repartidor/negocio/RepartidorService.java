@@ -12,7 +12,11 @@ import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException;
+import com.example.DA2Back.deposito.negocio.IDeposito;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.EstadoHistoricoPedido;
 import com.example.DA2Back.pedidos.dato.HistorialEstadoPedido;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
@@ -46,6 +50,7 @@ public class RepartidorService implements IRepartidorService {
     private final UsuarioRepository usuarioRepository;
     private final PedidosRepository pedidosRepository;
     private final ServicioDePedidos servicioDePedidos;
+    private final IDeposito depositoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,7 +74,7 @@ public class RepartidorService implements IRepartidorService {
                 .orElseThrow(() -> new NoSuchElementException(
                         "El usuario " + usuarioId
                                 + " todavía no tiene un perfil de repartidor configurado"));
-        return toResponseDTO(repartidor);
+        return toResponseDTO(repartidor, true);
     }
 
     @Override
@@ -177,34 +182,80 @@ public class RepartidorService implements IRepartidorService {
                         ESTADOS_PEDIDO_FINALIZADO
                 )
                 .stream()
-                .map(pedido -> {
-                    LocalDateTime fechaFinal = null;
-                    if (pedido.getHistorial() != null) {
-                        fechaFinal = pedido.getHistorial().stream()
-                                .filter(h -> h.getEstado() != null && ESTADOS_PEDIDO_FINALIZADO.contains(h.getEstado()))
-                                .map(HistorialEstadoPedido::getFechaHora)
-                                .filter(Objects::nonNull)
-                                .max(LocalDateTime::compareTo)
-                                .orElse(null);
-                    }
-                    if (fechaFinal == null) {
-                        fechaFinal = pedido.getFechaCreacion();
-                    }
-
-                    return EntregaHistorialDTO.builder()
-                            .fecha(fechaFinal != null ? fechaFinal.toString() : null)
-                            .pedidoId(pedido.getId())
-                            .direccionEntrega(pedido.getDireccionDestino())
-                            .resultado(pedido.getEstado())
-                            .build();
-                })
+.map(pedido -> EntregaHistorialDTO.builder()
+                        .fecha(obtenerFechaFinalizacion(pedido))
+                        .pedidoId(pedido.getId())
+                        .direccionEntrega(pedido.getDireccionDestino())
+                        .resultado(pedido.getEstado())
+                        .build())
                 .toList();
+    }
+
+    private String obtenerFechaFinalizacion(Pedido pedido) {
+        if (pedido.getHistorial() == null) return null;
+        EstadoHistoricoPedido estadoFinal = EstadoHistoricoPedido.desdeOperativo(pedido.getEstado());
+        return pedido.getHistorial().stream()
+                .filter(registro -> registro.getEstado() == estadoFinal)
+                .map(HistorialEstadoPedido::getFechaHora)
+                .filter(Objects::nonNull)
+                .max(java.time.LocalDateTime::compareTo)
+                .map(java.time.LocalDateTime::toString)
+                .orElse(null);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosAsignables() {
         return servicioDePedidos.listarPendientesAsignables();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerPedidosDisponiblesParaUsuario(Long usuarioId) {
+        Repartidor repartidor = repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+
+        if (!repartidor.isActivo()) {
+            throw new IllegalStateException("El perfil de repartidor está inactivo");
+        }
+
+        if (repartidor.getEstado() != EstadoRepartidor.DISPONIBLE) {
+            throw new IllegalStateException(
+                    "El repartidor debe estar DISPONIBLE para consultar pedidos disponibles");
+        }
+
+        return servicioDePedidos.listarPendientesAsignables();
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO tomarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+
+        return servicioDePedidos.asignarRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO retirarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.marcarRetiradoPorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO iniciarViajeParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.iniciarViajePorRepartidor(pedidoId, repartidor.getId());
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO entregarPedidoParaUsuario(Long usuarioId, Long pedidoId) {
+        Repartidor repartidor = buscarRepartidorPorUsuarioId(usuarioId);
+        return servicioDePedidos.entregarPorRepartidor(pedidoId, repartidor.getId());
     }
 
     @Override
@@ -225,11 +276,22 @@ public class RepartidorService implements IRepartidorService {
                         "Repartidor con id=" + id + " no encontrado"));
     }
 
+    private Repartidor buscarRepartidorPorUsuarioId(Long usuarioId) {
+        return repartidorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "El usuario " + usuarioId
+                                + " todavía no tiene un perfil de repartidor configurado"));
+    }
+
     private RepartidorResponseDTO toResponseDTO(Repartidor repartidor) {
+        return toResponseDTO(repartidor, false);
+    }
+
+    private RepartidorResponseDTO toResponseDTO(Repartidor repartidor, boolean incluirDatosDeposito) {
         return RepartidorMapper.toResponseDTO(
                 repartidor,
                 buscarUsuario(repartidor.getUsuarioId()),
-                buscarPedidoActual(repartidor.getId())
+                buscarPedidoActual(repartidor.getId(), incluirDatosDeposito)
         );
     }
 
@@ -239,21 +301,37 @@ public class RepartidorService implements IRepartidorService {
                         "Usuario con id=" + usuarioId + " no encontrado"));
     }
 
-    private PedidoActualDTO buscarPedidoActual(Long repartidorId) {
+    private PedidoActualDTO buscarPedidoActual(Long repartidorId, boolean incluirDatosDeposito) {
         return pedidosRepository.findFirstByRepartidorIdAndEstadoIn(
                         repartidorId,
                         ESTADOS_PEDIDO_ACTIVO
                 )
-                .map(pedido -> PedidoActualDTO.builder()
+                .map(pedido -> {
+                    Deposito deposito = incluirDatosDeposito ? buscarDepositoDelPedido(pedido.getDepositoId()) : null;
+                    return PedidoActualDTO.builder()
                         .id(pedido.getId())
                         .estado(pedido.getEstado())
                         .direccionDestino(pedido.getDireccionDestino())
                         .direccionOrigen(pedido.getDireccionOrigen())
                         .fechaCreacion(pedido.getFechaCreacion())
-                        .build())
+.depositoId(pedido.getDepositoId())
+                        .depositoNombre(deposito != null ? deposito.getNombre() : null)
+                        .depositoDireccion(deposito != null ? deposito.getDireccion() : null)
+                        .detalles(pedidosRepository.buscarDetallesParaRespuesta(pedido.getId()))
+                        .build();
+                })
                 .orElse(null);
     }
 
+    private Deposito buscarDepositoDelPedido(Long depositoId) {
+        if (depositoId == null) return null;
+        try {
+            return depositoService.obtenerEntidadPorId(depositoId);
+        } catch (RecursoNoEncontradoException ex) {
+            // Los pedidos antiguos pueden conservar el ID de un deposito eliminado.
+            return null;
+        }
+    }
     private boolean tienePedidoActivo(Long repartidorId) {
         return pedidosRepository.existsByRepartidorIdAndEstadoIn(
                 repartidorId,

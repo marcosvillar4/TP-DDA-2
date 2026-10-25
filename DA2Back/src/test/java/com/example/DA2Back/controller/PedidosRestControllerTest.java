@@ -1,6 +1,8 @@
 package com.example.DA2Back.controller;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.pedidos.dto.ActualizarEstadoDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
@@ -33,6 +35,7 @@ class PedidosRestControllerTest {
     private PedidosRestController controller;
 
     private PedidoResponseDTO responseDTO;
+    private final Usuario admin = Usuario.builder().id(1L).rol(Rol.ADMIN).build();
 
     @BeforeEach
     void setUp() {
@@ -51,9 +54,9 @@ class PedidosRestControllerTest {
         dto.setComercioId(100L);
         dto.setDireccionDestino("Av. Corrientes 1234");
 
-        when(servicioDePedidos.crearPedido(any(CrearPedidoDTO.class))).thenReturn(responseDTO);
+        when(servicioDePedidos.crearPedido(any(CrearPedidoDTO.class), eq(admin))).thenReturn(responseDTO);
 
-        ResponseEntity<PedidoResponseDTO> respuesta = controller.crearPedido(dto);
+        ResponseEntity<PedidoResponseDTO> respuesta = controller.crearPedido(dto, admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.CREATED, respuesta.getStatusCode());
@@ -62,15 +65,15 @@ class PedidosRestControllerTest {
         assertEquals(100L, respuesta.getBody().getComercioId());
         assertEquals(EstadoPedido.CREADO, respuesta.getBody().getEstado());
 
-        verify(servicioDePedidos, times(1)).crearPedido(any(CrearPedidoDTO.class));
+        verify(servicioDePedidos, times(1)).crearPedido(any(CrearPedidoDTO.class), eq(admin));
     }
 
     @Test
     @DisplayName("GET /api/pedidos debe retornar HTTP 200 OK y la lista de todos los pedidos")
     void testListarTodos() {
-        when(servicioDePedidos.listarTodos()).thenReturn(List.of(responseDTO));
+        when(servicioDePedidos.listarTodos(admin)).thenReturn(List.of(responseDTO));
 
-        ResponseEntity<List<PedidoResponseDTO>> respuesta = controller.listarTodos();
+        ResponseEntity<List<PedidoResponseDTO>> respuesta = controller.listarTodos(admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
@@ -78,30 +81,30 @@ class PedidosRestControllerTest {
         assertEquals(1, respuesta.getBody().size());
         assertEquals(1L, respuesta.getBody().get(0).getId());
 
-        verify(servicioDePedidos, times(1)).listarTodos();
+        verify(servicioDePedidos, times(1)).listarTodos(admin);
     }
 
     @Test
     @DisplayName("GET /api/pedidos/{id} debe retornar HTTP 200 OK y el pedido por ID")
     void testObtenerPorId() {
-        when(servicioDePedidos.obtenerPorId(1L)).thenReturn(responseDTO);
+        when(servicioDePedidos.obtenerPorId(1L, admin)).thenReturn(responseDTO);
 
-        ResponseEntity<PedidoResponseDTO> respuesta = controller.obtenerPorId(1L);
+        ResponseEntity<PedidoResponseDTO> respuesta = controller.obtenerPorId(1L, admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
         assertEquals(1L, respuesta.getBody().getId());
 
-        verify(servicioDePedidos, times(1)).obtenerPorId(1L);
+        verify(servicioDePedidos, times(1)).obtenerPorId(1L, admin);
     }
 
     @Test
     @DisplayName("GET /api/pedidos/comercio/{id} debe retornar pedidos del comercio")
     void testListarPorComercio() {
-        when(servicioDePedidos.listarPorComercio(100L)).thenReturn(List.of(responseDTO));
+        when(servicioDePedidos.listarPorComercio(100L, admin)).thenReturn(List.of(responseDTO));
 
-        ResponseEntity<List<PedidoResponseDTO>> respuesta = controller.listarPorComercio(100L);
+        ResponseEntity<List<PedidoResponseDTO>> respuesta = controller.listarPorComercio(100L, admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
@@ -109,24 +112,24 @@ class PedidosRestControllerTest {
         assertEquals(1, respuesta.getBody().size());
         assertEquals(100L, respuesta.getBody().get(0).getComercioId());
 
-        verify(servicioDePedidos, times(1)).listarPorComercio(100L);
+        verify(servicioDePedidos, times(1)).listarPorComercio(100L, admin);
     }
 
     @Test
     @DisplayName("GET /api/pedidos/estado/{estado} debe retornar pedidos por estado")
     void testListarPorEstado() {
-        when(servicioDePedidos.listarPorEstado(EstadoPedido.CREADO))
+        when(servicioDePedidos.listarPorEstado(EstadoPedido.CREADO, admin))
                 .thenReturn(List.of(responseDTO));
 
         ResponseEntity<List<PedidoResponseDTO>> respuesta =
-                controller.listarPorEstado(EstadoPedido.CREADO);
+                controller.listarPorEstado(EstadoPedido.CREADO, admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
         assertEquals(EstadoPedido.CREADO, respuesta.getBody().get(0).getEstado());
 
-        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.CREADO);
+        verify(servicioDePedidos, times(1)).listarPorEstado(EstadoPedido.CREADO, admin);
     }
 
     @Test
@@ -162,15 +165,15 @@ class PedidosRestControllerTest {
                 .estado(EstadoPedido.CANCELADO)
                 .build();
 
-        when(servicioDePedidos.cancelar(1L)).thenReturn(responseCancelado);
+        when(servicioDePedidos.cancelar(1L, admin)).thenReturn(responseCancelado);
 
-        ResponseEntity<PedidoResponseDTO> respuesta = controller.cancelar(1L);
+        ResponseEntity<PedidoResponseDTO> respuesta = controller.cancelar(1L, admin);
 
         assertNotNull(respuesta);
         assertEquals(HttpStatus.OK, respuesta.getStatusCode());
         assertEquals(EstadoPedido.CANCELADO, respuesta.getBody().getEstado());
 
-        verify(servicioDePedidos, times(1)).cancelar(1L);
+        verify(servicioDePedidos, times(1)).cancelar(1L, admin);
     }
 }
 

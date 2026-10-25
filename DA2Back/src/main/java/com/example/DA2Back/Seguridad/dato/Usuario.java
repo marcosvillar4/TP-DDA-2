@@ -15,6 +15,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import com.example.DA2Back.notificacion.dato.Notificacion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -64,6 +67,9 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     @Builder.Default
     private EstadoUsuario estado = EstadoUsuario.EN_EVALUACION;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Notificacion> notificaciones;
 
 
     @Override

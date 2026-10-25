@@ -22,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,8 +30,8 @@ import lombok.RequiredArgsConstructor;
  * Seguridad HTTP de la API.
  *
  * Criterio:
- *  - ADMIN puede todo: figura en todas las reglas y es el único rol con
- *    acceso a lo que no esté listado explícitamente (deny por defecto).
+ *  - ADMIN conserva las operaciones administrativas y es el unico rol con
+ *    acceso a lo que no este listado explicitamente.
  *  - El resto de los roles accede solo a lo que necesita su pantalla.
  *  - Spring usa la PRIMERA regla que coincide, por eso las reglas
  *    específicas van antes que las generales.
@@ -77,6 +78,27 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider())
+            .exceptionHandling(ex -> ex
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json;charset=UTF-8");
+                    String json = String.format(
+                        "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"Acceso denegado: su rol no tiene permisos para acceder a este recurso\",\"timestamp\":\"%s\"}",
+                        java.time.Instant.now().toString()
+                    );
+                    response.getWriter().write(json);
+                })
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    String json = String.format(
+                        "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"No autorizado: token invalido o expirado\",\"timestamp\":\"%s\"}",
+                        java.time.Instant.now().toString()
+                    );
+                    response.getWriter().write(json);
+                })
+            )
 
             .authorizeHttpRequests(auth -> auth
 
@@ -95,7 +117,7 @@ public class SecurityConfig {
                 .requestMatchers("/comercios/**").hasRole(ADMIN)
 
                 // ───────── Depósitos ─────────
-                .requestMatchers(GET, "/depositos/me").hasAnyRole(ADMIN, DEPOSITO)
+                .requestMatchers(GET, "/depositos/me").hasRole(DEPOSITO)
                 .requestMatchers(GET, "/depositos/comercio/*").hasAnyRole(ADMIN, COMERCIO)
                 // Un COMERCIO da de alta depósitos para SU comercio (se vincula al usuario autenticado).
                 .requestMatchers(POST, "/depositos").hasRole(COMERCIO)
@@ -116,27 +138,33 @@ public class SecurityConfig {
                 // DEPOSITO solo ve el inventario de su depósito (validado en el servicio).
                 .requestMatchers(GET, "/items-inventario/deposito/*")
                     .hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
+                .requestMatchers(PATCH, "/items-inventario/*/stock-minimo")
+                    .hasAnyRole(ADMIN, COMERCIO)
                 .requestMatchers("/items-inventario/**").hasAnyRole(ADMIN, COMERCIO)
 
                 // ───────── Pedidos ─────────
                 .requestMatchers(POST, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO)
                 .requestMatchers(GET, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos/comercio/*").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
-                .requestMatchers(GET, "/api/pedidos/estado/*", "/api/pedidos/pendientes").hasRole(ADMIN)
-                // Detalle / seguimiento de un pedido: lo consultan todos los roles.
-                .requestMatchers(GET, "/api/pedidos/*").authenticated()
+                .requestMatchers(GET, "/api/pedidos/estado/*", "/api/pedidos/pendientes")
+                    .hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
+                // El servicio limita las consultas al comercio o deposito autenticado.
+                .requestMatchers(GET, "/api/pedidos/*").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(PATCH, "/api/pedidos/*/listo-para-retirar")
                     .hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
-                .requestMatchers(PATCH, "/api/pedidos/*/asignar/*").hasAnyRole(ADMIN, REPARTIDOR)
+                .requestMatchers(PATCH, "/api/pedidos/*/asignar/*").hasRole(ADMIN)
                 .requestMatchers(PATCH, "/api/pedidos/*/retirar",
                                         "/api/pedidos/*/iniciar-viaje",
                                         "/api/pedidos/*/entregar")
-                    .hasAnyRole(ADMIN, REPARTIDOR)
+                    .hasRole(ADMIN)
                 .requestMatchers(DELETE, "/api/pedidos/*/cancelar").hasAnyRole(ADMIN, COMERCIO)
 
                 // ───────── Repartidores ─────────
                 .requestMatchers("/repartidores/**").hasRole(ADMIN)
-                .requestMatchers("/repartidor/**").hasAnyRole(ADMIN, REPARTIDOR)
+                .requestMatchers("/repartidor/**").hasRole(REPARTIDOR)
+
+                // Notificaciones propias del usuario autenticado.
+                .requestMatchers("/notificaciones/**").authenticated()
 
                 // Todo lo demás: solo ADMIN.
                 .anyRequest().hasRole(ADMIN)

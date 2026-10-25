@@ -126,13 +126,20 @@ export default function PedidoForm() {
       return;
     }
 
+    const comercioSeleccionado = comercios.find(
+      comercio => String(comercio.id) === String(formData.comercioId)
+    );
+    const depositoSeleccionado = depositos.find(
+      deposito => String(deposito.id) === String(formData.depositoId)
+    );
+
     setLoading(true);
     try {
       await crearPedido({
         comercioId: parseInt(formData.comercioId),
         depositoId: parseInt(formData.depositoId),
-        direccionOrigen: formData.direccionOrigen,
-        direccionDestino: formData.direccionDestino,
+        direccionOrigen: formData.direccionOrigen.trim() || depositoSeleccionado?.direccion || '',
+        direccionDestino: formData.direccionDestino.trim() || comercioSeleccionado?.direccion || '',
         detalles: detalles.map(d => ({ productoId: d.productoId, cantidad: d.cantidad }))
       });
       Swal.fire('¡Éxito!', 'Pedido creado y stock descontado', 'success');
@@ -203,7 +210,7 @@ export default function PedidoForm() {
               >
                 <option value="" disabled>Seleccione un depósito...</option>
                 {depositos.map(d => (
-                  <option key={d.id} value={d.id}>{d.nombreDeposito} ({d.direccion})</option>
+                  <option key={d.id} value={d.id}>{d.nombre} ({d.direccion})</option>
                 ))}
               </select>
             </div>
@@ -227,19 +234,18 @@ export default function PedidoForm() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--color-slate-700)' }}>
-                Dirección de Destino
+                Dirección de Destino (Opcional)
               </label>
               <input 
                 type="text" 
                 name="direccionDestino"
                 value={formData.direccionDestino}
                 onChange={handleChange}
-                placeholder="Ej. Av. Cabildo 500, CABA"
+                placeholder="Si se deja vacío usa la dirección del comercio"
                 style={{
                   padding: '0.625rem', borderRadius: '0.375rem', 
                   border: '1px solid var(--color-slate-300)', outline: 'none'
                 }}
-                required
               />
             </div>
           </div>

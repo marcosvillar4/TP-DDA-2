@@ -1,9 +1,12 @@
+import { Mail, Phone, Contact } from "lucide-react";
+import { InfoItem } from "./InfoItem";
+
 export function UsuarioDatosCard({ usuario }) {
   return (
     <div className="detalle-datos">
-      <div><span className="detalle-label">Email</span><p>{usuario.email}</p></div>
-      <div><span className="detalle-label">Teléfono</span><p>{usuario.telefono}</p></div>
-      <div><span className="detalle-label">DNI</span><p>{usuario.dni}</p></div>
+      <InfoItem icono={Mail} label="Email">{usuario.email}</InfoItem>
+      <InfoItem icono={Phone} label="Teléfono">{usuario.telefono}</InfoItem>
+      <InfoItem icono={Contact} label="DNI">{usuario.dni}</InfoItem>
     </div>
   );
 }

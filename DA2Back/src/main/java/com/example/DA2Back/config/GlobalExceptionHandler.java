@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -90,6 +91,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * AccessDeniedException → 403 Forbidden
+     * Ejemplo: un repartidor intenta operar un pedido asignado a otro repartidor.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException ex) {
+        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    /**
      * DataIntegrityViolationException → 500 Internal Server Error.
      * Evita que errores de persistencia no manejados terminen delegando en /error
      * y se oculten como 403 por la configuración de seguridad.
@@ -106,10 +117,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
-        return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
-    }
 
     // -------------------------------------------------------------------------
     /*
@@ -138,6 +145,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UsuarioYaExisteException.class)
     public ResponseEntity<Map<String, Object>> handleYaExiste(UsuarioYaExisteException ex) {
         return buildError(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<Map<String, String>> handleBloqueado(UsuarioBloqueadoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(TransicionInvalidaException.class)

@@ -102,21 +102,23 @@ export default function ComerciosList() {
                   <td>
                     <BadgeComercio estado={c.estado} />
                   </td>
-                  <td className="col-acciones">
-                    <button
-                      className="comercios-btn-ver"
-                      onClick={() => navigate(`/comercios/${c.id}`)}
-                      title="Ver comercio"
-                    >
-                      <Eye size={16} /> Ver
-                    </button>
-                    <button
-                      className="comercios-btn-icon"
-                      title="Editar comercio"
-                      onClick={() => navigate(`/comercios/${c.id}/editar`)}
-                    >
-                      <Edit2 size={16} />
-                    </button>
+                  <td>
+                    <div className="col-acciones">
+                      <button
+                        className="comercios-btn-ver"
+                        onClick={() => navigate(`/comercios/${c.id}`)}
+                        title="Ver comercio"
+                      >
+                        <Eye size={16} /> Ver
+                      </button>
+                      <button
+                        className="comercios-btn-icon"
+                        title="Editar comercio"
+                        onClick={() => navigate(`/comercios/${c.id}/editar`)}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.excepcion.TransicionInvalidaException;
 import com.example.DA2Back.Seguridad.negocio.State.ResolverEstadoUsuario;
+import com.example.DA2Back.notificacion.negocio.NotificacionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +46,7 @@ public class ControlIntentosLoginService {
 
     private final UsuarioRepository usuarioRepository;
     private final ResolverEstadoUsuario resolverEstadoUsuario;
+    private final NotificacionService notificacionService;
 
     /**
      * Registra un intento de login fallido para el email dado.
@@ -88,6 +90,7 @@ public class ControlIntentosLoginService {
             try {
                 resolverEstadoUsuario.resolver(usuario.getEstado()).bloquear(usuario);
                 usuarioRepository.save(usuario);
+                notificacionService.notificarActualizacionEstadoUsuario(usuario);
                 log.warn("Usuario '{}' bloqueado automaticamente tras {} intentos fallidos de login",
                         email, MAX_INTENTOS_FALLIDOS);
             } catch (TransicionInvalidaException ex) {

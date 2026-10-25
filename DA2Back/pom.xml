@@ -112,6 +112,17 @@
     <scope>runtime</scope>
 </dependency>
 
+		<!-- Mensajeria asincronica: JMS + ActiveMQ (cola punto a punto) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-activemq</artifactId>
+		</dependency>
+		<!-- Broker embebido (BrokerService) para correr sin instalar ActiveMQ ni Docker -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+		</dependency>
+
 		<!-- Mail -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -160,6 +171,13 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar</argLine>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

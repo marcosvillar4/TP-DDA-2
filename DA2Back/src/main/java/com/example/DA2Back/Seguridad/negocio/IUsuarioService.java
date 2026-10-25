@@ -9,6 +9,8 @@ import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.RegistroDepositoDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.ActualizarPerfilAdminDTO;
+import com.example.DA2Back.Seguridad.dto.perfilAdmin.UsuarioAdminDetalleDTO;
 
 public interface IUsuarioService {
     UsuarioResponseDTO registrar(RegisterDTO dto);
@@ -28,5 +30,6 @@ public interface IUsuarioService {
     UsuarioResponseDTO desbloquear(Long id);
     void asociarDepositoAComercio(AsociarDepositoDTO dto);
     boolean existePorId(Long id);
-
+    UsuarioAdminDetalleDTO obtenerDetalleAdmin(Long id);
+    UsuarioAdminDetalleDTO actualizarPerfilAdmin(Long id, ActualizarPerfilAdminDTO dto);
 }

@@ -13,6 +13,8 @@ export function ProductoFormModal({
   mode,
   producto,
   comercios,
+  esComercio,
+  comercioPropio,
   categorias,
   submitting,
   onClose,
@@ -30,7 +32,10 @@ export function ProductoFormModal({
       };
     }
 
-    return initialForm;
+    return {
+      ...initialForm,
+      comercioId: comercioPropio?.id ?? "",
+    };
   });
 
   const comercioNombre = useMemo(() => {
@@ -51,7 +56,13 @@ export function ProductoFormModal({
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSubmit(form);
+    if (!isEdit && esComercio && !comercioPropio) return;
+
+    onSubmit({
+      ...form,
+      comercioId:
+        !isEdit && esComercio ? comercioPropio.id : form.comercioId,
+    });
   }
 
   return (
@@ -137,7 +148,17 @@ export function ProductoFormModal({
             </datalist>
           </label>
 
-          {!isEdit && (
+          {!isEdit && esComercio && (
+            <label>
+              <span>Comercio *</span>
+              <input
+                value={comercioPropio?.nombreComercial ?? "No tenés un comercio asociado"}
+                readOnly
+              />
+            </label>
+          )}
+
+          {!isEdit && !esComercio && (
             <label>
               <span>Comercio *</span>
               <select
@@ -166,7 +187,7 @@ export function ProductoFormModal({
             <button
               type="submit"
               className="producto-button producto-button-primary"
-              disabled={submitting}
+              disabled={submitting || (esComercio && !comercioPropio)}
             >
               {submitting ? "Guardando..." : isEdit ? "Guardar cambios" : "Registrar"}
             </button>

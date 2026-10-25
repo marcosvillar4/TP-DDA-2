@@ -1,6 +1,8 @@
 package com.example.DA2Back.pedidos.presentacion;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
@@ -34,39 +36,43 @@ public class PedidosRestController {
 
     /** POST /api/pedidos — crea un nuevo pedido en estado CREADO */
     @PostMapping
-    public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody CrearPedidoDTO dto) {
+    public ResponseEntity<PedidoResponseDTO> crearPedido(@RequestBody CrearPedidoDTO dto,
+                                                        @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(servicioDePedidos.crearPedido(dto));
+                .body(servicioDePedidos.crearPedido(dto, usuario));
     }
 
     /** GET /api/pedidos — lista todos los pedidos */
     @GetMapping
-    public ResponseEntity<List<PedidoResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(servicioDePedidos.listarTodos());
+    public ResponseEntity<List<PedidoResponseDTO>> listarTodos(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.listarTodos(usuario));
     }
 
     /** GET /api/pedidos/{id} — obtiene un pedido por ID */
     @GetMapping("/{id}")
-    public ResponseEntity<PedidoResponseDTO> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(servicioDePedidos.obtenerPorId(id));
+    public ResponseEntity<PedidoResponseDTO> obtenerPorId(@PathVariable Long id,
+                                                        @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.obtenerPorId(id, usuario));
     }
 
     /** GET /api/pedidos/comercio/{comercioId} — pedidos de un comercio */
     @GetMapping("/comercio/{comercioId}")
-    public ResponseEntity<List<PedidoResponseDTO>> listarPorComercio(@PathVariable Long comercioId) {
-        return ResponseEntity.ok(servicioDePedidos.listarPorComercio(comercioId));
+    public ResponseEntity<List<PedidoResponseDTO>> listarPorComercio(@PathVariable Long comercioId,
+                                                                   @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.listarPorComercio(comercioId, usuario));
     }
 
     /** GET /api/pedidos/estado/{estado} — pedidos por estado */
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<PedidoResponseDTO>> listarPorEstado(@PathVariable EstadoPedido estado) {
-        return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado));
+    public ResponseEntity<List<PedidoResponseDTO>> listarPorEstado(@PathVariable EstadoPedido estado,
+                                                                 @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado, usuario));
     }
 
     /** GET /api/pedidos/pendientes — pedidos LISTO_PARA_RETIRAR sin repartidor */
     @GetMapping("/pendientes")
-    public ResponseEntity<List<PedidoResponseDTO>> listarPendientesAsignables() {
-        return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables());
+    public ResponseEntity<List<PedidoResponseDTO>> listarPendientesAsignables(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables(usuario));
     }
 
     /**
@@ -74,8 +80,9 @@ public class PedidosRestController {
      * CREADO → LISTO_PARA_RETIRAR: marca el pedido como listo para retirar.
      */
     @PatchMapping("/{id}/listo-para-retirar")
-    public ResponseEntity<PedidoResponseDTO> marcarListoParaRetirar(@PathVariable Long id) {
-        return ResponseEntity.ok(servicioDePedidos.marcarListoParaRetirar(id));
+    public ResponseEntity<PedidoResponseDTO> marcarListoParaRetirar(@PathVariable Long id,
+                                                                 @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.marcarListoParaRetirar(id, usuario));
     }
 
     /**
@@ -121,8 +128,9 @@ public class PedidosRestController {
      * Cancela el pedido desde cualquier estado que lo permita.
      */
     @DeleteMapping("/{id}/cancelar")
-    public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id) {
-        return ResponseEntity.ok(servicioDePedidos.cancelar(id));
+    public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.cancelar(id, usuario));
     }
 }
 

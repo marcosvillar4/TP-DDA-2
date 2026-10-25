@@ -195,9 +195,9 @@ function getInitials(name = "") {
 
 function formatVehiculo(vehiculo) {
   const labels = {
-    MOTO: "Moto",
-    AUTO: "Auto / Utilitario",
-    BICI: "Bicicleta",
+    FURGONES_Y_UTILITARIOS_LIVIANOS: "Furgones y utilitarios livianos",
+    CAMIONES_RIGIDOS: "Camiones rígidos",
+    CAMIONES_ARTICULADOS: "Camiones articulados",
   };
   return labels[vehiculo] || vehiculo || "—";
 }

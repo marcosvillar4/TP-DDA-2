@@ -27,6 +27,7 @@ import MisPedidosPage from "../repartidor/MisPedidosPage";
 import UsuariosPage from "../usuarios/UsuariosPage";
 import DepositosPage from "../depositos/DepositosPage";
 import MisDepositosPage from "../depositos/MisDepositosPage";
+import AlertasPage from "../alertas/AlertasPage";
 
 export const ROLES = {
   ADMIN: "ADMIN",
@@ -160,6 +161,7 @@ export const NAV_ITEMS = [
     path: "/alertas",
     icon: Bell,
     roles: TODOS,
+    element: AlertasPage,
   },
   {
     key: "usuarios",

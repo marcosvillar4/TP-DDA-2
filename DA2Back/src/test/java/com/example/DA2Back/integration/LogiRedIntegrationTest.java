@@ -1,6 +1,10 @@
 package com.example.DA2Back.integration;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.comercio.dato.Comercio;
+import com.example.DA2Back.comercio.dato.ComercioRepository;
+import com.example.DA2Back.deposito.dato.Deposito;
+import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.negocio.UsuarioFactory;
@@ -37,8 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * gracias a @TestInstance(PER_CLASS).
  *
  * Nota: usa /auth/** (mapping de main) en lugar de /api/auth/**.
- * No depende de ComercioRepository ya que ese módulo no tiene
- * repositorio en main. El comercioId del pedido es un Long simple.
+ * Crea comercio y deposito reales de prueba para validar la coherencia del pedido.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -58,6 +61,8 @@ class LogiRedIntegrationTest {
 
     @Autowired
     private PedidosRepository pedidosRepository;
+    @Autowired private ComercioRepository comercios;
+    @Autowired private DepositoRepository depositos;
 
     @Autowired
     private com.example.DA2Back.comercio.dato.ComercioRepository comercioRepository;
@@ -162,6 +167,7 @@ class LogiRedIntegrationTest {
         }
     }
 
+
     // ==================================================================
     // 1. Acceso sin token debe ser rechazado
     // ==================================================================
@@ -237,7 +243,7 @@ class LogiRedIntegrationTest {
                 {
                   "comercioId": %d,
                   "depositoId": %d,
-                  "direccionDestino": "Av. Rivadavia 5000, CABA",
+"direccionDestino": "Av. Rivadavia 5000, CABA",
                   "detalles": [
                     {
                       "productoId": %d,
