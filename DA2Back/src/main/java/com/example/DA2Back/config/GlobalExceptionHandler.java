@@ -158,8 +158,9 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(CredencialesInvalidasException.class)
-    public ResponseEntity<Map<String, Object>> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
+    @ExceptionHandler({CredencialesInvalidasException.class,
+            com.example.DA2Back.Seguridad.excepcion.RefreshTokenInvalidoException.class})
+    public ResponseEntity<Map<String, Object>> handleCredencialesInvalidas(RuntimeException ex) {
         return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 

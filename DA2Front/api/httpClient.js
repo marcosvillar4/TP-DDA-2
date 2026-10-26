@@ -1,3 +1,5 @@
+import { refreshTokenRequest } from "./authApi";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
 
 function getAuthHeaders() {
@@ -8,7 +10,7 @@ function getAuthHeaders() {
   };
 }
 
-export async function request(path, options = {}) {
+export async function request(path, options = {}, _retried = false) {
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -22,6 +24,25 @@ export async function request(path, options = {}) {
     throw new Error(
       "No se pudo conectar con el servidor. Verificá que el backend esté corriendo en localhost:8081."
     );
+  }
+
+  // SEC-W03: si el access token expiró (401) e intentamos renovar con el refresh token
+  if (response.status === 401 && !_retried) {
+    const refreshToken = localStorage.getItem("logired_refresh_token");
+    if (refreshToken) {
+      try {
+        const refreshed = await refreshTokenRequest(refreshToken);
+        localStorage.setItem("logired_token", refreshed.token);
+        if (refreshed.refreshToken) {
+          localStorage.setItem("logired_refresh_token", refreshed.refreshToken);
+        }
+        return request(path, options, true);
+      } catch {
+        localStorage.removeItem("logired_token");
+        localStorage.removeItem("logired_refresh_token");
+        localStorage.removeItem("logired_user");
+      }
+    }
   }
 
   if (!response.ok) {

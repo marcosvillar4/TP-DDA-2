@@ -5,8 +5,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
+import com.example.DA2Back.comercio.negocio.IComercio;
 import com.example.DA2Back.producto.dato.EstadoProducto;
 import com.example.DA2Back.producto.dato.Producto;
 import com.example.DA2Back.producto.dto.ProductoCreateDTO;
@@ -20,9 +26,11 @@ import com.example.DA2Back.producto.negocio.IProductoService;
 public class ProductoController {
 
     private final IProductoService productoService;
+    private final IComercio comercioService;
 
-    public ProductoController(IProductoService productoService) {
+    public ProductoController(IProductoService productoService, IComercio comercioService) {
         this.productoService = productoService;
+        this.comercioService = comercioService;
     }
 
     @GetMapping
@@ -30,11 +38,17 @@ public class ProductoController {
             @RequestParam(required = false) Long comercioId,
             @RequestParam(required = false) EstadoProducto estado,
             @RequestParam(required = false) String categoria,
-            @RequestParam(required = false) String buscar) {
+            @RequestParam(required = false) String buscar,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        if (comercioId != null) {
+            validarPropiedadComercio(comercioId, usuario);
+        }
 
         List<ProductoResponseDTO> productos =
                 productoService.buscar(comercioId, estado, categoria, buscar)
                         .stream()
+                        .filter(p -> puedeAccederProducto(p, usuario))
                         .map(ProductoMapper::toResponseDTO)
                         .collect(Collectors.toList());
 
@@ -43,7 +57,10 @@ public class ProductoController {
 
     @GetMapping("/comercio/{comercioId}")
     public ResponseEntity<List<ProductoResponseDTO>> obtenerPorComercio(
-            @PathVariable Long comercioId) {
+            @PathVariable Long comercioId,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        validarPropiedadComercio(comercioId, usuario);
 
         List<ProductoResponseDTO> productos =
                 productoService.obtenerPorComercio(comercioId)
@@ -56,9 +73,11 @@ public class ProductoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> obtenerPorId(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
 
         Producto producto = productoService.obtenerPorId(id);
+        validarPropiedadProducto(producto, usuario);
 
         return ResponseEntity.ok(
                 ProductoMapper.toResponseDTO(producto)
@@ -67,7 +86,12 @@ public class ProductoController {
 
     @PostMapping
     public ResponseEntity<ProductoResponseDTO> crear(
-            @RequestBody ProductoCreateDTO dto) {
+            @RequestBody ProductoCreateDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        if (dto != null && dto.getComercioId() != null) {
+            validarPropiedadComercio(dto.getComercioId(), usuario);
+        }
 
         Producto producto = ProductoMapper.toEntity(dto);
 
@@ -81,7 +105,11 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> actualizar(
             @PathVariable Long id,
-            @RequestBody ProductoUpdateDTO dto) {
+            @RequestBody ProductoUpdateDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        Producto existente = productoService.obtenerPorId(id);
+        validarPropiedadProducto(existente, usuario);
 
         Producto producto = ProductoMapper.toEntity(dto);
 
@@ -95,7 +123,11 @@ public class ProductoController {
 
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ProductoResponseDTO> activar(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        Producto existente = productoService.obtenerPorId(id);
+        validarPropiedadProducto(existente, usuario);
 
         Producto actualizado =
                 productoService.activar(id);
@@ -107,7 +139,11 @@ public class ProductoController {
 
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<ProductoResponseDTO> desactivar(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        Producto existente = productoService.obtenerPorId(id);
+        validarPropiedadProducto(existente, usuario);
 
         Producto desactivado =
                 productoService.desactivar(id);
@@ -116,5 +152,35 @@ public class ProductoController {
                 ProductoMapper.toResponseDTO(desactivado)
         );
     }
-}
 
+    /**
+     * SEC-W06: Valida en el servidor que un usuario con rol COMERCIO solo pueda
+     * operar sobre productos pertenecientes a su propio comercio.
+     */
+    private void validarPropiedadComercio(Long comercioId, Usuario usuario) {
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            ComercioResponseDTO comercio = comercioService.obtenerPorId(comercioId);
+            if (!usuario.getId().equals(comercio.getUsuarioId())) {
+                throw new AccessDeniedException(
+                        "No tenés permisos para operar sobre productos de otro comercio");
+            }
+        }
+    }
+
+    private void validarPropiedadProducto(Producto producto, Usuario usuario) {
+        if (!puedeAccederProducto(producto, usuario)) {
+            throw new AccessDeniedException(
+                    "No tenés permisos para operar sobre productos de otro comercio");
+        }
+    }
+
+    private boolean puedeAccederProducto(Producto producto, Usuario usuario) {
+        if (usuario == null || usuario.getRol() == Rol.ADMIN) {
+            return true;
+        }
+        if (usuario.getRol() == Rol.COMERCIO && producto != null && producto.getComercio() != null) {
+            return usuario.getId().equals(producto.getComercio().getUsuarioId());
+        }
+        return false;
+    }
+}

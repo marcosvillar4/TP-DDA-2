@@ -76,6 +76,7 @@ public class SecurityConfig {
         http
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
+            .logout(logout -> logout.disable())
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
@@ -103,7 +104,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // ───────── Público ─────────
-                .requestMatchers("/auth/**", "/error").permitAll()
+                .requestMatchers("/auth/**", "/logout", "/refresh", "/error").permitAll()
 
                 // ───────── Usuarios ─────────
                 .requestMatchers("/usuarios/admin/**").hasRole(ADMIN)

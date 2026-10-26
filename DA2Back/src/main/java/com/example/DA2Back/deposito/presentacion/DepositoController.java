@@ -54,7 +54,7 @@ public class DepositoController {
             @AuthenticationPrincipal Usuario usuario) {
 
         // Un COMERCIO solo puede ver los depósitos de su propio comercio.
-        if (usuario.getRol() == Rol.COMERCIO) {
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
             Long duenoId = comercioService.obtenerPorId(comercioId).getUsuarioId();
             if (!usuario.getId().equals(duenoId)) {
                 throw new AccessDeniedException("No podés ver los depósitos de otro comercio");
@@ -82,13 +82,34 @@ public class DepositoController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DEPOSITO')")
     public ResponseEntity<DepositoResponseDTO> actualizar(
             @PathVariable Long id,
-            @RequestBody DepositoCreateDTO dto) {
+            @RequestBody DepositoCreateDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        // SEC-W06: Un DEPOSITO solo puede modificar su propio depósito asignado.
+        if (usuario != null && usuario.getRol() == Rol.DEPOSITO) {
+            DepositoResponseDTO actual = depositoService.obtenerPorId(id);
+            if (!usuario.getId().equals(actual.getUsuarioId())) {
+                throw new AccessDeniedException("No podés modificar un depósito que no te pertenece");
+            }
+        }
+
         return ResponseEntity.ok(depositoService.actualizar(id, dto));
     }
 
     @PatchMapping("/asociar")
     @PreAuthorize("hasAnyRole('ADMIN', 'COMERCIO')")
-    public ResponseEntity<Void> asociarAComercio(@Valid @RequestBody AsociarDepositoDTO dto) {
+    public ResponseEntity<Void> asociarAComercio(
+            @Valid @RequestBody AsociarDepositoDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        // SEC-W06: Un COMERCIO solo puede asociar depósitos a su propio comercio.
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            Long duenoId = comercioService.obtenerPorId(dto.getComercioId()).getUsuarioId();
+            if (!usuario.getId().equals(duenoId)) {
+                throw new AccessDeniedException("No podés asociar depósitos a otro comercio");
+            }
+        }
+
         depositoService.asociarAComercio(dto.getDepositoId(), dto.getComercioId());
         return ResponseEntity.noContent().build();
     }

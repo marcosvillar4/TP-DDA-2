@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, LogOut } from "lucide-react";
 import { getCantidadNotificacionesNoLeidas } from "../../../api/notificacionesApi";
+import { logoutRequest } from "../../../api/authApi";
 import { ROLE_LABELS } from "../navConfig";
 import "../styles/Topbar.css";
 
@@ -33,7 +34,10 @@ export function Topbar({ user, title }) {
     };
   }, []);
 
-  function handleLogout() {
+  async function handleLogout() {
+    const refreshToken = localStorage.getItem("logired_refresh_token");
+    localStorage.removeItem("logired_refresh_token");
+    await logoutRequest(refreshToken);
     localStorage.removeItem("logired_token");
     localStorage.removeItem("logired_user");
     navigate("/");

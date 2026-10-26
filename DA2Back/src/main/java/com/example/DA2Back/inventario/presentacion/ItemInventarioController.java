@@ -5,16 +5,20 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.inventario.dato.Inventario;
 import com.example.DA2Back.inventario.dato.ItemInventario;
 import com.example.DA2Back.inventario.dto.AlertaStockDTO;
 import com.example.DA2Back.inventario.dto.ItemInventarioCreateDTO;
 import com.example.DA2Back.inventario.dto.ItemInventarioMapper;
 import com.example.DA2Back.inventario.dto.ItemInventarioResponseDTO;
 import com.example.DA2Back.inventario.dto.StockMinimoDTO;
+import com.example.DA2Back.inventario.negocio.IInventario;
 import com.example.DA2Back.inventario.negocio.IItemInventario;
 
 @RestController
@@ -22,11 +26,14 @@ import com.example.DA2Back.inventario.negocio.IItemInventario;
 public class ItemInventarioController {
 
     private final IItemInventario itemInventarioService;
+    private final IInventario inventarioService;
 
     public ItemInventarioController(
-            IItemInventario itemInventarioService) {
+            IItemInventario itemInventarioService,
+            IInventario inventarioService) {
 
         this.itemInventarioService = itemInventarioService;
+        this.inventarioService = inventarioService;
     }
 
     @GetMapping
@@ -56,10 +63,12 @@ public class ItemInventarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ItemInventarioResponseDTO> obtenerPorId(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
 
         ItemInventario item =
                 itemInventarioService.obtenerPorId(id);
+        validarPropiedadItem(item, usuario);
 
         return ResponseEntity.ok(
                 ItemInventarioMapper.toResponseDTO(item)
@@ -68,7 +77,10 @@ public class ItemInventarioController {
 
     @GetMapping("/inventario/{inventarioId}")
     public ResponseEntity<List<ItemInventarioResponseDTO>> obtenerPorInventario(
-            @PathVariable Long inventarioId) {
+            @PathVariable Long inventarioId,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        validarPropiedadInventarioId(inventarioId, usuario);
 
         List<ItemInventarioResponseDTO> items =
                 itemInventarioService
@@ -97,12 +109,14 @@ public class ItemInventarioController {
 
     @GetMapping("/producto/{productoId}")
     public ResponseEntity<List<ItemInventarioResponseDTO>> obtenerPorProducto(
-            @PathVariable Long productoId) {
+            @PathVariable Long productoId,
+            @AuthenticationPrincipal Usuario usuario) {
 
         List<ItemInventarioResponseDTO> items =
                 itemInventarioService
                         .obtenerPorProducto(productoId)
                         .stream()
+                        .filter(item -> puedeAccederItem(item, usuario))
                         .map(ItemInventarioMapper::toResponseDTO)
                         .collect(Collectors.toList());
 
@@ -111,7 +125,12 @@ public class ItemInventarioController {
 
     @PostMapping
     public ResponseEntity<ItemInventarioResponseDTO> crear(
-            @RequestBody ItemInventarioCreateDTO dto) {
+            @RequestBody ItemInventarioCreateDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        if (dto != null && dto.getInventarioId() != null) {
+            validarPropiedadInventarioId(dto.getInventarioId(), usuario);
+        }
 
         ItemInventario creado =
                 itemInventarioService.crear(
@@ -130,7 +149,11 @@ public class ItemInventarioController {
     @PutMapping("/{id}/cantidad")
     public ResponseEntity<ItemInventarioResponseDTO> actualizarCantidad(
             @PathVariable Long id,
-            @RequestParam Integer cantidad) {
+            @RequestParam Integer cantidad,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        ItemInventario existente = itemInventarioService.obtenerPorId(id);
+        validarPropiedadItem(existente, usuario);
 
         ItemInventario actualizado =
                 itemInventarioService.actualizarCantidad(
@@ -163,7 +186,11 @@ public class ItemInventarioController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        ItemInventario existente = itemInventarioService.obtenerPorId(id);
+        validarPropiedadItem(existente, usuario);
 
         itemInventarioService.eliminar(id);
 
@@ -173,7 +200,11 @@ public class ItemInventarioController {
     @PutMapping("/{id}")
     public ResponseEntity<ItemInventarioResponseDTO> actualizar(
             @PathVariable Long id,
-            @RequestBody ItemInventarioCreateDTO dto) {
+            @RequestBody ItemInventarioCreateDTO dto,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        ItemInventario existente = itemInventarioService.obtenerPorId(id);
+        validarPropiedadItem(existente, usuario);
 
         ItemInventario actualizado =
                 itemInventarioService.actualizar(
@@ -186,6 +217,41 @@ public class ItemInventarioController {
         return ResponseEntity.ok(
                 ItemInventarioMapper.toResponseDTO(actualizado)
         );
+    }
+
+    /**
+     * SEC-W06: Valida que un usuario COMERCIO solo pueda operar sobre ítems
+     * de su propio inventario.
+     */
+    private void validarPropiedadInventarioId(Long inventarioId, Usuario usuario) {
+        if (usuario != null && usuario.getRol() == Rol.COMERCIO) {
+            Inventario inventario = inventarioService.obtenerPorId(inventarioId);
+            if (inventario.getComercio() == null
+                    || !usuario.getId().equals(inventario.getComercio().getUsuarioId())) {
+                throw new AccessDeniedException(
+                        "No tenés permisos para operar sobre el inventario de otro comercio");
+            }
+        }
+    }
+
+    private void validarPropiedadItem(ItemInventario item, Usuario usuario) {
+        if (!puedeAccederItem(item, usuario)) {
+            throw new AccessDeniedException(
+                    "No tenés permisos para operar sobre el inventario de otro comercio");
+        }
+    }
+
+    private boolean puedeAccederItem(ItemInventario item, Usuario usuario) {
+        if (usuario == null || usuario.getRol() == Rol.ADMIN) {
+            return true;
+        }
+        if (usuario.getRol() == Rol.COMERCIO
+                && item != null
+                && item.getInventario() != null
+                && item.getInventario().getComercio() != null) {
+            return usuario.getId().equals(item.getInventario().getComercio().getUsuarioId());
+        }
+        return false;
     }
 
     private AlertaStockDTO toAlertaStockDTO(ItemInventario item) {

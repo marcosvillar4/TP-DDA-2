@@ -28,6 +28,9 @@ export function useLogin() {
       const data = await loginRequest({ email, password });
 
       localStorage.setItem("logired_token", data.token);
+      if (data.refreshToken) {
+        localStorage.setItem("logired_refresh_token", data.refreshToken);
+      }
       localStorage.setItem(
         "logired_user",
         JSON.stringify({
