@@ -27,9 +27,10 @@ import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
 import com.example.DA2Back.notificacion.negocio.NotificacionService;
+import com.example.DA2Back.cotizacion.dto.CotizacionDTO;
+import com.example.DA2Back.cotizacion.negocio.ServicioDeCotizacion;
 import com.example.DA2Back.pedidos.negocio.evento.PedidoListoParaRetirarEvent;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,6 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +53,6 @@ import java.util.stream.Collectors;
  * defina qué transiciones son válidas, eliminando if/switch en este
  * servicio y garantizando consistencia con el módulo de Repartidores.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ServicioDePedidosImpl implements ServicioDePedidos {
@@ -73,6 +72,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final AccesoPedidos accesoPedidos;
     private final NotificacionService notificacionService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ServicioDeCotizacion cotizacionService;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -117,11 +117,27 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 items.put(prod.getId(), item);
             }
         }
+        // Cotizacion del envio (distancia + cantidad de objetos). Se calcula antes de tocar el stock.
+        int cantidadObjetos = cantidades.values().stream().mapToInt(Integer::intValue).sum();
+        CotizacionDTO cotizacion = cotizacionService.cotizar(
+                dto.getDepositoId(), dto.getDireccionOrigen(), dto.getDireccionDestino(), cantidadObjetos);
+
         Pedido pedido = Pedido.builder()
                 .comercioId(comercioId)
                 .depositoId(dto.getDepositoId())
-                .direccionDestino(dto.getDireccionDestino())
-                .direccionOrigen(dto.getDireccionOrigen())
+                // Si no se informo direccion, la cotizacion ya resolvio el valor por defecto
+                // (deposito para el origen, comercio para el destino).
+                .direccionDestino(cotizacion.destino().direccion())
+                .direccionOrigen(cotizacion.origen().direccion())
+                .origenLat(cotizacion.origen().lat())
+                .origenLng(cotizacion.origen().lng())
+                .destinoLat(cotizacion.destino().lat())
+                .destinoLng(cotizacion.destino().lng())
+                .distanciaKm(cotizacion.distanciaKm())
+                .duracionEstimadaMin(cotizacion.duracionEstimadaMin())
+                .cantidadObjetos(cotizacion.cantidadObjetos())
+                .costoEnvio(cotizacion.costoTotal())
+                .cotizacionEstimada(cotizacion.estimada())
                 .fechaCreacion(LocalDateTime.now())
                 .estado(EstadoPedido.CREADO)
                 .build();
@@ -148,6 +164,33 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         Pedido guardado = pedidosRepository.save(pedido);
         registrarHistorial(guardado, EstadoPedido.CREADO);
         return toResponseDTO(guardado);
+    }
+
+    /**
+     * Cotiza un envio sin crear el pedido ni descontar stock. Aplica los mismos
+     * controles de alcance que crearPedido.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CotizacionDTO cotizarPedido(CrearPedidoDTO dto, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
+        if (dto == null) throw new IllegalArgumentException("El pedido es obligatorio");
+        Long comercioId = alcance.comercioId() != null ? alcance.comercioId() : dto.getComercioId();
+        if (dto.getComercioId() != null) alcance.validarComercio(dto.getComercioId());
+        validarDepositoDelComercio(comercioId, dto.getDepositoId());
+
+        long objetos = 0;
+        if (dto.getDetalles() != null) {
+            for (DetallePedidoDTO d : dto.getDetalles()) {
+                if (d == null || d.getCantidad() == null || d.getCantidad() <= 0) {
+                    throw new IllegalArgumentException("Cada detalle requiere cantidad positiva");
+                }
+                objetos += d.getCantidad();
+            }
+        }
+        if (objetos > Integer.MAX_VALUE) throw new IllegalArgumentException("Cantidad fuera de rango");
+        return cotizacionService.cotizar(
+                dto.getDepositoId(), dto.getDireccionOrigen(), dto.getDireccionDestino(), (int) objetos);
     }
 
     // -------------------------------------------------------------------------
@@ -426,10 +469,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .estado(EstadoHistoricoPedido.desdeOperativo(estado))
                 .fechaHora(LocalDateTime.now())
                 .build();
-        HistorialEstadoPedido guardado = historialRepository.save(historial);
-        if (pedido.getHistorial() != null) {
-            pedido.getHistorial().add(guardado != null ? guardado : historial);
-        }
+        historialRepository.save(historial);
         if (estado != EstadoPedido.CREADO && notificacionService != null) {
             notificacionService.notificarActualizacionPedido(pedido, estado);
         }
@@ -496,6 +536,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .repartidorNombre(repartidorNombre)
                 .historial(historialDTO)
                 .detalles(detallesDTO)
+                .cantidadObjetos(pedido.getCantidadObjetos())
+                .distanciaKm(pedido.getDistanciaKm())
+                .duracionEstimadaMin(pedido.getDuracionEstimadaMin())
+                .costoEnvio(pedido.getCostoEnvio())
+                .cotizacionEstimada(pedido.getCotizacionEstimada())
                 .build();
     }
 
@@ -518,7 +563,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 }
             }
         } catch (Exception e) {
-            log.error("Error al restaurar stock del pedido {}: {}", pedido.getId(), e.getMessage(), e);
+            // Manejo defensivo en caso de inconsistencia de datos
         }
     }
 

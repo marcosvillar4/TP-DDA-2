@@ -22,7 +22,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.DA2Back.Seguridad.negocio.CustomUserDetailsService;
-import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -76,35 +75,14 @@ public class SecurityConfig {
         http
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
-            .logout(logout -> logout.disable())
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
-            .exceptionHandling(ex -> ex
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json;charset=UTF-8");
-                    String json = String.format(
-                        "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"Acceso denegado: su rol no tiene permisos para acceder a este recurso\",\"timestamp\":\"%s\"}",
-                        java.time.Instant.now().toString()
-                    );
-                    response.getWriter().write(json);
-                })
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json;charset=UTF-8");
-                    String json = String.format(
-                        "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"No autorizado: token invalido o expirado\",\"timestamp\":\"%s\"}",
-                        java.time.Instant.now().toString()
-                    );
-                    response.getWriter().write(json);
-                })
-            )
 
             .authorizeHttpRequests(auth -> auth
 
                 // ───────── Público ─────────
-                .requestMatchers("/auth/**", "/logout", "/refresh", "/error").permitAll()
+                .requestMatchers("/auth/**", "/error").permitAll()
 
                 // ───────── Usuarios ─────────
                 .requestMatchers("/usuarios/admin/**").hasRole(ADMIN)
@@ -122,9 +100,8 @@ public class SecurityConfig {
                 .requestMatchers(GET, "/depositos/comercio/*").hasAnyRole(ADMIN, COMERCIO)
                 // Un COMERCIO da de alta depósitos para SU comercio (se vincula al usuario autenticado).
                 .requestMatchers(POST, "/depositos").hasRole(COMERCIO)
-                .requestMatchers(PATCH, "/depositos/asociar").hasAnyRole(ADMIN, COMERCIO)
-                .requestMatchers(PUT, "/depositos/*").hasAnyRole(ADMIN, DEPOSITO)
-                .requestMatchers(GET, "/depositos/*").authenticated()
+                .requestMatchers(PATCH, "/depositos/asociar").hasRole(ADMIN)
+                .requestMatchers(PUT, "/depositos/*").hasRole(ADMIN)
                 .requestMatchers("/depositos/**").hasRole(ADMIN)
 
                 // ───────── Productos ─────────
@@ -145,6 +122,8 @@ public class SecurityConfig {
 
                 // ───────── Pedidos ─────────
                 .requestMatchers(POST, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO)
+                .requestMatchers(POST, "/api/pedidos/cotizar").hasAnyRole(ADMIN, COMERCIO)
+                .requestMatchers(GET, "/api/pedidos/*/ruta").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos/comercio/*").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos/estado/*", "/api/pedidos/pendientes")

@@ -27,4 +27,11 @@ public class PedidoResponseDTO {
     private String repartidorNombre;
     private java.util.List<HistorialEstadoDTO> historial;
     private java.util.List<DetallePedidoResponseDTO> detalles;
+
+    // Cotizacion del envio (null en pedidos creados antes de la cotizacion).
+    private Integer cantidadObjetos;
+    private Double distanciaKm;
+    private Integer duracionEstimadaMin;
+    private java.math.BigDecimal costoEnvio;
+    private Boolean cotizacionEstimada;
 }

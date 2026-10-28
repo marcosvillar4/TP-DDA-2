@@ -2,12 +2,15 @@ package com.example.DA2Back.pedidos.negocio;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.cotizacion.dto.CotizacionDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import java.util.List;
 
 public interface ServicioDePedidos {
     PedidoResponseDTO crearPedido(CrearPedidoDTO dto, Usuario usuario);
+    /** Cotiza un envio sin crear el pedido ni tocar el stock. */
+    CotizacionDTO cotizarPedido(CrearPedidoDTO dto, Usuario usuario);
     PedidoResponseDTO obtenerPorId(Long id, Usuario usuario);
     List<PedidoResponseDTO> listarTodos(Usuario usuario);
     List<PedidoResponseDTO> listarPorComercio(Long comercioId, Usuario usuario);
