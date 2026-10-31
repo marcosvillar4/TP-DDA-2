@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
   Clock,
@@ -22,6 +21,7 @@ import {
   tomarPedidoDisponible,
 } from "../../api/repartidorPerfilApi";
 import BadgeEstado from "../pedidos/components/BadgeEstado";
+import RutaRepartidor from "./components/RutaRepartidor";
 import RepartidorEstadoBadge from "../repartidores/components/RepartidorEstadoBadge";
 import "./styles/MisPedidosPage.css";
 
@@ -105,6 +105,7 @@ export default function MisPedidosPage() {
 
   useEffect(() => {
     mountedRef.current = true;
+
     const timeoutId = window.setTimeout(() => {
       cargarPerfil();
       cargarHistorial();
@@ -322,6 +323,10 @@ export default function MisPedidosPage() {
         </aside>
       </section>
 
+      {pedidoActual && (
+        <RutaRepartidor refreshKey={`${pedidoActual.id}-${pedidoActual.estado}`} />
+      )}
+
       <section className="mis-pedidos-card">
         <div className="mis-pedidos-card-header">
           <div>
@@ -480,7 +485,6 @@ const ACCIONES_PEDIDO = {
 };
 
 function PedidoActual({ pedido, operacionActiva, onAccion }) {
-  const navigate = useNavigate();
   const accion = ACCIONES_PEDIDO[pedido.estado];
   const Icon = accion?.icon;
   const loading = accion ? operacionActiva === `${accion.accion}-${pedido.id}` : false;
@@ -490,14 +494,6 @@ function PedidoActual({ pedido, operacionActiva, onAccion }) {
       <div className="mis-pedidos-current-main">
         <span className="mis-pedidos-id">#{pedido.id}</span>
         <BadgeEstado estado={pedido.estado} />
-        <button
-          type="button"
-          className="mis-pedidos-btn"
-          style={{ marginLeft: "auto" }}
-          onClick={() => navigate(`/pedidos/${pedido.id}`)}
-        >
-          Ver detalle del pedido
-        </button>
       </div>
 
       <div className="mis-pedidos-info-list">

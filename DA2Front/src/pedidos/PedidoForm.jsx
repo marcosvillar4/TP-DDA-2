@@ -1,18 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { getComercios } from '../../api/inventarioApi';
-import { getMiComercio } from '../../api/comerciosApi';
 import { getDepositosPorComercio, getItemsInventarioPorDeposito } from '../../api/depositosApi';
-import { crearPedido } from '../../api/pedidosApi';
-import { useAuthUser } from '../../hooks/useAuthUser';
+import { crearPedido, cotizarPedido } from '../../api/pedidosApi';
+import CotizacionResumen from './components/CotizacionResumen';
+import { formatMoneda } from './utils/formatMoneda';
 import Swal from 'sweetalert2';
 
 export default function PedidoForm() {
   const navigate = useNavigate();
-  const user = useAuthUser();
-  const isComercio = user?.rol === 'COMERCIO';
-
   const [comercios, setComercios] = useState([]);
   const [depositos, setDepositos] = useState([]);
   const [itemsInventario, setItemsInventario] = useState([]);
@@ -27,27 +24,54 @@ export default function PedidoForm() {
 
   const [detalles, setDetalles] = useState([]);
 
+  // Cotizacion en vivo: distancia (origen -> destino) + cantidad de objetos.
+  const [cotizacion, setCotizacion] = useState(null);
+  const [cotizando, setCotizando] = useState(false);
+  const [errorCotizacion, setErrorCotizacion] = useState(null);
+  const cotizacionReqRef = useRef(0);
+
   useEffect(() => {
-    if (isComercio) {
-      getMiComercio()
-        .then(miComercio => {
-          if (miComercio) {
-            setComercios([miComercio]);
-            handleComercioChange(miComercio.id);
-          }
-        })
-        .catch(err => console.error("Error cargando mi comercio:", err));
-    } else {
-      getComercios()
-        .then(data => {
-          setComercios(data);
-          if (data.length > 0) {
-            handleComercioChange(data[0].id);
-          }
-        })
-        .catch(err => console.error("Error cargando comercios:", err));
-    }
-  }, [isComercio]);
+    const req = ++cotizacionReqRef.current; // las respuestas viejas se descartan
+    const timeoutId = setTimeout(async () => {
+      if (!formData.comercioId || !formData.depositoId) {
+        setCotizacion(null);
+        setErrorCotizacion(null);
+        setCotizando(false);
+        return;
+      }
+      setCotizando(true);
+      setErrorCotizacion(null);
+      try {
+        const data = await cotizarPedido({
+          comercioId: parseInt(formData.comercioId),
+          depositoId: parseInt(formData.depositoId),
+          // Vacio = el backend usa la direccion del deposito / del comercio.
+          direccionOrigen: formData.direccionOrigen.trim(),
+          direccionDestino: formData.direccionDestino.trim(),
+          detalles: detalles.map(d => ({ productoId: d.productoId, cantidad: d.cantidad }))
+        });
+        if (req === cotizacionReqRef.current) setCotizacion(data);
+      } catch (err) {
+        if (req === cotizacionReqRef.current) {
+          setErrorCotizacion(err.message || 'No se pudo calcular la cotización');
+        }
+      } finally {
+        if (req === cotizacionReqRef.current) setCotizando(false);
+      }
+    }, 800);
+    return () => clearTimeout(timeoutId);
+  }, [formData.comercioId, formData.depositoId, formData.direccionOrigen, formData.direccionDestino, detalles]);
+
+  useEffect(() => {
+    getComercios()
+      .then(data => {
+        setComercios(data);
+        if (data.length > 0) {
+          handleComercioChange(data[0].id);
+        }
+      })
+      .catch(err => console.error("Error cargando comercios:", err));
+  }, []);
 
   const handleComercioChange = async (comercioId) => {
     setFormData(prev => ({ ...prev, comercioId, depositoId: '' }));
@@ -135,14 +159,18 @@ export default function PedidoForm() {
 
     setLoading(true);
     try {
-      await crearPedido({
+      const pedidoCreado = await crearPedido({
         comercioId: parseInt(formData.comercioId),
         depositoId: parseInt(formData.depositoId),
         direccionOrigen: formData.direccionOrigen.trim() || depositoSeleccionado?.direccion || '',
         direccionDestino: formData.direccionDestino.trim() || comercioSeleccionado?.direccion || '',
         detalles: detalles.map(d => ({ productoId: d.productoId, cantidad: d.cantidad }))
       });
-      Swal.fire('¡Éxito!', 'Pedido creado y stock descontado', 'success');
+      Swal.fire(
+        '¡Éxito!',
+        `Pedido creado y stock descontado. Costo de envío: ${formatMoneda(pedidoCreado?.costoEnvio)}`,
+        'success'
+      );
       navigate('/pedidos');
     } catch (error) {
       Swal.fire('Error', error.message || 'Error al crear el pedido', 'error');
@@ -178,16 +206,13 @@ export default function PedidoForm() {
                 name="comercioId" 
                 value={formData.comercioId} 
                 onChange={handleChange}
-                disabled={isComercio}
                 style={{
                   padding: '0.625rem', borderRadius: '0.375rem', 
-                  border: '1px solid var(--color-slate-300)', outline: 'none',
-                  backgroundColor: isComercio ? 'var(--color-slate-100)' : 'white',
-                  cursor: isComercio ? 'not-allowed' : 'default'
+                  border: '1px solid var(--color-slate-300)', outline: 'none'
                 }}
                 required
               >
-                {!isComercio && <option value="" disabled>Seleccione un comercio...</option>}
+                <option value="" disabled>Seleccione un comercio...</option>
                 {comercios.map(c => (
                   <option key={c.id} value={c.id}>{c.nombreComercial}</option>
                 ))}
@@ -306,6 +331,11 @@ export default function PedidoForm() {
                 </ul>
               )}
             </div>
+          </div>
+
+          <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--color-slate-800)', fontSize: '1.1rem' }}>Cotización del envío</h3>
+          <div style={{ marginBottom: '2rem' }}>
+            <CotizacionResumen cotizacion={cotizacion} cargando={cotizando} error={errorCotizacion} />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>

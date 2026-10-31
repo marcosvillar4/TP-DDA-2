@@ -3,6 +3,7 @@ package com.example.DA2Back.pedidos.presentacion;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.DA2Back.cotizacion.dto.CotizacionDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
@@ -42,6 +43,16 @@ public class PedidosRestController {
                 .body(servicioDePedidos.crearPedido(dto, usuario));
     }
 
+    /**
+     * POST /api/pedidos/cotizar — cotiza el envio (distancia + cantidad de objetos)
+     * sin crear el pedido. El front lo usa para mostrar el precio antes de confirmar.
+     */
+    @PostMapping("/cotizar")
+    public ResponseEntity<CotizacionDTO> cotizarPedido(@RequestBody CrearPedidoDTO dto,
+                                                      @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.cotizarPedido(dto, usuario));
+    }
+
     /** GET /api/pedidos — lista todos los pedidos */
     @GetMapping
     public ResponseEntity<List<PedidoResponseDTO>> listarTodos(@AuthenticationPrincipal Usuario usuario) {
@@ -69,26 +80,22 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado, usuario));
     }
 
-    /** GET /api/pedidos/pendientes — pedidos LISTO_PARA_RETIRAR sin repartidor */
+    /** GET /api/pedidos/pendientes — pedidos CREADO sin repartidor */
     @GetMapping("/pendientes")
     public ResponseEntity<List<PedidoResponseDTO>> listarPendientesAsignables(@AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables(usuario));
     }
 
     /**
-     * PATCH /api/pedidos/{id}/listo-para-retirar
-     * CREADO → LISTO_PARA_RETIRAR: marca el pedido como listo para retirar.
+     * PATCH /api/pedidos/{id}/asignar/{repartidorId}
+     * CREADO → ASIGNADO: asigna un repartidor al pedido.
      */
-    @PatchMapping("/{id}/listo-para-retirar")
+        @PatchMapping("/{id}/listo-para-retirar")
     public ResponseEntity<PedidoResponseDTO> marcarListoParaRetirar(@PathVariable Long id,
                                                                  @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(servicioDePedidos.marcarListoParaRetirar(id, usuario));
     }
 
-    /**
-     * PATCH /api/pedidos/{id}/asignar/{repartidorId}
-     * LISTO_PARA_RETIRAR → ASIGNADO: asigna un repartidor al pedido.
-     */
     @PatchMapping("/{id}/asignar/{repartidorId}")
     public ResponseEntity<PedidoResponseDTO> asignarRepartidor(
             @PathVariable Long id,
@@ -97,18 +104,14 @@ public class PedidosRestController {
     }
 
     /**
-     * PATCH /api/pedidos/{id}/retirar
-     * ASIGNADO → RETIRADO: el repartidor retira el pedido del depósito.
+     * PATCH /api/pedidos/{id}/iniciar-viaje
+     * ASIGNADO → EN_CAMINO: el repartidor inicia el viaje.
      */
-    @PatchMapping("/{id}/retirar")
+        @PatchMapping("/{id}/retirar")
     public ResponseEntity<PedidoResponseDTO> marcarRetirado(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDePedidos.marcarRetirado(id));
     }
 
-    /**
-     * PATCH /api/pedidos/{id}/iniciar-viaje
-     * RETIRADO → EN_CAMINO: el repartidor inicia el viaje.
-     */
     @PatchMapping("/{id}/iniciar-viaje")
     public ResponseEntity<PedidoResponseDTO> iniciarViaje(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDePedidos.iniciarViaje(id));

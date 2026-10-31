@@ -56,9 +56,39 @@ public class Pedido {
     @Column(name = "estado", nullable = false)
     private EstadoPedido estado;
 
-    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "repartidor_id")
     private Repartidor repartidor;
+
+    // --- Cotizacion y ubicacion (todos nullable: los pedidos viejos no los tienen) ---
+
+    @Column(name = "origen_lat")
+    private Double origenLat;
+
+    @Column(name = "origen_lng")
+    private Double origenLng;
+
+    @Column(name = "destino_lat")
+    private Double destinoLat;
+
+    @Column(name = "destino_lng")
+    private Double destinoLng;
+
+    @Column(name = "distancia_km")
+    private Double distanciaKm;
+
+    @Column(name = "duracion_estimada_min")
+    private Integer duracionEstimadaMin;
+
+    @Column(name = "cantidad_objetos")
+    private Integer cantidadObjetos;
+
+    @Column(name = "costo_envio", precision = 12, scale = 2)
+    private java.math.BigDecimal costoEnvio;
+
+    /** true si la distancia de la cotizacion fue estimada (sin servicio de ruteo real). */
+    @Column(name = "cotizacion_estimada")
+    private Boolean cotizacionEstimada;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
