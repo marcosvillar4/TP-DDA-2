@@ -12,6 +12,19 @@ export function getPedidosPorComercio(comercioId) {
   return request(`/api/pedidos/comercio/${comercioId}`);
 }
 
+/** Cotiza el envio (distancia + cantidad de objetos) sin crear el pedido. */
+export function cotizarPedido(data) {
+  return request("/api/pedidos/cotizar", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/** Recorrido retiro -> entrega del pedido (paradas, distancia, tiempo y polilinea). */
+export function getRutaPedido(id) {
+  return request(`/api/pedidos/${id}/ruta`);
+}
+
 export function crearPedido(data) {
   return request("/api/pedidos", {
     method: "POST",

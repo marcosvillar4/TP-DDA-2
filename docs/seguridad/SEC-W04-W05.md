@@ -163,3 +163,37 @@ provienen de ejecuciones Maven/MySQL, no de predicciones de la IA.
 - No se ejecutaron otros criterios ni la suite completa. Estos tests son opt-in.
 - La captura de logs y el rollback son instrumentacion de tests; no cambian
   seguridad, reglas de negocio ni configuracion productiva.
+
+## Integracion con main - 2026-11-04
+
+Se integro `origin/main` (`72fc946`) sobre el trabajo de seguridad (`3325107`).
+Se conserva la sanitizacion de AdminSeeder y todas las aserciones originales.
+
+El login ahora persiste refresh tokens. Sus fechas MySQL pueden recibirse como
+`LocalDateTime`; el snapshot convierte valores temporales a texto antes de
+serializar y calcular el hash. No se excluyen tablas, columnas ni registros.
+
+La primera suite combinada ejecuto 236 pruebas y detecto dos fallos de SEC-W03:
+`/logout` era interceptado por el logout estandar (302) y `/refresh` caia en el
+fallback ADMIN (403). El ajuste en SecurityConfig desactiva exclusivamente ese
+logout estandar y permite los POST exactos de ambos aliases. El controlador
+existente sigue validando y revocando los refresh tokens; se conservan las rutas
+`/auth/logout` y `/auth/refresh` y las restricciones de los demas endpoints.
+Se agregaron tres regresiones a SEC-W03 sin relajar sus aserciones existentes.
+
+| Verificacion del codigo combinado | Tests | Failures | Errors | Skipped |
+|---|---:|---:|---:|---:|
+| SecW03RefreshTokenLogoutIntegrationTest | 6 | 0 | 0 | 0 |
+| SecurityCriteriaMySqlIT (SEC-W04 y SEC-W05) | 2 | 0 | 0 | 0 |
+| Suite backend predeterminada (incluye SEC-W03, excluye IT) | 239 | 0 | 0 | 0 |
+
+SEC-W04/W05 usaron exclusivamente `marketplace_security_test`; la suite general
+uso H2 en memoria, correo deshabilitado y mapas locales. No se realizaron
+escrituras sobre `marketplace`. `npm run build` tambien paso, con advertencias
+de tamanio de bundle e imports dinamicos inefectivos.
+
+Evidencia local ignorada: `DA2Back/target/final-integration/`, con logs Maven y
+copias XML de los tests focalizados. No publicar logs sin revisar sus contenidos.
+Para repetir SEC-W03: `./mvnw.cmd -o -Dtest=SecW03RefreshTokenLogoutIntegrationTest -Dspring.mail.host=false -Dapp.mapas.proveedor=local test`.
+Para repetir SEC-W04/W05, utilizar las variables y el comando opt-in documentados
+arriba; no ejecutar estos tests con el datasource normal del backend.

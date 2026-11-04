@@ -21,6 +21,7 @@ import {
   tomarPedidoDisponible,
 } from "../../api/repartidorPerfilApi";
 import BadgeEstado from "../pedidos/components/BadgeEstado";
+import RutaRepartidor from "./components/RutaRepartidor";
 import RepartidorEstadoBadge from "../repartidores/components/RepartidorEstadoBadge";
 import "./styles/MisPedidosPage.css";
 
@@ -321,6 +322,10 @@ export default function MisPedidosPage() {
           <Info label="Zona" value={perfil?.zona} />
         </aside>
       </section>
+
+      {pedidoActual && (
+        <RutaRepartidor refreshKey={`${pedidoActual.id}-${pedidoActual.estado}`} />
+      )}
 
       <section className="mis-pedidos-card">
         <div className="mis-pedidos-card-header">

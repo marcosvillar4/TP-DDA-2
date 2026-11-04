@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
 import com.example.DA2Back.Seguridad.dato.Usuario;
@@ -49,6 +50,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ItemInventario obtenerPorId(Long id) {
 
         if (id == null) {
@@ -64,11 +66,13 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerTodos() {
         return itemInventarioRepository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerPorInventario(Long inventarioId) {
 
         if (inventarioId == null) {
@@ -81,6 +85,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerPorDeposito(Long depositoId) {
 
         if (depositoId == null) {
@@ -93,6 +98,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerPorDeposito(Long depositoId, Usuario usuario) {
 
         validarUsuarioAutenticado(usuario);
@@ -109,6 +115,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerPorProducto(Long productoId) {
 
         if (productoId == null) {
@@ -121,6 +128,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional
     public ItemInventario crear(
             Long inventarioId,
             Long productoId,
@@ -131,6 +139,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional
     public ItemInventario crear(
             Long inventarioId,
             Long productoId,
@@ -193,6 +202,10 @@ public class ItemInventarioService implements IItemInventario {
                             itemExistente.getCantidad() + cantidad
                     );
 
+                    if (stockMinimo != null) {
+                        itemExistente.setStockMinimo(stockMinimoFinal);
+                    }
+
                     return itemInventarioRepository.save(itemExistente);
                 })
                 .orElseGet(() -> {
@@ -210,6 +223,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional
     public ItemInventario actualizarCantidad(
             Long id,
             Integer cantidad) {
@@ -244,6 +258,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional
     public ItemInventario actualizarStockMinimo(
             Long id,
             Integer stockMinimo,
@@ -261,6 +276,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemInventario> obtenerAlertasStock(Usuario usuario) {
         validarUsuarioAutenticado(usuario);
 
@@ -282,6 +298,7 @@ public class ItemInventarioService implements IItemInventario {
     }
 
     @Override
+    @Transactional
     public void eliminar(Long id) {
 
         if (id == null) {
@@ -295,7 +312,8 @@ public class ItemInventarioService implements IItemInventario {
         itemInventarioRepository.delete(item);
     }
 
-        @Override
+    @Override
+    @Transactional
     public ItemInventario actualizar(
             Long id,
             Long productoId,

@@ -140,8 +140,8 @@ class ItemInventarioServiceTest {
     }
 
     @Test
-    @DisplayName("Crear combinación existente conserva el stock mínimo actual")
-    void crear_combinacionExistente_conservaStockMinimoActual() {
+    @DisplayName("Crear combinación existente actualiza el stock mínimo si se proporciona")
+    void crear_combinacionExistente_actualizaStockMinimoSiSeProporciona() {
         Comercio comercio = comercio(1L);
         Inventario inventario = inventario(10L, comercio);
         Producto producto = producto(20L, comercio);
@@ -157,6 +157,31 @@ class ItemInventarioServiceTest {
         when(itemInventarioRepository.save(existente)).thenReturn(existente);
 
         ItemInventario actualizado = itemInventarioService.crear(10L, 20L, 30L, 3, 20);
+
+        assertSame(existente, actualizado);
+        assertEquals(13, actualizado.getCantidad());
+        assertEquals(20, actualizado.getStockMinimo());
+        verify(itemInventarioRepository).save(existente);
+    }
+
+    @Test
+    @DisplayName("Crear combinación existente conserva el stock mínimo actual si no se proporciona")
+    void crear_combinacionExistente_conservaStockMinimoActualSiEsNull() {
+        Comercio comercio = comercio(1L);
+        Inventario inventario = inventario(10L, comercio);
+        Producto producto = producto(20L, comercio);
+        Deposito deposito = deposito(30L, comercio);
+        ItemInventario existente = item(100L, inventario, producto, deposito, 10);
+        existente.setStockMinimo(5);
+
+        when(inventarioService.obtenerPorId(10L)).thenReturn(inventario);
+        when(productoService.obtenerPorId(20L)).thenReturn(producto);
+        when(depositoService.obtenerEntidadPorId(30L)).thenReturn(deposito);
+        when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(10L, 20L, 30L))
+                .thenReturn(Optional.of(existente));
+        when(itemInventarioRepository.save(existente)).thenReturn(existente);
+
+        ItemInventario actualizado = itemInventarioService.crear(10L, 20L, 30L, 3, null);
 
         assertSame(existente, actualizado);
         assertEquals(13, actualizado.getCantidad());

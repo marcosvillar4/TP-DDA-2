@@ -97,7 +97,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(
             AccessDeniedException ex) {
-
         return buildError(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
@@ -118,15 +117,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+
     // -------------------------------------------------------------------------
     /*
      * Excepciones de Seguridad
      */
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
-    public ResponseEntity<Map<String, String>> handleNoEncontrado(RecursoNoEncontradoException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("message", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleNoEncontrado(RecursoNoEncontradoException ex) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     /** Recursos no encontrados de los módulos comercio y deposito → 404. */
@@ -134,21 +133,18 @@ public class GlobalExceptionHandler {
             com.example.DA2Back.comercio.excepcion.RecursoNoEncontradoException.class,
             com.example.DA2Back.deposito.excepcion.RecursoNoEncontradoException.class
     })
-    public ResponseEntity<Map<String, String>> handleNoEncontradoComercioDeposito(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("message", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleNoEncontradoComercioDeposito(RuntimeException ex) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(com.example.DA2Back.deposito.excepcion.AsociacionInvalidaException.class)
-    public ResponseEntity<Map<String, String>> handleAsociacionInvalida(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("message", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleAsociacionInvalida(RuntimeException ex) {
+        return buildError(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(UsuarioYaExisteException.class)
-    public ResponseEntity<Map<String, String>> handleYaExiste(UsuarioYaExisteException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("message", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleYaExiste(UsuarioYaExisteException ex) {
+        return buildError(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(UsuarioBloqueadoException.class)
@@ -158,15 +154,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TransicionInvalidaException.class)
-    public ResponseEntity<Map<String, String>> handleTransicionInvalida(TransicionInvalidaException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleTransicionInvalida(TransicionInvalidaException ex) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(CredencialesInvalidasException.class)
-    public ResponseEntity<Map<String, String>> handleCredencialesInvalidas(CredencialesInvalidasException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", ex.getMessage()));
+    @ExceptionHandler({CredencialesInvalidasException.class,
+            com.example.DA2Back.Seguridad.excepcion.RefreshTokenInvalidoException.class})
+    public ResponseEntity<Map<String, Object>> handleCredencialesInvalidas(RuntimeException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     // -------------------------------------------------------------------------

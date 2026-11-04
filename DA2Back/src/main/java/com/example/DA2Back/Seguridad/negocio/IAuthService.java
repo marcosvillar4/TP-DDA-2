@@ -10,4 +10,10 @@ public interface IAuthService {
     UsuarioResponseDTO registrar(RegisterDTO dto);
 
     LoginResponseDTO login(LoginDTO loginDTO);
+
+    /** Rota el refresh token y emite un nuevo access token. 401 si fue revocado. */
+    LoginResponseDTO refrescar(String refreshToken);
+
+    /** Cierra la sesión revocando el refresh token. */
+    void logout(String refreshToken);
 }

@@ -3,6 +3,7 @@ package com.example.DA2Back.pedidos.presentacion;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.DA2Back.cotizacion.dto.CotizacionDTO;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
 import com.example.DA2Back.pedidos.negocio.ServicioDePedidos;
@@ -40,6 +41,16 @@ public class PedidosRestController {
                                                         @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(servicioDePedidos.crearPedido(dto, usuario));
+    }
+
+    /**
+     * POST /api/pedidos/cotizar — cotiza el envio (distancia + cantidad de objetos)
+     * sin crear el pedido. El front lo usa para mostrar el precio antes de confirmar.
+     */
+    @PostMapping("/cotizar")
+    public ResponseEntity<CotizacionDTO> cotizarPedido(@RequestBody CrearPedidoDTO dto,
+                                                      @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.cotizarPedido(dto, usuario));
     }
 
     /** GET /api/pedidos — lista todos los pedidos */

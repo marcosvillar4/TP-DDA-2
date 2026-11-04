@@ -26,6 +26,7 @@ public class AuthServiceImpl implements IAuthService {
     private final JwtService jwtService;
     private final IUsuarioService usuarioService;
     private final ControlIntentosLoginService controlIntentosLoginService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public UsuarioResponseDTO registrar(RegisterDTO dto) {
@@ -50,16 +51,7 @@ public class AuthServiceImpl implements IAuthService {
             // Login exitoso: se resetea el contador en memoria de intentos fallidos.
             controlIntentosLoginService.registrarLoginExitoso(email);
 
-            String token = jwtService.generateToken(usuario);
-
-            return new LoginResponseDTO(
-                    token,
-                    usuario.getId(),
-                    usuario.getNombre(),
-                    usuario.getApellido(),
-                    usuario.getEmail(),
-                    usuario.getRol()
-            );
+            return construirRespuesta(usuario, refreshTokenService.emitir(usuario));
 
         } catch (BadCredentialsException ex) {
             // Contraseña incorrecta: cuenta como intento fallido.
@@ -77,5 +69,33 @@ public class AuthServiceImpl implements IAuthService {
             // Cuenta aun no validada (estado != VALIDADO): no suma intento nuevo.
             throw new CredencialesInvalidasException("La cuenta aún no fue validada");
         }
+    }
+
+    /**
+     * SEC-W03: rota el refresh token. Si fue revocado por logout (o ya se
+     * usó), RefreshTokenService lanza RefreshTokenInvalidoException → 401.
+     */
+    @Override
+    public LoginResponseDTO refrescar(String refreshToken) {
+        RefreshTokenService.Rotacion rotacion = refreshTokenService.rotar(refreshToken);
+        return construirRespuesta(rotacion.usuario(), rotacion.nuevoRefreshToken());
+    }
+
+    /** SEC-W03: logout del lado servidor; el refresh token queda revocado. */
+    @Override
+    public void logout(String refreshToken) {
+        refreshTokenService.revocar(refreshToken);
+    }
+
+    private LoginResponseDTO construirRespuesta(Usuario usuario, String refreshToken) {
+        return new LoginResponseDTO(
+                jwtService.generateToken(usuario),
+                refreshToken,
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getEmail(),
+                usuario.getRol()
+        );
     }
 }

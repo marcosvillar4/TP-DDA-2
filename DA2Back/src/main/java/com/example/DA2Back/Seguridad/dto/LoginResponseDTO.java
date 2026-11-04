@@ -11,7 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginResponseDTO {
 
+    /** Access token JWT (vida corta). */
     private String token;
+    /** Refresh token opaco para renovar el access token (SEC-W03). */
+    private String refreshToken;
     private Long id;
     private String nombre;
     private String apellido;

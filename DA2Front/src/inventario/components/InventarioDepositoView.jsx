@@ -51,7 +51,7 @@ export function InventarioDepositoView() {
   return (
     <div className="inventario-content">
       <section className="inventario-panel">
-        <h2 className="inventario-panel-title">{deposito.nombre}</h2>
+        <h2 className="inventario-panel-title">{deposito.nombre || deposito.nombreDeposito}</h2>
         <p className="inventario-deposito-info">
           {deposito.direccion}
           {deposito.comercioNombre ? ` · ${deposito.comercioNombre}` : ""}

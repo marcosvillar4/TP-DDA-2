@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle, PackageCheck, PackageOpen } from 'lucide-react';
-import { getPedidoById, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado } from '../../api/pedidosApi';
+import { getPedidoById, getRutaPedido, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import { getDepositoPorId } from '../../api/depositosApi';
 import BadgeEstado from './components/BadgeEstado';
 import StepperHistorial from './components/StepperHistorial';
+import CotizacionResumen from './components/CotizacionResumen';
+import MapaRuta from '../mapa/MapaRuta';
 import './styles/PedidoDetail.css';
 import Swal from 'sweetalert2';
 
@@ -17,6 +19,8 @@ export default function PedidoDetail() {
   const [comercioNombre, setComercioNombre] = useState('');
   const [depositoNombre, setDepositoNombre] = useState('');
   const [loading, setLoading] = useState(true);
+  const [ruta, setRuta] = useState(null);
+  const [errorRuta, setErrorRuta] = useState(null);
 
   const fetchPedido = () => {
     getPedidoById(id)
@@ -50,6 +54,15 @@ export default function PedidoDetail() {
 
   useEffect(() => {
     fetchPedido();
+  }, [id]);
+
+  // Recorrido retiro -> entrega. Es un dato complementario: si falla no bloquea el detalle.
+  useEffect(() => {
+    let activo = true;
+    getRutaPedido(id)
+      .then(data => { if (activo) { setRuta(data); setErrorRuta(null); } })
+      .catch(err => { if (activo) setErrorRuta(err.message || 'No se pudo calcular el recorrido'); });
+    return () => { activo = false; };
   }, [id]);
 
   const handleAction = async (actionFn, actionName) => {
@@ -223,6 +236,49 @@ export default function PedidoDetail() {
               </table>
             ) : (
               <p style={{ fontSize: '0.875rem', color: 'var(--color-slate-500)' }}>Este pedido no tiene productos registrados.</p>
+            )}
+          </div>
+
+          <div className="pedido-card" style={{ marginTop: '1.5rem' }}>
+            <h3 className="pedido-card-title">Cotización del envío</h3>
+            {pedido.costoEnvio != null ? (
+              <CotizacionResumen
+                cotizacion={{
+                  costoTotal: pedido.costoEnvio,
+                  distanciaKm: pedido.distanciaKm,
+                  duracionEstimadaMin: pedido.duracionEstimadaMin,
+                  cantidadObjetos: pedido.cantidadObjetos,
+                  estimada: pedido.cotizacionEstimada
+                }}
+              />
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-slate-500)' }}>Este pedido se creó antes de que existiera la cotización.</p>
+            )}
+          </div>
+
+          <div className="pedido-card" style={{ marginTop: '1.5rem' }}>
+            <h3 className="pedido-card-title">Recorrido</h3>
+            {errorRuta ? (
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-red)' }}>{errorRuta}</p>
+            ) : !ruta ? (
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-slate-500)' }}>Calculando recorrido...</p>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-slate-600)', margin: '0 0 0.75rem 0' }}>
+                  {ruta.paradas.length > 0
+                    ? `${ruta.distanciaTotalKm.toFixed(2)} km · ~${ruta.duracionTotalMin} min (retiro → entrega)`
+                    : 'No se pudo ubicar el recorrido de este pedido.'}
+                </p>
+                {ruta.paradas.length > 0 && <MapaRuta ruta={ruta} />}
+                {ruta.estimada && ruta.paradas.length > 0 && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-amber-dark)', marginBottom: 0 }}>
+                    Recorrido aproximado: no se pudo consultar el servicio de mapas.
+                  </p>
+                )}
+                {ruta.advertencias?.map(a => (
+                  <p key={a} style={{ fontSize: '0.75rem', color: 'var(--color-amber-dark)', marginBottom: 0 }}>{a}</p>
+                ))}
+              </>
             )}
           </div>
 

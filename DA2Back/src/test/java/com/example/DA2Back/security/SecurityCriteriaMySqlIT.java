@@ -251,7 +251,12 @@ class SecurityCriteriaMySqlIT {
             if (!table.matches("[a-z_]+")) {
                 throw new IllegalStateException("Unexpected table name in isolated schema");
             }
-            byte[] rows = JSON.writeValueAsBytes(jdbc.queryForList("SELECT * FROM `" + table + "` ORDER BY id"));
+            var contents = jdbc.queryForList("SELECT * FROM `" + table + "` ORDER BY id");
+            // MySQL can return refresh-token timestamps as java.time values.
+            // Preserve their full value without requiring another Jackson module.
+            contents.forEach(row -> row.replaceAll((column, value) ->
+                    value instanceof java.time.temporal.TemporalAccessor ? value.toString() : value));
+            byte[] rows = JSON.writeValueAsBytes(contents);
             result.put(table, HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(rows)));
         }
         return result;

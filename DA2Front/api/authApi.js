@@ -1,4 +1,4 @@
-const AUTH_API_BASE_URL = "http://localhost:8081/auth";
+const AUTH_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8081") + "/auth";
 
 export async function loginRequest({ email, password }) {
   let response;
@@ -21,7 +21,7 @@ export async function loginRequest({ email, password }) {
       if (errorData && errorData.message) {
         errorMsg = errorData.message;
       }
-    } catch (e) {
+    } catch {
       if (response.status === 401 || response.status === 403) {
         errorMsg = "Correo o contraseña incorrectos.";
       }
@@ -30,6 +30,43 @@ export async function loginRequest({ email, password }) {
   }
 
   return response.json();
+}
+
+/**
+ * SEC-W03: Renueva el access token enviando el refresh token vigente.
+ * Lanza error (401) si el refresh token fue revocado (logout) o venció.
+ */
+export async function refreshTokenRequest(refreshToken) {
+  const response = await fetch(`${AUTH_API_BASE_URL}/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    const error = new Error(errorBody?.message || "Sesión expirada o revocada.");
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.json();
+}
+
+/**
+ * SEC-W03: Cierra la sesión en el servidor revocando el refresh token.
+ */
+export async function logoutRequest(refreshToken) {
+  if (!refreshToken) return;
+  try {
+    await fetch(`${AUTH_API_BASE_URL}/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch {
+    // Incluso si el servidor no responde, el cliente limpia su sesión local.
+  }
 }
 
 /**

@@ -5,6 +5,20 @@ export function getMiPerfilRepartidor() {
   return request("/repartidor/me");
 }
 
+/**
+ * Recorrido pendiente (paradas ordenadas) del repartidor autenticado.
+ * lat/lng son opcionales: su ubicacion actual como punto de partida.
+ */
+export function getMiRuta(lat, lng) {
+  const params = new URLSearchParams();
+  if (lat != null && lng != null) {
+    params.set("lat", lat);
+    params.set("lng", lng);
+  }
+  const query = params.toString();
+  return request(`/repartidor/me/ruta${query ? `?${query}` : ""}`);
+}
+
 /** Entregas finalizadas del repartidor autenticado. */
 export function getMiHistorialRepartidor() {
   return request("/repartidor/me/historial");

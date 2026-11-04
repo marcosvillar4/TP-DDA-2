@@ -75,6 +75,8 @@ public class SecurityConfig {
         http
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
+            // El controlador REST revoca refresh tokens; evitar el logout con redireccion.
+            .logout(logout -> logout.disable())
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
@@ -83,6 +85,7 @@ public class SecurityConfig {
 
                 // ───────── Público ─────────
                 .requestMatchers("/auth/**", "/error").permitAll()
+                .requestMatchers(POST, "/logout", "/refresh").permitAll()
 
                 // ───────── Usuarios ─────────
                 .requestMatchers("/usuarios/admin/**").hasRole(ADMIN)
@@ -122,6 +125,8 @@ public class SecurityConfig {
 
                 // ───────── Pedidos ─────────
                 .requestMatchers(POST, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO)
+                .requestMatchers(POST, "/api/pedidos/cotizar").hasAnyRole(ADMIN, COMERCIO)
+                .requestMatchers(GET, "/api/pedidos/*/ruta").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos/comercio/*").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(GET, "/api/pedidos/estado/*", "/api/pedidos/pendientes")

@@ -1,10 +1,12 @@
 package com.example.DA2Back.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import org.springframework.security.access.AccessDeniedException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,20 @@ import com.example.DA2Back.pedidos.negocio.state.ResolverEstadoPedido;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
+
+import java.util.List;
+
+import com.example.DA2Back.pedidos.dto.DetallePedidoDTO;
+import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
+import com.example.DA2Back.inventario.dato.Inventario;
+import com.example.DA2Back.inventario.dato.ItemInventario;
+import com.example.DA2Back.producto.dato.Producto;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class ServicioDePedidosImplTest {
@@ -322,4 +338,132 @@ class ServicioDePedidosImplTest {
         assertEquals(EstadoRepartidor.EN_ENTREGA, repartidor.getEstado());
         org.mockito.Mockito.verify(repartidorRepository).save(repartidor);
     }
+
+    @Test
+    void debeRechazarCreacionDePedidoConCantidadNegativa() {
+        // DADO: un DTO de pedido con cantidad negativa (-5)
+        DetallePedidoDTO detalleInvalido = new DetallePedidoDTO();
+        detalleInvalido.setProductoId(1L);
+        detalleInvalido.setCantidad(-5);
+
+        CrearPedidoDTO dto = new CrearPedidoDTO();
+        dto.setComercioId(1L);
+        dto.setDepositoId(1L);
+        dto.setDireccionDestino("Av. Cabildo 500");
+        dto.setDetalles(List.of(detalleInvalido));
+
+        // Usuario autenticado con rol COMERCIO que realiza la petición
+        Usuario usuarioComercio = new Usuario();
+        usuarioComercio.setId(1L);
+        usuarioComercio.setEmail("comercio@test.com");
+        usuarioComercio.setRol(Rol.COMERCIO);
+
+        when(accesoPedidos.resolver(usuarioComercio, Rol.ADMIN, Rol.COMERCIO))
+                .thenReturn(new AccesoPedidos.Alcance(1L, null));
+
+        Deposito deposito = new Deposito();
+        deposito.setId(1L);
+        deposito.setComercio(Comercio.builder().id(1L).build());
+        when(depositoRepository.findById(1L)).thenReturn(Optional.of(deposito));
+
+        lenient().when(inventarioService.obtenerPorComercio(1L)).thenReturn(new Inventario());
+
+        // CUANDO / ENTONCES: se envía (dto, usuarioComercio), lanza IllegalArgumentException y no persiste
+        assertThrows(IllegalArgumentException.class, () -> servicioDePedidos.crearPedido(dto, usuarioComercio));
+        verify(pedidosRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("SEC-W05: Usuario con rol REPARTIDOR no puede crear pedidos (endpoint exclusivo de Comercio)")
+    void secW05_repartidorNoPuedeCrearPedido() {
+        // DADO: Un usuario con rol REPARTIDOR y un DTO de creación de pedido
+        Usuario repartidorUser = Usuario.builder()
+                .id(15L)
+                .email("repartidor@test.com")
+                .rol(Rol.REPARTIDOR)
+                .build();
+
+        CrearPedidoDTO dto = new CrearPedidoDTO();
+        dto.setComercioId(1L);
+        dto.setDepositoId(1L);
+        dto.setDireccionDestino("Av. Corrientes 1000");
+
+        when(accesoPedidos.resolver(repartidorUser, Rol.ADMIN, Rol.COMERCIO))
+                .thenThrow(new AccessDeniedException("No tiene permiso para operar pedidos"));
+
+        // CUANDO / ENTONCES: Se lanza AccessDeniedException y nunca se persiste
+        AccessDeniedException ex = assertThrows(
+                AccessDeniedException.class,
+                () -> servicioDePedidos.crearPedido(dto, repartidorUser),
+                "SEC-W05: Se debe lanzar AccessDeniedException cuando un REPARTIDOR intenta crear pedidos"
+        );
+        assertEquals("No tiene permiso para operar pedidos", ex.getMessage(),
+                "SEC-W05: El mensaje debe indicar claramente la falta de permisos para el rol REPARTIDOR");
+        verify(pedidosRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("SEC-W06: Servidor valida en cada request que un Comercio no acceda a pedidos de otro Comercio")
+    void secW06_comercioNoPuedeAccederAPedidoDeOtroComercio() {
+        // DADO: Usuario del Comercio 1 y un pedido existente perteneciente al Comercio 2
+        Usuario usuarioComercio1 = Usuario.builder()
+                .id(10L)
+                .email("comercio1@test.com")
+                .rol(Rol.COMERCIO)
+                .build();
+
+        Pedido pedidoComercio2 = Pedido.builder()
+                .id(99L)
+                .comercioId(2L) // Pertenece a OTRO comercio
+                .depositoId(5L)
+                .estado(EstadoPedido.CREADO)
+                .build();
+
+        when(pedidosRepository.findById(99L)).thenReturn(Optional.of(pedidoComercio2));
+
+        AccesoPedidos.Alcance alcanceComercio1 = new AccesoPedidos.Alcance(1L, null);
+        when(accesoPedidos.resolver(usuarioComercio1, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO))
+                .thenReturn(alcanceComercio1);
+
+        // CUANDO / ENTONCES: al intentar obtenerlo, validarPedido() rechaza en el servidor con AccessDeniedException
+        AccessDeniedException ex = assertThrows(
+                AccessDeniedException.class,
+                () -> servicioDePedidos.obtenerPorId(99L, usuarioComercio1),
+                "SEC-W06: El servidor debe rechazar la consulta de un pedido que pertenece a otro comercio"
+        );
+        assertEquals("No tiene acceso al comercio solicitado", ex.getMessage(),
+                "SEC-W06: El mensaje debe explicar que no se tiene acceso al comercio del pedido solicitado");
+    }
+
+    @Test
+    @DisplayName("SEC-D02: Las respuestas exponen únicamente DTOs mínimos sin exponer la entidad JPA")
+    void secD02_respuestasRetornanDtoMinimoSinExponerEntidadJPA() {
+        // DADO: Pedido existente con sus campos de negocio
+        Pedido pedido = Pedido.builder()
+                .id(100L)
+                .comercioId(1L)
+                .depositoId(2L)
+                .direccionDestino("Calle Falsa 123")
+                .estado(EstadoPedido.CREADO)
+                .detalles(new java.util.ArrayList<>())
+                .historial(new java.util.ArrayList<>())
+                .build();
+
+        when(pedidosRepository.findById(100L)).thenReturn(Optional.of(pedido));
+        when(accesoPedidos.resolver(admin, Rol.ADMIN, Rol.COMERCIO, Rol.DEPOSITO))
+                .thenReturn(new AccesoPedidos.Alcance(null, null));
+
+        // CUANDO: Se consulta el pedido
+        PedidoResponseDTO responseDTO = servicioDePedidos.obtenerPorId(100L, admin);
+
+        // ENTONCES: Se valida que retorne un DTO puro y desacoplado de la entidad JPA con mensaje explicativo
+        assertNotNull(responseDTO, "SEC-D02: La respuesta debe ser un objeto DTO válido y no nulo");
+        assertEquals(100L, responseDTO.getId(), "SEC-D02: El DTO debe exponer el identificador del pedido");
+        assertEquals(1L, responseDTO.getComercioId(), "SEC-D02: El DTO debe limitar los datos al comercio asociado");
+        assertEquals(2L, responseDTO.getDepositoId(), "SEC-D02: El DTO debe limitar los datos al depósito asociado");
+        assertEquals(EstadoPedido.CREADO, responseDTO.getEstado(), "SEC-D02: El DTO debe exponer solo el estado operativo");
+        assertEquals("Calle Falsa 123", responseDTO.getDireccionDestino(),
+                "SEC-D02: El DTO expone los datos estrictamente necesarios de destino sin filtrar entidades JPA internas");
+    }
+
 }

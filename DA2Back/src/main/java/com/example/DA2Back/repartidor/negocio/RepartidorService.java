@@ -1,5 +1,6 @@
 package com.example.DA2Back.repartidor.negocio;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -87,6 +88,10 @@ public class RepartidorService implements IRepartidorService {
 
         if (usuario.getRol() != Rol.REPARTIDOR) {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
+        }
+
+        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario indicado no se encuentra en estado VALIDADO");
         }
 
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
@@ -177,7 +182,7 @@ public class RepartidorService implements IRepartidorService {
                         ESTADOS_PEDIDO_FINALIZADO
                 )
                 .stream()
-                .map(pedido -> EntregaHistorialDTO.builder()
+.map(pedido -> EntregaHistorialDTO.builder()
                         .fecha(obtenerFechaFinalizacion(pedido))
                         .pedidoId(pedido.getId())
                         .direccionEntrega(pedido.getDireccionDestino())
@@ -201,10 +206,7 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosAsignables() {
-        return pedidosRepository.findByEstadoAndRepartidorIsNull(EstadoPedido.LISTO_PARA_RETIRAR)
-                .stream()
-                .map(this::toPedidoResponseDTO)
-                .toList();
+        return servicioDePedidos.listarPendientesAsignables();
     }
 
     @Override
@@ -312,7 +314,7 @@ public class RepartidorService implements IRepartidorService {
                         .direccionDestino(pedido.getDireccionDestino())
                         .direccionOrigen(pedido.getDireccionOrigen())
                         .fechaCreacion(pedido.getFechaCreacion())
-                        .depositoId(pedido.getDepositoId())
+.depositoId(pedido.getDepositoId())
                         .depositoNombre(deposito != null ? deposito.getNombre() : null)
                         .depositoDireccion(deposito != null ? deposito.getDireccion() : null)
                         .detalles(pedidosRepository.buscarDetallesParaRespuesta(pedido.getId()))
@@ -330,25 +332,6 @@ public class RepartidorService implements IRepartidorService {
             return null;
         }
     }
-
-    private PedidoResponseDTO toPedidoResponseDTO(Pedido pedido) {
-        Long repartidorId = pedido.getRepartidor() != null ? pedido.getRepartidor().getId() : null;
-        String repartidorNombre = null;
-        if (pedido.getRepartidor() != null) {
-            Usuario usuario = buscarUsuario(pedido.getRepartidor().getUsuarioId());
-            repartidorNombre = usuario.getNombre() + " " + usuario.getApellido();
-        }
-
-        return PedidoResponseDTO.builder()
-                .id(pedido.getId())
-                .comercioId(pedido.getComercioId())
-                .direccionDestino(pedido.getDireccionDestino())
-                .estado(pedido.getEstado())
-                .repartidorId(repartidorId)
-                .repartidorNombre(repartidorNombre)
-                .build();
-    }
-
     private boolean tienePedidoActivo(Long repartidorId) {
         return pedidosRepository.existsByRepartidorIdAndEstadoIn(
                 repartidorId,

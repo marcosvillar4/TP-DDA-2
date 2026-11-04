@@ -1,5 +1,7 @@
 package com.example.DA2Back.repartidor.dto;
 
+import java.time.LocalDateTime;
+
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import com.example.DA2Back.pedidos.dto.DetallePedidoResponseDTO;
 import java.time.LocalDateTime;
