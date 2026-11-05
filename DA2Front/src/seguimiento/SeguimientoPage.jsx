@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, CheckCircle2, Warehouse, Store } from 'lucide-react';
+import { MapPin, CheckCircle2, Store } from 'lucide-react';
 import { getPedidoById } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
@@ -15,7 +15,7 @@ export default function SeguimientoPage() {
   
   const [pedido, setPedido] = useState(null);
   const [comercioNombre, setComercioNombre] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(id));
   const [error, setError] = useState(false);
 
   const handleSearch = (e) => {
@@ -24,26 +24,35 @@ export default function SeguimientoPage() {
     navigate(`/seguimiento/${searchInput.trim()}`);
   };
 
+  const [consultaId, setConsultaId] = useState(id);
+  if (consultaId !== id) {
+    setConsultaId(id);
+    setLoading(Boolean(id));
+    setError(false);
+    setPedido(null);
+  }
+
   useEffect(() => {
+    let cancelado = false;
     if (id) {
-      setLoading(true);
-      setError(false);
-      setPedido(null);
       
       const cleanId = id.replace('LOG-', ''); // allow users to type LOG-1
       
       Promise.all([getPedidoById(cleanId), getComercios()])
         .then(([pedidoData, comerciosData]) => {
+          if (cancelado) return;
           setPedido(pedidoData);
           const comercio = comerciosData.find(c => c.id === pedidoData.comercioId);
           setComercioNombre(comercio ? comercio.nombreComercial : `Comercio ${pedidoData.comercioId}`);
         })
         .catch(err => {
+          if (cancelado) return;
           console.error(err);
           setError(true);
         })
-        .finally(() => setLoading(false));
+        .finally(() => !cancelado && setLoading(false));
     }
+    return () => { cancelado = true; };
   }, [id]);
 
   const recentSearches = ['1', '2'];

@@ -80,6 +80,16 @@ public class RepartidorService implements IRepartidorService {
     @Override
     @Transactional
     public RepartidorResponseDTO crear(RepartidorCreateDTO dto) {
+        return crearPerfil(dto, EstadoUsuario.VALIDADO, true);
+    }
+
+    @Override
+    @Transactional
+    public RepartidorResponseDTO crearPendiente(RepartidorCreateDTO dto) {
+        return crearPerfil(dto, EstadoUsuario.EN_EVALUACION, false);
+    }
+
+    private RepartidorResponseDTO crearPerfil(RepartidorCreateDTO dto, EstadoUsuario estadoEsperado, boolean activo) {
         validarCamposCreacion(dto);
 
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
@@ -90,8 +100,8 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalArgumentException("El usuario indicado no tiene rol REPARTIDOR");
         }
 
-        if (usuario.getEstado() != EstadoUsuario.VALIDADO) {
-            throw new IllegalStateException("El usuario indicado no se encuentra en estado VALIDADO");
+        if (usuario.getEstado() != estadoEsperado) {
+            throw new IllegalStateException("El usuario indicado no se encuentra en estado " + estadoEsperado);
         }
 
         if (repartidorRepository.existsByUsuarioId(usuario.getId())) {
@@ -104,6 +114,8 @@ public class RepartidorService implements IRepartidorService {
         }
 
         Repartidor repartidor = RepartidorMapper.toEntity(dto, usuario.getId());
+        repartidor.setActivo(activo);
+        repartidor.setEstado(activo ? EstadoRepartidor.DISPONIBLE : EstadoRepartidor.NO_DISPONIBLE);
         return toResponseDTO(repartidorRepository.save(repartidor));
     }
 
@@ -135,6 +147,7 @@ public class RepartidorService implements IRepartidorService {
             throw new IllegalStateException("No se puede cambiar el estado de un repartidor inactivo");
         }
 
+        validarUsuarioHabilitado(repartidor);
         validarCambioEstadoManual(repartidor, dto.getEstado());
 
         repartidor.setEstado(dto.getEstado());
@@ -155,6 +168,7 @@ public class RepartidorService implements IRepartidorService {
     @Transactional
     public RepartidorResponseDTO activar(Long id) {
         Repartidor repartidor = buscarRepartidor(id);
+        validarUsuarioHabilitado(repartidor);
         repartidor.setActivo(true);
         if (!tienePedidoActivo(repartidor.getId())) {
             repartidor.setEstado(EstadoRepartidor.DISPONIBLE);
@@ -268,6 +282,30 @@ public class RepartidorService implements IRepartidorService {
                 .filter(usuario -> !repartidorRepository.existsByUsuarioId(usuario.getId()))
                 .map(RepartidorMapper::toUsuarioDisponibleDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void resolverEvaluacion(Long usuarioId, boolean aprobado) {
+        Usuario usuario = buscarUsuario(usuarioId);
+        EstadoUsuario esperado = aprobado ? EstadoUsuario.VALIDADO : EstadoUsuario.RECHAZADO;
+        if (usuario.getRol() != Rol.REPARTIDOR || usuario.getEstado() != esperado) {
+            throw new IllegalStateException("La evaluación del usuario no corresponde al perfil de repartidor");
+        }
+        // Los usuarios históricos sin perfil conservan el alta administrativa posterior.
+        repartidorRepository.findByUsuarioIdForUpdate(usuarioId).ifPresent(repartidor -> {
+            validarSinPedidoActivo(repartidor);
+            repartidor.setActivo(aprobado);
+            repartidor.setEstado(aprobado ? EstadoRepartidor.DISPONIBLE : EstadoRepartidor.NO_DISPONIBLE);
+            repartidorRepository.save(repartidor);
+        });
+    }
+
+    private void validarUsuarioHabilitado(Repartidor repartidor) {
+        Usuario usuario = buscarUsuario(repartidor.getUsuarioId());
+        if (usuario.getRol() != Rol.REPARTIDOR || usuario.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario repartidor debe estar VALIDADO");
+        }
     }
 
     private Repartidor buscarRepartidor(Long id) {

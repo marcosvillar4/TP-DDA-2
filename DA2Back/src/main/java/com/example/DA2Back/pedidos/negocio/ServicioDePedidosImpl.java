@@ -2,6 +2,7 @@ package com.example.DA2Back.pedidos.negocio;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import com.example.DA2Back.deposito.dato.DepositoRepository;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
@@ -103,12 +104,13 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         if (!cantidades.isEmpty()) {
             Inventario inv = inventarioService.obtenerPorComercio(comercioId);
             validarComercioRelacionado(comercioId, inv.getComercio() == null ? null : inv.getComercio().getId());
-            for (var entrada : cantidades.entrySet()) {
+            // Orden estable de bloqueos para pedidos con varios productos.
+            for (var entrada : cantidades.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
                 Producto prod = productoRepository.findById(entrada.getKey())
                         .orElseThrow(() -> new NoSuchElementException("Producto no encontrado"));
                 validarComercioRelacionado(comercioId, prod.getComercio() == null ? null : prod.getComercio().getId());
                 ItemInventario item = itemInventarioRepository
-                        .findByInventarioIdAndProductoIdAndDepositoId(inv.getId(), prod.getId(), dto.getDepositoId())
+                        .buscarParaActualizarStock(inv.getId(), prod.getId(), dto.getDepositoId())
                         .orElseThrow(() -> new IllegalStateException("Producto sin stock en el deposito seleccionado"));
                 validarItemDelComercio(item, comercioId);
                 if (item.getCantidad() == null || item.getCantidad() < entrada.getValue()) {
@@ -254,10 +256,8 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     // -------------------------------------------------------------------------
 
     /**
-     * Asigna un repartidor a un pedido.
-     * Delegado al patrón State: solo CREADO admite esta transición.
-     * Este es el punto único de asignación — RepartidorService debe
-     * llamar aquí en lugar de mutar el pedido directamente.
+     * Marca listo para retirar un pedido propio: CREADO -> LISTO_PARA_RETIRAR.
+     * La asignacion posterior se centraliza en asignarRepartidor.
      */
         @Override
     @Transactional
@@ -287,6 +287,13 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
             throw new IllegalStateException("El pedido ya tiene un repartidor asignado");
         }
 
+        var usuarioRepartidor = usuarioRepository.findById(repartidor.getUsuarioId())
+                .orElseThrow(() -> new IllegalStateException("El usuario repartidor no existe"));
+        if (usuarioRepartidor.getRol() != Rol.REPARTIDOR
+                || usuarioRepartidor.getEstado() != EstadoUsuario.VALIDADO) {
+            throw new IllegalStateException("El usuario repartidor debe estar VALIDADO para recibir pedidos");
+        }
+
         if (!repartidor.isActivo()) {
             throw new IllegalStateException("No se puede asignar el pedido a un repartidor inactivo");
         }
@@ -314,7 +321,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     }
 
     /**
-     * El repartidor inicia el viaje: ASIGNADO → EN_CAMINO.
+     * Confirma el retiro: ASIGNADO -> RETIRADO.
      */
         @Override
     @Transactional
@@ -406,9 +413,14 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
         Pedido pedido = buscarPedidoParaTransicion(id);
         alcance.validarPedido(pedido);
-        validarEntidadesParaRestaurar(pedido);
+        // Mismo orden que las otras transiciones: pedido, repartidor y luego stock.
+        if (pedido.getRepartidor() != null) {
+            pedido.setRepartidor(repartidorRepository.findByIdForUpdate(pedido.getRepartidor().getId())
+                    .orElseThrow(() -> new IllegalStateException("Repartidor asignado inexistente")));
+        }
+        Map<Long, ItemInventario> stockParaRestaurar = validarEntidadesParaRestaurar(pedido);
         resolverEstado.resolver(pedido.getEstado()).cancelar(pedido);
-        restaurarStock(pedido);
+        restaurarStock(pedido, stockParaRestaurar);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.CANCELADO);
         liberarRepartidorSiCorresponde(pedido);
@@ -544,26 +556,14 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .build();
     }
 
-    private void restaurarStock(Pedido pedido) {
-        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty() || pedido.getDepositoId() == null) {
-            return;
-        }
-        try {
-            Inventario inv = inventarioService.obtenerPorComercio(pedido.getComercioId());
-            if (inv == null) return;
-            for (DetallePedido detalle : pedido.getDetalles()) {
-                if (detalle.getProducto() != null && detalle.getCantidad() != null) {
-                    itemInventarioRepository
-                            .findByInventarioIdAndProductoIdAndDepositoId(
-                                    inv.getId(), detalle.getProducto().getId(), pedido.getDepositoId())
-                            .ifPresent(item -> {
-                                item.setCantidad(item.getCantidad() + detalle.getCantidad());
-                                itemInventarioRepository.save(item);
-                            });
-                }
-            }
-        } catch (Exception e) {
-            // Manejo defensivo en caso de inconsistencia de datos
+    private void restaurarStock(Pedido pedido, Map<Long, ItemInventario> stockParaRestaurar) {
+        if (pedido.getDetalles() == null) return;
+        for (DetallePedido detalle : pedido.getDetalles()) {
+            ItemInventario item = stockParaRestaurar.get(detalle.getProducto().getId());
+            long cantidad = (long) item.getCantidad() + detalle.getCantidad();
+            if (cantidad > Integer.MAX_VALUE) throw new IllegalStateException("Cantidad de stock fuera de rango");
+            item.setCantidad((int) cantidad);
+            itemInventarioRepository.save(item);
         }
     }
 
@@ -596,17 +596,28 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 ? null : item.getDeposito().getComercio().getId());
     }
 
-    private void validarEntidadesParaRestaurar(Pedido pedido) {
+    private Map<Long, ItemInventario> validarEntidadesParaRestaurar(Pedido pedido) {
         validarDepositoDelComercio(pedido.getComercioId(), pedido.getDepositoId());
-        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) return;
+        Map<Long, ItemInventario> stock = new LinkedHashMap<>();
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) return stock;
         Inventario inv = inventarioService.obtenerPorComercio(pedido.getComercioId());
         validarComercioRelacionado(pedido.getComercioId(), inv.getComercio() == null ? null : inv.getComercio().getId());
         for (DetallePedido detalle : pedido.getDetalles()) {
+            if (detalle == null || detalle.getProducto() == null || detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+                throw new IllegalStateException("El pedido tiene detalles incompletos; no se puede restituir stock");
+            }
+        }
+        for (DetallePedido detalle : pedido.getDetalles().stream()
+                .sorted(Comparator.comparing(d -> d.getProducto().getId())).toList()) {
             validarComercioRelacionado(pedido.getComercioId(), detalle.getProducto().getComercio() == null
                     ? null : detalle.getProducto().getComercio().getId());
-            itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(
+            ItemInventario item = itemInventarioRepository.buscarParaActualizarStock(
                     inv.getId(), detalle.getProducto().getId(), pedido.getDepositoId())
-                    .ifPresent(item -> validarItemDelComercio(item, pedido.getComercioId()));
+                    .orElseThrow(() -> new IllegalStateException("No existe el item necesario para restituir stock"));
+            validarItemDelComercio(item, pedido.getComercioId());
+            if (item.getCantidad() == null || item.getCantidad() < 0) throw new IllegalStateException("Stock inconsistente");
+            stock.put(detalle.getProducto().getId(), item);
         }
+        return stock;
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import { actualizarPerfilAdmin } from "../api/usuariosApi";
  
@@ -25,10 +25,12 @@ export function useEditarPerfilAdmin(usuario, onActualizado) {
  
   // Si cambia el usuario mostrado (cola de revisión, botones del navegador) se descarta
   // la edición: evita guardar datos de un usuario sobre el id de otro.
-  useEffect(() => {
+  const [usuarioEditadoId, setUsuarioEditadoId] = useState(usuario?.id);
+  if (usuarioEditadoId !== usuario?.id) {
+    setUsuarioEditadoId(usuario?.id);
     setEditando(false);
     setForm(null);
-  }, [usuario?.id]);
+  }
  
   function iniciarEdicion(valoresIniciales) {
     setForm(valoresIniciales);

@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle, PackageCheck, PackageOpen } from 'lucide-react';
 import { getPedidoById, getRutaPedido, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
-import { getDepositoPorId } from '../../api/depositosApi';
+import { getDepositoPorId, getDepositosPorComercio, getMiDeposito } from '../../api/depositosApi';
 import BadgeEstado from './components/BadgeEstado';
 import StepperHistorial from './components/StepperHistorial';
 import CotizacionResumen from './components/CotizacionResumen';
 import MapaRuta from '../mapa/MapaRuta';
 import './styles/PedidoDetail.css';
 import Swal from 'sweetalert2';
+import { useAuthUser } from '../../hooks/useAuthUser';
+import { accionesPedido, formatearDeposito } from './utils/pedidoPresentacion';
 
 export default function PedidoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const usuario = useAuthUser();
+  const rol = usuario?.rol;
   
   const [pedido, setPedido] = useState(null);
   const [comercioNombre, setComercioNombre] = useState('');
@@ -22,8 +26,8 @@ export default function PedidoDetail() {
   const [ruta, setRuta] = useState(null);
   const [errorRuta, setErrorRuta] = useState(null);
 
-  const fetchPedido = () => {
-    getPedidoById(id)
+  const fetchPedido = useCallback(() => {
+    return getPedidoById(id)
       .then(async (pedidoData) => {
         setPedido(pedidoData);
         
@@ -37,11 +41,23 @@ export default function PedidoDetail() {
 
         if (pedidoData.depositoId) {
           try {
-            const depositoData = await getDepositoPorId(pedidoData.depositoId);
-            setDepositoNombre(`${depositoData.nombreDeposito} (${depositoData.direccion})`);
+            let depositoData = null;
+            if (rol === 'COMERCIO') {
+              const depositos = await getDepositosPorComercio(pedidoData.comercioId);
+              depositoData = depositos.find(deposito => deposito.id === pedidoData.depositoId);
+            } else if (rol === 'DEPOSITO') {
+              const propio = await getMiDeposito();
+              depositoData = propio.id === pedidoData.depositoId ? propio : null;
+            } else if (rol === 'ADMIN') {
+              depositoData = await getDepositoPorId(pedidoData.depositoId);
+            }
+            setDepositoNombre(formatearDeposito(depositoData, pedidoData.depositoId));
           } catch (e) {
             console.error("Error fetching deposito", e);
+            setDepositoNombre(formatearDeposito(null, pedidoData.depositoId));
           }
+        } else {
+          setDepositoNombre(formatearDeposito(null));
         }
       })
       .catch(err => {
@@ -50,11 +66,11 @@ export default function PedidoDetail() {
         navigate('/pedidos');
       })
       .finally(() => setLoading(false));
-  };
+  }, [id, navigate, rol]);
 
   useEffect(() => {
     fetchPedido();
-  }, [id]);
+  }, [fetchPedido]);
 
   // Recorrido retiro -> entrega. Es un dato complementario: si falla no bloquea el detalle.
   useEffect(() => {
@@ -120,6 +136,7 @@ export default function PedidoDetail() {
 
   if (loading) return <div style={{padding: '2rem'}}>Cargando pedido...</div>;
   if (!pedido) return null;
+  const acciones = accionesPedido(rol, pedido.estado);
 
   const historialUI = (pedido.historial || []).map((h, i) => {
     const isCurrent = i === 0;
@@ -144,37 +161,37 @@ export default function PedidoDetail() {
         </div>
         <div className="pedido-detail-actions" style={{display: 'flex', gap: '0.5rem'}}>
           
-          {pedido.estado === 'CREADO' && (
+          {acciones.preparar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(marcarListoParaRetirar, 'Marcar Listo')} style={{backgroundColor: 'var(--color-orange)', color: 'white', border: 'none'}}>
               <PackageCheck size={16} /> Marcar Listo Para Retirar
             </button>
           )}
 
-          {pedido.estado === 'LISTO_PARA_RETIRAR' && (
+          {acciones.asignar && (
             <button className="pedido-btn-asignar" onClick={handleAsignarRepartidor}>
               <UserPlus size={16} /> Asignar repartidor
             </button>
           )}
 
-          {pedido.estado === 'ASIGNADO' && (
+          {acciones.retirar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(marcarRetirado, 'Marcar Retirado')} style={{backgroundColor: 'var(--color-violet)', color: 'white', border: 'none'}}>
               <PackageOpen size={16} /> Marcar Retirado
             </button>
           )}
 
-          {pedido.estado === 'RETIRADO' && (
+          {acciones.viajar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(iniciarViajePedido, 'Iniciar Viaje')} style={{backgroundColor: 'var(--color-blue)', color: 'white', border: 'none'}}>
               <Truck size={16} /> Iniciar Viaje
             </button>
           )}
 
-          {pedido.estado === 'EN_CAMINO' && (
+          {acciones.entregar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(entregarPedido, 'Entrega')} style={{backgroundColor: 'var(--color-green)', color: 'white', border: 'none'}}>
               <CheckCircle size={16} /> Marcar Entregado
             </button>
           )}
 
-          {['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO'].includes(pedido.estado) && (
+          {acciones.cancelar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(cancelarPedido, 'Cancelación')} style={{borderColor: 'var(--color-red)', color: 'var(--color-red)'}}>
               <XCircle size={16} /> Cancelar
             </button>

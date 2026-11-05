@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import "../styles/RepartidorFormModal.css";
 
@@ -17,21 +17,25 @@ export default function RepartidorFormModal({
   onClose,
   onSubmit,
 }) {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(() => open && mode === "edit" && repartidor ? {
+    usuarioId: repartidor.usuarioId || "",
+    patente: repartidor.patente || "",
+    zona: repartidor.zona || "",
+  } : initialForm);
 
-  useEffect(() => {
-    if (!open) return;
-
-    if (mode === "edit" && repartidor) {
+  const [origen, setOrigen] = useState({ open, mode, repartidor });
+  if (origen.open !== open || origen.mode !== mode || origen.repartidor !== repartidor) {
+    setOrigen({ open, mode, repartidor });
+    if (open && mode === "edit" && repartidor) {
       setForm({
         usuarioId: repartidor.usuarioId || "",
         patente: repartidor.patente || "",
         zona: repartidor.zona || "",
       });
-    } else {
+    } else if (open) {
       setForm(initialForm);
     }
-  }, [open, mode, repartidor]);
+  }
 
   const usuarioSeleccionado = useMemo(
     () => usuariosDisponibles.find((usuario) => String(usuario.id) === String(form.usuarioId)),

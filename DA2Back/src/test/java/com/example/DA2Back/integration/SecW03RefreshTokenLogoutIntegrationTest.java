@@ -153,6 +153,45 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void secW03_logoutYRefreshCanonicosRevocanLaSesion() throws Exception {
+        String refreshToken = hacerLogin().get("refreshToken").asText();
+        String payload = objectMapper.writeValueAsString(java.util.Map.of("refreshToken", refreshToken));
+
+        mockMvc.perform(post("/auth/logout").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Location"));
+        mockMvc.perform(post("/auth/refresh").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void secW03_aliasRefreshValidaElTokenSinAccessToken() throws Exception {
+        String refreshToken = hacerLogin().get("refreshToken").asText();
+        String payload = objectMapper.writeValueAsString(java.util.Map.of("refreshToken", refreshToken));
+
+        mockMvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").value(org.hamcrest.Matchers.not(refreshToken)));
+        mockMvc.perform(post("/refresh").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void secW03_rutasDeRefreshRechazanTokenDesconocidoYTodasValidanElCuerpo() throws Exception {
+        String payload = objectMapper.writeValueAsString(java.util.Map.of("refreshToken", "token-ficticio-desconocido"));
+        for (String ruta : java.util.List.of("/auth/refresh", "/refresh")) {
+            mockMvc.perform(post(ruta).contentType(MediaType.APPLICATION_JSON).content(payload))
+                    .andExpect(status().isUnauthorized());
+        }
+        for (String ruta : java.util.List.of("/auth/refresh", "/refresh", "/auth/logout", "/logout")) {
+            mockMvc.perform(post(ruta).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
     private JsonNode hacerLogin() throws Exception {
         String body = """
                 {

@@ -23,12 +23,17 @@ export function useUsuarioDetail(id) {
   const [accionEnCurso, setAccionEnCurso] = useState(false);
   const [recarga, setRecarga] = useState(0);
 
+  const [consulta, setConsulta] = useState({ id, recarga });
+  if (consulta.id !== id || consulta.recarga !== recarga) {
+    setConsulta({ id, recarga });
+    setLoading(true);
+    setError(null);
+  }
+
   useEffect(() => {
     // "cancelado" evita pisar el estado con la respuesta de un id anterior
     // si el usuario navega rápido entre detalles (cola de revisión).
     let cancelado = false;
-    setLoading(true);
-    setError(null);
     fetchUsuarioPorId(id)
       .then((data) => !cancelado && setUsuario(data))
       .catch((err) => !cancelado && setError(err.message))

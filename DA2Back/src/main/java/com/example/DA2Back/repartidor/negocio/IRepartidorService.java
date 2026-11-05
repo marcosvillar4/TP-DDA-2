@@ -21,6 +21,10 @@ public interface IRepartidorService {
 
     RepartidorResponseDTO crear(RepartidorCreateDTO dto);
 
+    RepartidorResponseDTO crearPendiente(RepartidorCreateDTO dto);
+
+    void resolverEvaluacion(Long usuarioId, boolean aprobado);
+
     RepartidorResponseDTO actualizar(Long id, RepartidorUpdateDTO dto);
 
     RepartidorResponseDTO cambiarEstado(Long id, CambiarEstadoRepartidorDTO dto);

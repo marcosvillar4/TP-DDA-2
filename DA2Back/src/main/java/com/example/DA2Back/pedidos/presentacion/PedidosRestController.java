@@ -24,9 +24,8 @@ import java.util.List;
 /**
  * Controlador REST de la capa de Presentación para Pedidos.
  *
- * Cada endpoint mapea directamente a una transición de estado del
- * patrón State, haciendo que la API sea autodescriptiva sobre qué
- * operaciones son posibles en el ciclo de vida de un pedido.
+ * Expone consultas, cotizacion y transiciones. El servicio valida el alcance
+ * del usuario y el patron State determina las transiciones permitidas.
  */
 @RestController
 @RequestMapping("/api/pedidos")
@@ -53,7 +52,7 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.cotizarPedido(dto, usuario));
     }
 
-    /** GET /api/pedidos — lista todos los pedidos */
+    /** GET /api/pedidos — lista pedidos dentro del alcance del usuario autenticado. */
     @GetMapping
     public ResponseEntity<List<PedidoResponseDTO>> listarTodos(@AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(servicioDePedidos.listarTodos(usuario));
@@ -80,15 +79,15 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.listarPorEstado(estado, usuario));
     }
 
-    /** GET /api/pedidos/pendientes — pedidos CREADO sin repartidor */
+    /** GET /api/pedidos/pendientes — pedidos LISTO_PARA_RETIRAR sin repartidor, dentro del alcance. */
     @GetMapping("/pendientes")
     public ResponseEntity<List<PedidoResponseDTO>> listarPendientesAsignables(@AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(servicioDePedidos.listarPendientesAsignables(usuario));
     }
 
     /**
-     * PATCH /api/pedidos/{id}/asignar/{repartidorId}
-     * CREADO → ASIGNADO: asigna un repartidor al pedido.
+     * PATCH /api/pedidos/{id}/listo-para-retirar
+     * CREADO -> LISTO_PARA_RETIRAR: ADMIN, COMERCIO o DEPOSITO dentro de su alcance.
      */
         @PatchMapping("/{id}/listo-para-retirar")
     public ResponseEntity<PedidoResponseDTO> marcarListoParaRetirar(@PathVariable Long id,
@@ -96,6 +95,7 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.marcarListoParaRetirar(id, usuario));
     }
 
+    /** LISTO_PARA_RETIRAR -> ASIGNADO: asignacion administrativa exclusiva de ADMIN. */
     @PatchMapping("/{id}/asignar/{repartidorId}")
     public ResponseEntity<PedidoResponseDTO> asignarRepartidor(
             @PathVariable Long id,
@@ -104,14 +104,15 @@ public class PedidosRestController {
     }
 
     /**
-     * PATCH /api/pedidos/{id}/iniciar-viaje
-     * ASIGNADO → EN_CAMINO: el repartidor inicia el viaje.
+     * PATCH /api/pedidos/{id}/retirar
+     * ASIGNADO -> RETIRADO: operacion administrativa exclusiva de ADMIN.
      */
         @PatchMapping("/{id}/retirar")
     public ResponseEntity<PedidoResponseDTO> marcarRetirado(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDePedidos.marcarRetirado(id));
     }
 
+    /** RETIRADO -> EN_CAMINO: ADMIN; el repartidor utiliza su endpoint /repartidor/me. */
     @PatchMapping("/{id}/iniciar-viaje")
     public ResponseEntity<PedidoResponseDTO> iniciarViaje(@PathVariable Long id) {
         return ResponseEntity.ok(servicioDePedidos.iniciarViaje(id));
@@ -119,7 +120,7 @@ public class PedidosRestController {
 
     /**
      * PATCH /api/pedidos/{id}/entregar
-     * EN_CAMINO → ENTREGADO: el repartidor confirma la entrega.
+     * EN_CAMINO -> ENTREGADO: ADMIN; el repartidor utiliza su endpoint /repartidor/me.
      */
     @PatchMapping("/{id}/entregar")
     public ResponseEntity<PedidoResponseDTO> entregar(@PathVariable Long id) {

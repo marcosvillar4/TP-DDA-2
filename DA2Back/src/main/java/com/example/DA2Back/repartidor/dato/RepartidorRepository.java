@@ -20,6 +20,10 @@ public interface RepartidorRepository extends JpaRepository<Repartidor, Long> {
 
     Optional<Repartidor> findByUsuarioId(Long usuarioId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Repartidor r where r.usuarioId = :usuarioId")
+    Optional<Repartidor> findByUsuarioIdForUpdate(@Param("usuarioId") Long usuarioId);
+
     boolean existsByUsuarioId(Long usuarioId);
 
     boolean existsByPatenteIgnoreCase(String patente);
