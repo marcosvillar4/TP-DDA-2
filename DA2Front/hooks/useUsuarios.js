@@ -25,21 +25,20 @@ export function useUsuarios() {
   const paginaParam = Number.parseInt(searchParams.get("page"), 10);
   const pagina = Number.isNaN(paginaParam) || paginaParam < 1 ? 1 : paginaParam;
 
+  const cargarDatosUsuarios = useCallback(() => fetchUsuarios()
+    .then(setUsuarios)
+    .catch((err) => setError(err.message))
+    .finally(() => setLoading(false)), []);
+
   const cargarUsuarios = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      setUsuarios(await fetchUsuarios());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await cargarDatosUsuarios();
+  }, [cargarDatosUsuarios]);
 
   useEffect(() => {
-    cargarUsuarios();
-  }, [cargarUsuarios]);
+    cargarDatosUsuarios();
+  }, [cargarDatosUsuarios]);
 
   const actualizarParams = useCallback(
     (cambios, { resetPagina = true } = {}) => {

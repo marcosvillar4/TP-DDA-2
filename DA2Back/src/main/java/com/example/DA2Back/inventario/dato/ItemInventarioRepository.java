@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 
 public interface ItemInventarioRepository extends JpaRepository<ItemInventario, Long> {
@@ -19,6 +21,13 @@ public interface ItemInventarioRepository extends JpaRepository<ItemInventario, 
             Long productoId,
             Long depositoId
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from ItemInventario i where i.inventario.id = :inventarioId "
+            + "and i.producto.id = :productoId and i.deposito.id = :depositoId")
+    Optional<ItemInventario> buscarParaActualizarStock(@Param("inventarioId") Long inventarioId,
+                                                     @Param("productoId") Long productoId,
+                                                     @Param("depositoId") Long depositoId);
 
     @Query("""
             SELECT i

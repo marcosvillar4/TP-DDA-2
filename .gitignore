@@ -36,3 +36,10 @@ DA2Back/src/main/resources/application.properties
 
 hs_err_pid*.log
 replay_pid*.log
+
+# Configuracion y respaldos locales; conservar plantillas sin secretos.
+.env
+.env.*
+!.env.example
+*.sql.gz
+*.dump

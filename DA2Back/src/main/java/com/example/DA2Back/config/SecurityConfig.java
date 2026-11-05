@@ -77,6 +77,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             // El controlador REST revoca refresh tokens; evitar el logout con redireccion.
             .logout(logout -> logout.disable())
+            // El cliente renueva el JWT ante 401; un usuario autenticado sin permisos conserva 403.
+            .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint((request, response, exception) -> {
+                response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"status\":401,\"message\":\"Autenticación requerida o token inválido\"}");
+            }))
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())

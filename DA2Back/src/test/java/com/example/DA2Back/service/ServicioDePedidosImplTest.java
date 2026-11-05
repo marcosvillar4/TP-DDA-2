@@ -91,6 +91,8 @@ class ServicioDePedidosImplTest {
                 .id(1L)
                 .nombre("Carlos")
                 .apellido("Ruiz")
+                .rol(Rol.REPARTIDOR)
+                .estado(com.example.DA2Back.Seguridad.dato.EstadoUsuario.VALIDADO)
                 .build();
 
         repartidor = Repartidor.builder()
@@ -101,6 +103,7 @@ class ServicioDePedidosImplTest {
                 .estado(EstadoRepartidor.DISPONIBLE)
                 .activo(true)
                 .build();
+        lenient().when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioRepartidor));
     }
 
     @Test
@@ -172,7 +175,7 @@ class ServicioDePedidosImplTest {
         when(depositoRepository.findById(10L)).thenReturn(Optional.of(deposito));
         when(resolverEstado.resolver(EstadoPedido.CREADO)).thenReturn(estadoMock);
         when(inventarioService.obtenerPorComercio(100L)).thenReturn(inv);
-        when(itemInventarioRepository.findByInventarioIdAndProductoIdAndDepositoId(5L, 101L, 10L))
+        when(itemInventarioRepository.buscarParaActualizarStock(5L, 101L, 10L))
                 .thenReturn(Optional.of(item));
 
         servicioDePedidos.cancelar(50L, admin);

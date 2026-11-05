@@ -69,8 +69,8 @@ public class UsuarioFactory {
 
     /**
      * Crea la entidad de dominio asociada al usuario recién registrado
-     * (Comercio). REPARTIDOR no necesita una entidad aparte: su único dato
-     * extra (vehiculo) ya se guardó directo en el Usuario. Los depósitos no
+     * (Comercio o Repartidor pendiente). El vehículo permanece en Usuario;
+     * patente y zona se conservan en el perfil operativo inactivo. Los depósitos no
      * pasan por acá: los crea un comercio (ver UsuarioServiceImpl).
      */
     public void crearEntidadRelacionada(RegisterDTO dto, Long usuarioId) {
@@ -78,7 +78,7 @@ public class UsuarioFactory {
             comercioService.crear(mapearComercio(comercioDTO), usuarioId);
         }
         else if (dto instanceof RegistroRepartidorDTO repartidorDTO) {
-            repartidorService.crear(mapearRepartidor(repartidorDTO, usuarioId));
+            repartidorService.crearPendiente(mapearRepartidor(repartidorDTO, usuarioId));
         }
     }
 

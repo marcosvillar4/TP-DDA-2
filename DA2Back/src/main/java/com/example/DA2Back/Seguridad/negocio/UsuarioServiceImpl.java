@@ -14,6 +14,9 @@ import com.example.DA2Back.comercio.comercioDTOs.ComercioResponseDTO;
 import com.example.DA2Back.comercio.negocio.IComercio;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.repartidor.negocio.IRepartidorService;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
 import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
@@ -46,6 +49,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final IComercio comercioService;
     private final PasswordEncoder passwordEncoder;
     private final NotificacionService notificacionService;
+    private final IRepartidorService repartidorService;
 
     @Override
     @Transactional
@@ -176,13 +180,19 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     private UsuarioResponseDTO aplicarTransicion(Long id, BiConsumer<IEstadoUsuario, Usuario> transicion) {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + id));
 
-        IEstadoUsuario estadoActual = resolverEstadoUsuario.resolver(usuario.getEstado());
+        EstadoUsuario estadoPrevio = usuario.getEstado();
+        IEstadoUsuario estadoActual = resolverEstadoUsuario.resolver(estadoPrevio);
         transicion.accept(estadoActual, usuario);
 
         Usuario guardado = usuarioRepository.save(usuario);
+        if (usuario.getRol() == Rol.REPARTIDOR
+                && estadoPrevio == EstadoUsuario.EN_EVALUACION) {
+            repartidorService.resolverEvaluacion(usuario.getId(),
+                    usuario.getEstado() == EstadoUsuario.VALIDADO);
+        }
         notificacionService.notificarActualizacionEstadoUsuario(guardado);
         return UsuarioMapper.toResponseDTO(guardado);
     }

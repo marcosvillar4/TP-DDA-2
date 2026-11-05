@@ -12,6 +12,8 @@ import SeguimientoPage from "./seguimiento/SeguimientoPage";
 import RepartidorDetail from "./repartidores/RepartidorDetail";
 import UsuarioDetailPage from "./usuarios/UsuarioDetailPage";
 import DepositoDetail from "./depositos/DepositoDetail";
+import RoleGuard from "./layout/RoleGuard";
+import { PERMISOS_RUTA } from "./layout/routePermissions";
 
 /**
  * Rutas "hijas" que no son ítems de sidebar (detalle, alta, edición),
@@ -43,13 +45,17 @@ function App() {
             key={item.key}
             path={item.path}
             element={
-              item.element ? <item.element /> : <EnTrabajoPage titulo={item.label} />
+              <RoleGuard roles={item.roles}>
+                {item.element ? <item.element /> : <EnTrabajoPage titulo={item.label} />}
+              </RoleGuard>
             }
           />
         ))}
 
         {EXTRA_ROUTES.map((route) => (
-          <Route key={route.path} path={route.path} element={<route.element />} />
+          <Route key={route.path} path={route.path} element={
+            <RoleGuard roles={PERMISOS_RUTA[route.path]}><route.element /></RoleGuard>
+          } />
         ))}
       </Route>
 

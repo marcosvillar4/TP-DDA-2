@@ -29,20 +29,13 @@ import DepositosPage from "../depositos/DepositosPage";
 import MisDepositosPage from "../depositos/MisDepositosPage";
 import AlertasPage from "../alertas/AlertasPage";
 
-export const ROLES = {
-  ADMIN: "ADMIN",
-  COMERCIO: "COMERCIO",
-  DEPOSITO: "DEPOSITO",
-  REPARTIDOR: "REPARTIDOR",
-};
-
-const TODOS = [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO, ROLES.REPARTIDOR];
+import { PERMISOS_RUTA } from "./routePermissions";
+export { ROLES } from "./routePermissions";
 
 /**
  * Fuente única de verdad del menú lateral y de las rutas de la app.
  *
- * - `roles`: quién ve el item en el Sidebar (y quién puede navegar a esa
- *   ruta, ya que la ruta se genera igual para todos en App.jsx).
+ * - `roles`: permisos de routePermissions, compartidos por Sidebar y RoleGuard.
  * - `element`: componente real de la pantalla. Si se omite, la ruta
  *   se renderiza automáticamente con <EnTrabajoPage/>.
  *
@@ -58,7 +51,7 @@ export const NAV_ITEMS = [
     label: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
-    roles: TODOS,
+    roles: PERMISOS_RUTA["/dashboard"],
     element: DashboardPage,
   },
   {
@@ -66,7 +59,7 @@ export const NAV_ITEMS = [
     label: "Pedidos",
     path: "/pedidos",
     icon: ClipboardList,
-    roles: [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO],
+    roles: PERMISOS_RUTA["/pedidos"],
     element: PedidosList,
   },
   {
@@ -74,7 +67,7 @@ export const NAV_ITEMS = [
     label: "Mis Pedidos",
     path: "/mis-pedidos",
     icon: ClipboardList,
-    roles: [ROLES.REPARTIDOR],
+    roles: PERMISOS_RUTA["/mis-pedidos"],
     element: MisPedidosPage,
   },
   {
@@ -82,7 +75,7 @@ export const NAV_ITEMS = [
     label: "Seguimiento",
     path: "/seguimiento",
     icon: MapPin,
-    roles: TODOS,
+    roles: PERMISOS_RUTA["/seguimiento"],
     element: SeguimientoPage,
   },
   {
@@ -90,7 +83,7 @@ export const NAV_ITEMS = [
     label: "Comercios",
     path: "/comercios",
     icon: Building2,
-    roles: [ROLES.ADMIN],
+    roles: PERMISOS_RUTA["/comercios"],
     element: ComerciosList,
   },
   {
@@ -98,7 +91,7 @@ export const NAV_ITEMS = [
     label: "Mi Comercio",
     path: "/mi-comercio",
     icon: Store,
-    roles: [ROLES.COMERCIO],
+    roles: PERMISOS_RUTA["/mi-comercio"],
     element: MiComercio,
   },
   {
@@ -106,7 +99,7 @@ export const NAV_ITEMS = [
     label: "Productos",
     path: "/productos",
     icon: Package,
-    roles: [ROLES.ADMIN, ROLES.COMERCIO],
+    roles: PERMISOS_RUTA["/productos"],
     element: ProductosPage,
   },
   {
@@ -114,7 +107,7 @@ export const NAV_ITEMS = [
     label: "Inventario",
     path: "/inventario",
     icon: Boxes,
-    roles: [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO],
+    roles: PERMISOS_RUTA["/inventario"],
     element: InventarioPage,
   },
   {
@@ -122,7 +115,7 @@ export const NAV_ITEMS = [
     label: "Depósitos",
     path: "/depositos",
     icon: Warehouse,
-    roles: [ROLES.ADMIN],
+    roles: PERMISOS_RUTA["/depositos"],
     element: DepositosPage,
   },
   {
@@ -130,7 +123,7 @@ export const NAV_ITEMS = [
     label: "Mis Depósitos",
     path: "/mis-depositos",
     icon: Warehouse,
-    roles: [ROLES.COMERCIO],
+    roles: PERMISOS_RUTA["/mis-depositos"],
     element: MisDepositosPage,
   },
   {
@@ -138,7 +131,7 @@ export const NAV_ITEMS = [
     label: "Repartidores",
     path: "/repartidores",
     icon: Navigation,
-    roles: [ROLES.ADMIN],
+    roles: PERMISOS_RUTA["/repartidores"],
     element: RepartidoresPage,
   },
   {
@@ -146,21 +139,21 @@ export const NAV_ITEMS = [
     label: "Transportistas",
     path: "/transportistas",
     icon: Truck,
-    roles: [ROLES.ADMIN],
+    roles: PERMISOS_RUTA["/transportistas"],
   },
   {
     key: "pagos",
     label: "Pagos y Cobranzas",
     path: "/pagos",
     icon: CreditCard,
-    roles: [ROLES.ADMIN, ROLES.COMERCIO, ROLES.DEPOSITO],
+    roles: PERMISOS_RUTA["/pagos"],
   },
   {
     key: "alertas",
     label: "Alertas",
     path: "/alertas",
     icon: Bell,
-    roles: TODOS,
+    roles: PERMISOS_RUTA["/alertas"],
     element: AlertasPage,
   },
   {
@@ -168,7 +161,7 @@ export const NAV_ITEMS = [
     label: "Usuarios",
     path: "/usuarios",
     icon: Users,
-    roles: [ROLES.ADMIN],
+    roles: PERMISOS_RUTA["/usuarios"],
     element: UsuariosPage,
   },
   {
@@ -176,7 +169,7 @@ export const NAV_ITEMS = [
     label: "Configuración",
     path: "/configuracion",
     icon: Settings,
-    roles: TODOS,
+    roles: PERMISOS_RUTA["/configuracion"],
   },
 ];
 
