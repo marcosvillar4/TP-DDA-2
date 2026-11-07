@@ -49,6 +49,7 @@ public class SecurityConfig {
     private static final String REPARTIDOR = "REPARTIDOR";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CustomUserDetailsService userDetailsService;
 
     @Bean
@@ -78,6 +79,9 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
+            // SEC-W02: sin token valido (ausente, vencido, alterado o alg "none") -> 401.
+            // Un usuario autenticado sin permisos sigue recibiendo 403.
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
             .authorizeHttpRequests(auth -> auth
 

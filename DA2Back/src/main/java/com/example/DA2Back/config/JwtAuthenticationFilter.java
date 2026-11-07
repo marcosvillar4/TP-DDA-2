@@ -7,6 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import io.jsonwebtoken.ExpiredJwtException;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,11 @@ import com.example.DA2Back.Seguridad.negocio.JwtService;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    /** Atributo de request con el motivo del rechazo del token (lo lee JwtAuthenticationEntryPoint). */
+    public static final String ATRIBUTO_MOTIVO_JWT = "jwt.motivo";
+    public static final String MOTIVO_VENCIDO = "VENCIDO";
+    public static final String MOTIVO_INVALIDO = "INVALIDO";
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
@@ -72,8 +79,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .setAuthentication(authToken);
                 }
             }
-        } catch (Exception ex) {
+        } catch (ExpiredJwtException ex) {
+            // SEC-W02: token vencido. Sin autenticacion el entry point responde 401.
             SecurityContextHolder.clearContext();
+            request.setAttribute(ATRIBUTO_MOTIVO_JWT, MOTIVO_VENCIDO);
+        } catch (Exception ex) {
+            // SEC-W02: token alterado, con alg "none", malformado o de usuario inexistente.
+            SecurityContextHolder.clearContext();
+            request.setAttribute(ATRIBUTO_MOTIVO_JWT, MOTIVO_INVALIDO);
         }
 
         filterChain.doFilter(request, response);

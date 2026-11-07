@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
@@ -35,7 +36,9 @@ public class ControlIntentosLoginService {
 
     private static final Logger log = LoggerFactory.getLogger(ControlIntentosLoginService.class);
 
-    private static final int MAX_INTENTOS_FALLIDOS = 5;
+    /** SEC-W01: intentos fallidos consecutivos tras los cuales se bloquea la cuenta (default 5). */
+    @Value("${security.login.max-intentos-fallidos:5}")
+    private int maxIntentosFallidos = 5;
 
     /**
      * Estado en memoria del componente: email normalizado -> cantidad de
@@ -59,9 +62,9 @@ public class ControlIntentosLoginService {
                 .computeIfAbsent(clave, e -> new AtomicInteger(0))
                 .incrementAndGet();
 
-        log.info("Intento de login fallido para '{}' ({}/{})", clave, intentos, MAX_INTENTOS_FALLIDOS);
+        log.info("Intento de login fallido para '{}' ({}/{})", clave, intentos, maxIntentosFallidos);
 
-        if (intentos >= MAX_INTENTOS_FALLIDOS) {
+        if (intentos >= maxIntentosFallidos) {
             bloquearCuenta(clave);
             intentosFallidosPorEmail.remove(clave);
             return true; // Just blocked
@@ -92,7 +95,7 @@ public class ControlIntentosLoginService {
                 usuarioRepository.save(usuario);
                 notificacionService.notificarActualizacionEstadoUsuario(usuario);
                 log.warn("Usuario '{}' bloqueado automaticamente tras {} intentos fallidos de login",
-                        email, MAX_INTENTOS_FALLIDOS);
+                        email, maxIntentosFallidos);
             } catch (TransicionInvalidaException ex) {
                 // La cuenta ya esta bloqueada, rechazada o en un estado que no
                 // admite bloqueo (ej. EN_EVALUACION): no hay nada mas que hacer.
