@@ -5,9 +5,12 @@ import { getPedidos } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from './components/BadgeEstado';
 import './styles/PedidosList.css';
+import { useAuthUser } from '../../hooks/useAuthUser';
+import { PERMISOS_RUTA } from '../layout/routePermissions';
 
 export default function PedidosList() {
   const navigate = useNavigate();
+  const usuario = useAuthUser();
   const [pedidos, setPedidos] = useState([]);
   const [comerciosMap, setComerciosMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -53,10 +56,10 @@ export default function PedidosList() {
             {filteredPedidos.length} {filteredPedidos.length === 1 ? 'resultado' : 'resultados'}
           </p>
         </div>
-        <button className="pedidos-btn-nuevo" onClick={() => navigate('/pedidos/nuevo')}>
+        {PERMISOS_RUTA['/pedidos/nuevo'].includes(usuario?.rol) && <button className="pedidos-btn-nuevo" onClick={() => navigate('/pedidos/nuevo')}>
           <Plus size={16} />
           Nuevo pedido
-        </button>
+        </button>}
       </div>
 
       <div className="pedidos-filters-card">

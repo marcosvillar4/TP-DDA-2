@@ -77,7 +77,7 @@ export function useDashboardMetrics(user) {
 // ─────────────────────────────── ADMIN ───────────────────────────────
 
 async function cargarAdmin(fuente) {
-  const [comercios, depositos, usuarios, pedidos, repartidores, items, alertasStock] = await Promise.all([
+  const [comercios, depositos, usuarios, pedidos, repartidores, , alertasStock] = await Promise.all([
     fuente("comercios", getComercios(), []),
     fuente("depósitos", getDepositos(), []),
     fuente("usuarios", getUsuariosAdmin(), []),

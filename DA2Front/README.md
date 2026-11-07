@@ -1,16 +1,29 @@
-# React + Vite
+# Frontend de LogiRed
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz React/Vite para ADMIN, COMERCIO, DEPOSITO y REPARTIDOR.
 
-Currently, two official plugins are available:
+## Ejecucion
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requiere Node.js 22 y npm. Desde este directorio:
 
-## React Compiler
+```powershell
+npm ci
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+La API habitual esta en `http://localhost:8081`. El cliente compartido acepta
+`VITE_API_BASE_URL` en `.env.local`; algunos clientes legados conservan la URL fija.
+No colocar secretos en variables Vite. Detener el servidor con Ctrl+C.
 
-## Expanding the ESLint configuration
+## Verificaciones
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```powershell
+npm test
+npm run lint
+npm run build
+```
+
+Los tests nativos de Node verifican presentacion de depositos, botones por rol y
+metricas de rutas y políticas de acceso a las rutas privadas. No ejecutan React en un navegador ni escriben en MySQL.
+El build genera `dist/`, ignorado por Git. Consultar el README de la raiz para
+configuracion del backend y el [informe de cierre](../docs/auditoria-segunda-etapa-2026-11-05.md) para limitaciones conocidas.

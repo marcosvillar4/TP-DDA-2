@@ -28,32 +28,25 @@ export function useRepartidores() {
   const [error, setError] = useState("");
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
+  const cargarDatosRepartidores = useCallback(() => getRepartidores()
+    .then((data) => setRepartidores(Array.isArray(data) ? data : []))
+    .catch((err) => setError(err.message))
+    .finally(() => setLoading(false)), []);
+
+  const cargarUsuariosDisponibles = useCallback(() => getUsuariosRepartidoresDisponibles()
+    .then((data) => setUsuariosDisponibles(Array.isArray(data) ? data : []))
+    .catch(() => setUsuariosDisponibles([])), []);
+
   const cargarRepartidores = useCallback(async () => {
     setLoading(true);
     setError("");
-    try {
-      const data = await getRepartidores();
-      setRepartidores(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const cargarUsuariosDisponibles = useCallback(async () => {
-    try {
-      const data = await getUsuariosRepartidoresDisponibles();
-      setUsuariosDisponibles(Array.isArray(data) ? data : []);
-    } catch {
-      setUsuariosDisponibles([]);
-    }
-  }, []);
+    await cargarDatosRepartidores();
+  }, [cargarDatosRepartidores]);
 
   useEffect(() => {
-    cargarRepartidores();
+    cargarDatosRepartidores();
     cargarUsuariosDisponibles();
-  }, [cargarRepartidores, cargarUsuariosDisponibles]);
+  }, [cargarDatosRepartidores, cargarUsuariosDisponibles]);
 
   const repartidoresFiltrados = useMemo(() => {
     const buscar = filters.buscar.trim().toLowerCase();
@@ -163,29 +156,33 @@ export function useRepartidorDetalle(id) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const [detalleId, setDetalleId] = useState(id);
+  if (detalleId !== id) {
+    setDetalleId(id);
+    setLoading(true);
+    setError("");
+  }
+
+  const cargarDatosDetalle = useCallback(() => Promise.all([
+    getRepartidorPorId(id),
+    getHistorialRepartidor(id),
+    getPedidosAsignables(),
+  ]).then(([repartidorData, historialData, pedidosData]) => {
+    setRepartidor(repartidorData);
+    setHistorial(Array.isArray(historialData) ? historialData : []);
+    setPedidosAsignables(Array.isArray(pedidosData) ? pedidosData : []);
+  }).catch((err) => setError(err.message))
+    .finally(() => setLoading(false)), [id]);
+
   const cargarDetalle = useCallback(async () => {
     setLoading(true);
     setError("");
-    try {
-      const [repartidorData, historialData, pedidosData] = await Promise.all([
-        getRepartidorPorId(id),
-        getHistorialRepartidor(id),
-        getPedidosAsignables(),
-      ]);
-
-      setRepartidor(repartidorData);
-      setHistorial(Array.isArray(historialData) ? historialData : []);
-      setPedidosAsignables(Array.isArray(pedidosData) ? pedidosData : []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+    await cargarDatosDetalle();
+  }, [cargarDatosDetalle]);
 
   useEffect(() => {
-    cargarDetalle();
-  }, [cargarDetalle]);
+    cargarDatosDetalle();
+  }, [cargarDatosDetalle]);
 
   async function guardarCambios(payload) {
     setSaving(true);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LocateFixed, MapPin, PackageCheck, RefreshCw, Route } from "lucide-react";
 import { getMiRuta } from "../../../api/repartidorPerfilApi";
 import MapaRuta from "../../mapa/MapaRuta";
+import { resumenRuta } from "../utils/resumenRuta";
 import "../styles/RutaRepartidor.css";
 
 /**
@@ -55,12 +56,14 @@ export default function RutaRepartidor({ refreshKey }) {
     setErrorUbicacion(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (!montadoRef.current) return;
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setBuscandoUbicacion(false);
         setUbicacion(coords);
         cargar(coords);
       },
       () => {
+        if (!montadoRef.current) return;
         setBuscandoUbicacion(false);
         setErrorUbicacion("No pudimos obtener tu ubicación. Revisá los permisos del navegador.");
       },
@@ -69,6 +72,7 @@ export default function RutaRepartidor({ refreshKey }) {
   }
 
   const paradas = ruta?.paradas ?? [];
+  const resumen = resumenRuta(ruta);
 
   return (
     <section className="mis-pedidos-card ruta-repartidor">
@@ -114,10 +118,12 @@ export default function RutaRepartidor({ refreshKey }) {
       {paradas.length > 0 && (
         <>
           <div className="ruta-resumen">
-            <span><Route size={14} /> {ruta.distanciaTotalKm.toFixed(2)} km</span>
-            <span>~{ruta.duracionTotalMin} min</span>
+            <span><Route size={14} /> {resumen.metricasDisponibles ? `${ruta.distanciaTotalKm.toFixed(2)} km` : 'Distancia no disponible'}</span>
+            <span>{resumen.metricasDisponibles ? `~${ruta.duracionTotalMin} min` : 'Tiempo no disponible'}</span>
             <span>{paradas.length} parada{paradas.length === 1 ? "" : "s"}</span>
           </div>
+
+          {resumen.aviso && <p className="ruta-aviso">{resumen.aviso}</p>}
 
           <ol className="ruta-paradas">
             {paradas.map((p) => (

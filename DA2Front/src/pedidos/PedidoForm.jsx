@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { getComercios } from '../../api/inventarioApi';
@@ -62,18 +62,22 @@ export default function PedidoForm() {
     return () => clearTimeout(timeoutId);
   }, [formData.comercioId, formData.depositoId, formData.direccionOrigen, formData.direccionDestino, detalles]);
 
-  useEffect(() => {
-    getComercios()
-      .then(data => {
-        setComercios(data);
-        if (data.length > 0) {
-          handleComercioChange(data[0].id);
-        }
-      })
-      .catch(err => console.error("Error cargando comercios:", err));
+  const handleDepositoChange = useCallback(async (depositoId) => {
+    setFormData(prev => ({ ...prev, depositoId }));
+    setItemsInventario([]);
+    setDetalles([]);
+
+    if (!depositoId) return;
+
+    try {
+      const items = await getItemsInventarioPorDeposito(depositoId);
+      setItemsInventario(items);
+    } catch (err) {
+      console.error("Error cargando items del deposito:", err);
+    }
   }, []);
 
-  const handleComercioChange = async (comercioId) => {
+  const handleComercioChange = useCallback(async (comercioId) => {
     setFormData(prev => ({ ...prev, comercioId, depositoId: '' }));
     setDepositos([]);
     setItemsInventario([]);
@@ -88,22 +92,18 @@ export default function PedidoForm() {
     } catch (err) {
       console.error("Error cargando depositos:", err);
     }
-  };
+  }, [handleDepositoChange]);
 
-  const handleDepositoChange = async (depositoId) => {
-    setFormData(prev => ({ ...prev, depositoId }));
-    setItemsInventario([]);
-    setDetalles([]);
-
-    if (!depositoId) return;
-
-    try {
-      const items = await getItemsInventarioPorDeposito(depositoId);
-      setItemsInventario(items);
-    } catch (err) {
-      console.error("Error cargando items del deposito:", err);
-    }
-  };
+  useEffect(() => {
+    getComercios()
+      .then(data => {
+        setComercios(data);
+        if (data.length > 0) {
+          handleComercioChange(data[0].id);
+        }
+      })
+      .catch(err => console.error("Error cargando comercios:", err));
+  }, [handleComercioChange]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

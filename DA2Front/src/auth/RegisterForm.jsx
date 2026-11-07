@@ -4,7 +4,6 @@ import { useRegister } from "../../hooks/useRegister";
 import { TextField } from "./components/TextField";
 import { PasswordField } from "./components/PasswordField";
 import { Button } from "./components/Button";
-import { AuthLayout } from "./AuthLayout";
 import "./styles/RegisterForm.css";
 
 const roles = [
