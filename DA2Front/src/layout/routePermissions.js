@@ -18,7 +18,8 @@ export const PERMISOS_RUTA = {
   '/mis-depositos': ['COMERCIO'],
   '/repartidores': ['ADMIN'],
   '/transportistas': ['ADMIN'],
-  '/pagos': OPERADORES_PEDIDOS,
+  // El comercio paga sus envios y el repartidor consulta sus cobros (cada uno ve su vista).
+  '/pagos': ['COMERCIO', 'REPARTIDOR'],
   '/alertas': TODOS,
   '/usuarios': ['ADMIN'],
   '/configuracion': TODOS,
