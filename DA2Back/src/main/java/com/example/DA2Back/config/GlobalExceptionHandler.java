@@ -69,6 +69,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * PagoRechazadoException → 422 Unprocessable Entity
+     * La pasarela de pagos (simulada) rechazo la operacion; el pago sigue pendiente.
+     */
+    @ExceptionHandler(com.example.DA2Back.pago.excepcion.PagoRechazadoException.class)
+    public ResponseEntity<Map<String, Object>> handlePagoRechazado(
+            com.example.DA2Back.pago.excepcion.PagoRechazadoException ex) {
+
+        return buildError(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    }
+
+    /**
      * IllegalStateException → 409 Conflict
      * Ejemplo: intentar cancelar un pedido ya entregado.
      */

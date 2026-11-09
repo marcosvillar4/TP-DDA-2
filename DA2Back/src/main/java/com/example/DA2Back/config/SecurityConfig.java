@@ -152,6 +152,11 @@ public class SecurityConfig {
                     .hasRole(ADMIN)
                 .requestMatchers(DELETE, "/api/pedidos/*/cancelar").hasAnyRole(ADMIN, COMERCIO)
 
+                // ───────── Pagos ─────────
+                // Solo el comercio paga; el servicio valida que el pago sea de su comercio.
+                // Los cobros del repartidor viven en /repartidor/me/pagos (regla de /repartidor/**).
+                .requestMatchers("/api/pagos", "/api/pagos/**").hasRole(COMERCIO)
+
                 // ───────── Repartidores ─────────
                 .requestMatchers("/repartidores/**").hasRole(ADMIN)
                 .requestMatchers("/repartidor/**").hasRole(REPARTIDOR)
