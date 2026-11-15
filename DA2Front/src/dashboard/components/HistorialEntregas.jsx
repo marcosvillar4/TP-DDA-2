@@ -1,4 +1,4 @@
-import { ESTADOS_PEDIDO } from '../utils/pedidoEstado';
+import { ESTADOS_PEDIDO, labelEstadoPedido } from '../utils/pedidoEstado';
 import '../styles/PedidosRecientes.css';
 
 const CANTIDAD = 7;
@@ -31,7 +31,7 @@ export default function HistorialEntregas({ historial = [] }) {
                 <td>{h.direccionEntrega}</td>
                 <td>
                   <span className={`pedido-badge ${ESTADOS_PEDIDO[h.resultado]?.badge ?? ''}`}>
-                    {ESTADOS_PEDIDO[h.resultado]?.label ?? h.resultado}
+                    {labelEstadoPedido(h.resultado, h.resultadoLabel)}
                   </span>
                 </td>
               </tr>

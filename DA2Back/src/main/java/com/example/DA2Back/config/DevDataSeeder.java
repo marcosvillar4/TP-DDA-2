@@ -27,6 +27,9 @@ import com.example.DA2Back.producto.dato.ProductoRepository;
 import com.example.DA2Back.repartidor.dato.EstadoRepartidor;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 import com.example.DA2Back.repartidor.dato.RepartidorRepository;
+import com.example.DA2Back.transportista.dato.EstadoTransportista;
+import com.example.DA2Back.transportista.dato.Transportista;
+import com.example.DA2Back.transportista.dato.TransportistaRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,6 +174,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private final RepartidorRepository repartidorRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TransportistaRepository transportistaRepository;
 
     @Override
     public void run(String... args) {
@@ -183,8 +187,21 @@ public class DevDataSeeder implements CommandLineRunner {
         for (RepartidorSeed seed : REPARTIDORES) {
             if (sembrarRepartidor(seed, hash)) repartidoresNuevos++;
         }
+        sembrarTransportistas();
         log.info("Datos de prueba: {} comercios y {} repartidores nuevos (clave de todas las cuentas: {})",
                 comerciosNuevos, repartidoresNuevos, PASSWORD);
+    }
+
+    private void sembrarTransportistas() {
+        for (String empresa : List.of("Andreani", "OCA")) {
+            if (!transportistaRepository.existsByEmpresaIgnoreCase(empresa)) {
+                transportistaRepository.save(Transportista.builder()
+                        .empresa(empresa)
+                        .estado(EstadoTransportista.DISPONIBLE)
+                        .activo(true)
+                        .build());
+            }
+        }
     }
 
     // ---------------------------------------------------------------- comercio

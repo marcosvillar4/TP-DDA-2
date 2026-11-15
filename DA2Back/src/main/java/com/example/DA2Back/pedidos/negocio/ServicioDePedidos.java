@@ -21,6 +21,8 @@ public interface ServicioDePedidos {
 
     // Transiciones de estado
     PedidoResponseDTO marcarListoParaRetirar(Long id, Usuario usuario);
+    PedidoResponseDTO marcarConTransportista(Long id, Usuario usuario);
+    PedidoResponseDTO marcarEnviado(Long id, Usuario usuario);
     PedidoResponseDTO asignarRepartidor(Long pedidoId, Long repartidorId);
     PedidoResponseDTO marcarRetirado(Long id);
     PedidoResponseDTO marcarRetiradoPorRepartidor(Long id, Long repartidorId);

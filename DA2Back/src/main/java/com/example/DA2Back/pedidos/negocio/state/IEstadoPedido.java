@@ -5,6 +5,14 @@ import com.example.DA2Back.pedidos.excepcion.TransicionInvalidaPedidoException;
 import com.example.DA2Back.repartidor.dato.Repartidor;
 
 public interface IEstadoPedido {
+    default void marcarConTransportista(Pedido pedido) {
+        throw new TransicionInvalidaPedidoException("No se puede pasar del estado " + pedido.getEstado() + " a CON_TRANSPORTISTA");
+    }
+
+    default void marcarEnviado(Pedido pedido) {
+        throw new TransicionInvalidaPedidoException("No se puede pasar del estado " + pedido.getEstado() + " a ENTREGADO");
+    }
+
     default void marcarListoParaRetirar(Pedido pedido) {
         throw new TransicionInvalidaPedidoException("No se puede pasar del estado " + pedido.getEstado() + " a LISTO_PARA_RETIRAR");
     }
@@ -29,4 +37,3 @@ public interface IEstadoPedido {
         throw new TransicionInvalidaPedidoException("No se puede pasar del estado " + pedido.getEstado() + " a CANCELADO");
     }
 }
-

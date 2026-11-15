@@ -1,6 +1,7 @@
 package com.example.DA2Back.notificacion.dato;
 
 import com.example.DA2Back.Seguridad.dato.Usuario;
+import com.example.DA2Back.pedidos.dato.EstadoPedido;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,6 +43,10 @@ public class Notificacion {
 
     @Column(name = "referencia_id")
     private Long referenciaId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_pedido")
+    private EstadoPedido estadoPedido;
 
     @Column(nullable = false)
     private boolean leida;

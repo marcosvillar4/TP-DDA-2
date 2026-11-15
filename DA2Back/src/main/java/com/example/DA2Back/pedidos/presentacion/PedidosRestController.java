@@ -95,6 +95,18 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.marcarListoParaRetirar(id, usuario));
     }
 
+    @PatchMapping("/{id}/con-transportista")
+    public ResponseEntity<PedidoResponseDTO> marcarConTransportista(
+            @PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.marcarConTransportista(id, usuario));
+    }
+
+    @PatchMapping("/{id}/enviado")
+    public ResponseEntity<PedidoResponseDTO> marcarEnviado(
+            @PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(servicioDePedidos.marcarEnviado(id, usuario));
+    }
+
     /** LISTO_PARA_RETIRAR -> ASIGNADO: asignacion administrativa exclusiva de ADMIN. */
     @PatchMapping("/{id}/asignar/{repartidorId}")
     public ResponseEntity<PedidoResponseDTO> asignarRepartidor(
@@ -137,4 +149,3 @@ public class PedidosRestController {
         return ResponseEntity.ok(servicioDePedidos.cancelar(id, usuario));
     }
 }
-

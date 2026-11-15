@@ -493,7 +493,7 @@ function PedidoActual({ pedido, operacionActiva, onAccion }) {
     <div className="mis-pedidos-current-body">
       <div className="mis-pedidos-current-main">
         <span className="mis-pedidos-id">#{pedido.id}</span>
-        <BadgeEstado estado={pedido.estado} />
+        <BadgeEstado estado={pedido.estado} estadoLabel={pedido.estadoLabel} />
       </div>
 
       <div className="mis-pedidos-info-list">
@@ -544,7 +544,7 @@ function PedidoDisponible({ pedido, disabled, loading, onTomar }) {
           <span className="mis-pedidos-id">#{pedido.id}</span>
           <h3>{pedido.direccionDestino || "Destino sin informar"}</h3>
         </div>
-        <BadgeEstado estado={pedido.estado} />
+        <BadgeEstado estado={pedido.estado} estadoLabel={pedido.estadoLabel} />
       </div>
 
       <div className="mis-pedidos-available-info">

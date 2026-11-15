@@ -18,6 +18,7 @@ export default function PedidoForm() {
   const [formData, setFormData] = useState({
     comercioId: '',
     depositoId: '',
+    tipoEnvio: 'LOGIRED',
     direccionOrigen: '',
     direccionDestino: ''
   });
@@ -164,6 +165,7 @@ export default function PedidoForm() {
         depositoId: parseInt(formData.depositoId),
         direccionOrigen: formData.direccionOrigen.trim() || depositoSeleccionado?.direccion || '',
         direccionDestino: formData.direccionDestino.trim() || comercioSeleccionado?.direccion || '',
+        tipoEnvio: formData.tipoEnvio,
         detalles: detalles.map(d => ({ productoId: d.productoId, cantidad: d.cantidad }))
       });
       Swal.fire(
@@ -272,6 +274,30 @@ export default function PedidoForm() {
                   border: '1px solid var(--color-slate-300)', outline: 'none'
                 }}
               />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--color-slate-700)' }}>
+                Método de envío
+              </label>
+              <select
+                name="tipoEnvio"
+                value={formData.tipoEnvio}
+                onChange={handleChange}
+                style={{
+                  padding: '0.625rem', borderRadius: '0.375rem',
+                  border: '1px solid var(--color-slate-300)', outline: 'none'
+                }}
+                required
+              >
+                <option value="LOGIRED">Repartidor de LogiRed</option>
+                <option value="EXTERNO">Transportista externo</option>
+              </select>
+              <small style={{ color: 'var(--color-slate-500)' }}>
+                {formData.tipoEnvio === 'EXTERNO'
+                  ? 'Se asignará un transportista externo disponible.'
+                  : 'El pedido será gestionado por un repartidor de LogiRed.'}
+              </small>
             </div>
           </div>
 

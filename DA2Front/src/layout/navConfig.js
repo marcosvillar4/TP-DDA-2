@@ -29,6 +29,7 @@ import DepositosPage from "../depositos/DepositosPage";
 import MisDepositosPage from "../depositos/MisDepositosPage";
 import AlertasPage from "../alertas/AlertasPage";
 import PagosPage from "../pagos/PagosPage";
+import TransportistasPage from "../transportistas/TransportistasPage";
 
 import { PERMISOS_RUTA } from "./routePermissions";
 export { ROLES } from "./routePermissions";
@@ -141,6 +142,7 @@ export const NAV_ITEMS = [
     path: "/transportistas",
     icon: Truck,
     roles: PERMISOS_RUTA["/transportistas"],
+    element: TransportistasPage,
   },
   {
     key: "pagos",

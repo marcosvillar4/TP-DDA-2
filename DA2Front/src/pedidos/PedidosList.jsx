@@ -4,6 +4,7 @@ import { Search, Plus, Eye } from 'lucide-react';
 import { getPedidos } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from './components/BadgeEstado';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 import './styles/PedidosList.css';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { PERMISOS_RUTA } from '../layout/routePermissions';
@@ -109,15 +110,16 @@ export default function PedidosList() {
                 <th>ID PEDIDO</th>
                 <th>COMERCIO</th>
                 <th>DIRECCIÓN DESTINO</th>
+                <th>MÉTODO DE ENVÍO</th>
                 <th>ESTADO</th>
-                <th>REPARTIDOR</th>
+                <th>ASIGNACIÓN</th>
                 <th>ÚLTIMA ACTUALIZACIÓN</th>
                 <th>ACCIONES</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" style={{textAlign: 'center', padding: '2rem'}}>Cargando pedidos...</td></tr>
+                <tr><td colSpan="8" style={{textAlign: 'center', padding: '2rem'}}>Cargando pedidos...</td></tr>
               ) : filteredPedidos.map(p => {
                 const comercio = comerciosMap[p.comercioId] || { nombre: `Comercio ${p.comercioId}`, rubro: '-' };
                 const lastHistorial = p.historial && p.historial.length > 0 ? p.historial[0] : null;
@@ -131,10 +133,15 @@ export default function PedidosList() {
                       <span className="comercio-rubro">{comercio.rubro}</span>
                     </td>
                     <td className="col-direccion">{p.direccionDestino}</td>
+                    <td>{p.tipoEnvio === 'EXTERNO' ? 'Transportista externo' : 'Repartidor de LogiRed'}</td>
                     <td>
-                      <BadgeEstado estado={p.estado} />
+                      <BadgeEstado estado={p.estado} estadoLabel={labelEstadoPedido(p.estado, p.estadoLabel)} />
                     </td>
-                    <td>{p.repartidorNombre || 'Sin asignar'}</td>
+                    <td>
+                      {p.tipoEnvio === 'EXTERNO'
+                        ? (p.transportistaEmpresa || 'Sin asignar')
+                        : (p.repartidorNombre || 'Sin asignar')}
+                    </td>
                     <td className="col-fecha">{fechaStr}</td>
                     <td>
                       <button 
@@ -149,7 +156,7 @@ export default function PedidosList() {
               })}
               {!loading && filteredPedidos.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="pedidos-empty">
+                  <td colSpan="8" className="pedidos-empty">
                     No se encontraron pedidos.
                   </td>
                 </tr>
@@ -165,4 +172,3 @@ export default function PedidosList() {
     </div>
   );
 }
-

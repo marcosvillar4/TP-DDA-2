@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { getPagosComercio } from '../../api/pagosApi';
 import { formatMoneda } from '../pedidos/utils/formatMoneda';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 import BadgeEstadoPago from './components/BadgeEstadoPago';
 import PagoModal from './components/PagoModal';
 import './styles/Pagos.css';
@@ -117,7 +118,7 @@ export default function ComercioPagos() {
                 <tr key={p.id}>
                   <td className="pagos-col-id"><Link to={`/pedidos/${p.pedidoId}`}>LOG-{p.pedidoId}</Link></td>
                   <td>{p.direccionDestino}</td>
-                  <td><BadgeEstado estado={p.pedidoEstado} /></td>
+                  <td><BadgeEstado estado={p.pedidoEstado} estadoLabel={labelEstadoPedido(p.pedidoEstado, p.pedidoEstadoLabel)} /></td>
                   <td>{p.repartidorNombre || 'Sin asignar'}</td>
                   <td className="pagos-col-monto">{formatMoneda(p.monto)}</td>
                   <td>

@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import com.example.DA2Back.repartidor.dato.Repartidor;
+import com.example.DA2Back.transportista.dato.Transportista;
 
 /**
  * Entidad JPA que representa un Pedido en el sistema de logistica
@@ -59,6 +60,21 @@ public class Pedido {
     @ManyToOne
     @JoinColumn(name = "repartidor_id")
     private Repartidor repartidor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_envio")
+    @Builder.Default
+    private TipoEnvio tipoEnvio = TipoEnvio.LOGIRED;
+
+    @ManyToOne
+    @JoinColumn(name = "transportista_id")
+    private Transportista transportista;
+
+    @Column(name = "codigo_envio", unique = true)
+    private String codigoEnvio;
+
+    @Column(name = "codigo_seguimiento", unique = true)
+    private String codigoSeguimiento;
 
     // --- Cotizacion y ubicacion (todos nullable: los pedidos viejos no los tienen) ---
 

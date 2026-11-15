@@ -1,0 +1,4 @@
+.transportista-badge { display:inline-flex; min-width:7rem; justify-content:center; padding:.25rem .625rem; border-radius:999px; font-size:.75rem; font-weight:700; white-space:nowrap; }
+.transportista-badge-disponible { color:var(--color-green); background:var(--color-green-light); }
+.transportista-badge-en_servicio { color:var(--color-violet); background:var(--color-violet-light); }
+.transportista-badge-no_disponible,.transportista-badge-inactivo { color:var(--color-amber-dark); background:var(--color-amber-light); }

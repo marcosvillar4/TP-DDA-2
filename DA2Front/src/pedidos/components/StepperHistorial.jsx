@@ -17,7 +17,7 @@ export default function StepperHistorial({ historial }) {
             </div>
             <div className="step-content">
               <div className="step-header">
-                <span className="step-estado">{step.estado}</span>
+                <span className="step-estado">{step.estadoLabel}</span>
                 {step.status === 'current' && <span className="step-badge-actual">ACTUAL</span>}
               </div>
               {step.fecha && <span className="step-fecha">{step.fecha}</span>}

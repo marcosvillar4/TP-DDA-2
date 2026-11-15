@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle, PackageCheck, PackageOpen } from 'lucide-react';
-import { getPedidoById, getRutaPedido, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado } from '../../api/pedidosApi';
+import { ArrowLeft, UserPlus, Truck, CheckCircle, XCircle, PackageCheck, PackageOpen, Send } from 'lucide-react';
+import { getPedidoById, getRutaPedido, cancelarPedido, iniciarViajePedido, entregarPedido, marcarListoParaRetirar, marcarRetirado, marcarConTransportista, marcarEnviado } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import { getDepositoPorId, getDepositosPorComercio, getMiDeposito } from '../../api/depositosApi';
 import BadgeEstado from './components/BadgeEstado';
@@ -12,6 +12,7 @@ import './styles/PedidoDetail.css';
 import Swal from 'sweetalert2';
 import { useAuthUser } from '../../hooks/useAuthUser';
 import { accionesPedido, formatearDeposito } from './utils/pedidoPresentacion';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 
 export default function PedidoDetail() {
   const { id } = useParams();
@@ -136,12 +137,12 @@ export default function PedidoDetail() {
 
   if (loading) return <div style={{padding: '2rem'}}>Cargando pedido...</div>;
   if (!pedido) return null;
-  const acciones = accionesPedido(rol, pedido.estado);
+  const acciones = accionesPedido(rol, pedido.estado, pedido.tipoEnvio);
 
   const historialUI = (pedido.historial || []).map((h, i) => {
     const isCurrent = i === 0;
     return {
-      estado: h.estado,
+      estadoLabel: labelEstadoPedido(h.estado, h.estadoLabel),
       fecha: new Date(h.fechaHora).toLocaleString(),
       ubicacion: 'Sistema',
       status: isCurrent ? 'current' : 'completed'
@@ -157,13 +158,25 @@ export default function PedidoDetail() {
       <div className="pedido-detail-header">
         <div className="pedido-detail-title-group">
           <h1 className="pedido-detail-title">LOG-{pedido.id}</h1>
-          <BadgeEstado estado={pedido.estado} />
+          <BadgeEstado estado={pedido.estado} estadoLabel={labelEstadoPedido(pedido.estado, pedido.estadoLabel)} />
         </div>
         <div className="pedido-detail-actions" style={{display: 'flex', gap: '0.5rem'}}>
           
           {acciones.preparar && (
             <button className="pedido-btn-asignar" onClick={() => handleAction(marcarListoParaRetirar, 'Marcar Listo')} style={{backgroundColor: 'var(--color-orange)', color: 'white', border: 'none'}}>
               <PackageCheck size={16} /> Marcar Listo Para Retirar
+            </button>
+          )}
+
+          {acciones.conTransportista && (
+            <button className="pedido-btn-asignar" onClick={() => handleAction(marcarConTransportista, 'Retirado Por Transportista')} style={{backgroundColor: 'var(--color-blue)', color: 'white', border: 'none'}}>
+              <Truck size={16} /> Retirado Por Transportista
+            </button>
+          )}
+
+          {acciones.enviado && (
+            <button className="pedido-btn-asignar" onClick={() => handleAction(marcarEnviado, 'Marcar enviado')} style={{backgroundColor: 'var(--color-green)', color: 'white', border: 'none'}}>
+              <Send size={16} /> Marcar enviado
             </button>
           )}
 
@@ -226,11 +239,39 @@ export default function PedidoDetail() {
                 <span className="info-value">{pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString() : "-"}</span>
               </div>
               <div className="info-block">
-                <span className="info-label">REPARTIDOR</span>
-                <span className="info-value">{pedido.repartidorNombre || "Sin asignar"}</span>
+                <span className="info-label">MÉTODO DE ENVÍO</span>
+                <span className="info-value">
+                  {pedido.tipoEnvio === "EXTERNO" ? "Transportista externo" : "Repartidor de LogiRed"}
+                </span>
               </div>
+              {pedido.tipoEnvio !== "EXTERNO" && (
+                <div className="info-block">
+                  <span className="info-label">REPARTIDOR</span>
+                  <span className="info-value">{pedido.repartidorNombre || "Sin asignar"}</span>
+                </div>
+              )}
             </div>
           </div>
+
+          {pedido.tipoEnvio === "EXTERNO" && (
+            <div className="pedido-card" style={{ marginTop: '1.5rem' }}>
+              <h3 className="pedido-card-title">Envío externo</h3>
+              <div className="pedido-info-grid">
+                <div className="info-block">
+                  <span className="info-label">EMPRESA ASIGNADA</span>
+                  <span className="info-value">{pedido.transportistaEmpresa || "Sin asignar"}</span>
+                </div>
+                <div className="info-block">
+                  <span className="info-label">CÓDIGO DE ENVÍO</span>
+                  <span className="info-value">{pedido.codigoEnvio || "Pendiente"}</span>
+                </div>
+                <div className="info-block">
+                  <span className="info-label">CÓDIGO DE SEGUIMIENTO</span>
+                  <span className="info-value">{pedido.codigoSeguimiento || "Pendiente"}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="pedido-card" style={{ marginTop: '1.5rem' }}>
             <h3 className="pedido-card-title">Productos del Pedido</h3>
@@ -304,7 +345,7 @@ export default function PedidoDetail() {
         <div className="pedido-side-col">
           <div className="pedido-card border-top-violet">
             <span className="info-label mb-2">ESTADO ACTUAL</span>
-            <BadgeEstado estado={pedido.estado} />
+            <BadgeEstado estado={pedido.estado} estadoLabel={labelEstadoPedido(pedido.estado, pedido.estadoLabel)} />
           </div>
 
           <StepperHistorial historial={historialUI} />

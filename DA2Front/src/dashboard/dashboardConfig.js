@@ -1,4 +1,4 @@
-import { ESTADOS_PEDIDO } from "./utils/pedidoEstado";
+import { labelEstadoPedido } from "./utils/pedidoEstado";
 
 /**
  * Tarjetas superiores del Dashboard por rol.
@@ -123,7 +123,7 @@ export const DASHBOARD_WIDGETS_BY_ROLE = {
       metric: (m) => ESTADOS_REPARTIDOR[m.estadoRepartidor],
       metricDescription: (m) =>
         m.pedidoActual
-          ? `Pedido #${m.pedidoActual.id} (${ESTADOS_PEDIDO[m.pedidoActual.estado]?.label ?? m.pedidoActual.estado}) → ${m.pedidoActual.direccionDestino}`
+          ? `Pedido #${m.pedidoActual.id} (${labelEstadoPedido(m.pedidoActual.estado, m.pedidoActual.estadoLabel)}) → ${m.pedidoActual.direccionDestino}`
           : "Sin pedido en curso.",
     },
     {

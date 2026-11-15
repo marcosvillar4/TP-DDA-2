@@ -107,7 +107,7 @@ export default function RepartidorDetail() {
                       <td>{item.fecha || "—"}</td>
                       <td className="repartidor-pedido-id">#{item.pedidoId}</td>
                       <td>{item.direccionEntrega}</td>
-                      <td>{formatPedidoEstado(item.resultado)}</td>
+                      <td>{formatPedidoEstado(item.resultado, item.resultadoLabel)}</td>
                     </tr>
                   ))}
                   {historial.length === 0 && (
@@ -142,7 +142,7 @@ export default function RepartidorDetail() {
             {repartidor.pedidoActual ? (
               <div className="repartidor-current-order">
                 <strong>#{repartidor.pedidoActual.id}</strong>
-                <span>{formatPedidoEstado(repartidor.pedidoActual.estado)}</span>
+                <span>{formatPedidoEstado(repartidor.pedidoActual.estado, repartidor.pedidoActual.estadoLabel)}</span>
                 <small>{repartidor.pedidoActual.direccionDestino}</small>
               </div>
             ) : (
@@ -221,7 +221,7 @@ function Info({ icon: Icon, label, value }) {
   );
 }
 
-function formatPedidoEstado(estado) {
+function formatPedidoEstado(estado, estadoLabel) {
   const labels = {
     PENDIENTE_COTIZACION: "PENDIENTE_COTIZACION",
     ASIGNADO: "Asignado",
@@ -229,7 +229,7 @@ function formatPedidoEstado(estado) {
     ENTREGADO: "Entregado",
     CANCELADO: "No entregado",
   };
-  return labels[estado] || estado || "—";
+  return estadoLabel || labels[estado] || "—";
 }
 
 function formatVehiculo(vehiculo) {
@@ -240,4 +240,3 @@ function formatVehiculo(vehiculo) {
   };
   return labels[vehiculo] || vehiculo || "—";
 }
-

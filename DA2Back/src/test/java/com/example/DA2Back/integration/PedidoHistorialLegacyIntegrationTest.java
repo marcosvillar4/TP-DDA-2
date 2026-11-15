@@ -115,7 +115,7 @@ class PedidoHistorialLegacyIntegrationTest {
 
     @Test
     void estadosOperativosSiguenCerradosYTodosTienenRepresentacionHistorica() {
-        assertEquals(7, EstadoPedido.values().length);
+        assertEquals(8, EstadoPedido.values().length);
         assertThrows(IllegalArgumentException.class,
                 () -> EstadoPedido.valueOf("PENDIENTE_COTIZACION"));
         for (EstadoPedido estado : EstadoPedido.values()) {

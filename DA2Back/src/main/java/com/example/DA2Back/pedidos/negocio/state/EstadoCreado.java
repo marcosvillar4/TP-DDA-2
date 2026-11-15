@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class EstadoCreado implements IEstadoPedido {
     @Override
+    public void marcarConTransportista(Pedido pedido) {
+        pedido.setEstado(EstadoPedido.CON_TRANSPORTISTA);
+    }
+
+    @Override
     public void marcarListoParaRetirar(Pedido pedido) {
         pedido.setEstado(EstadoPedido.LISTO_PARA_RETIRAR);
     }

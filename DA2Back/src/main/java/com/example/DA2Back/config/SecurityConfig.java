@@ -145,6 +145,9 @@ public class SecurityConfig {
                 .requestMatchers(GET, "/api/pedidos/*").hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
                 .requestMatchers(PATCH, "/api/pedidos/*/listo-para-retirar")
                     .hasAnyRole(ADMIN, COMERCIO, DEPOSITO)
+                .requestMatchers(PATCH, "/api/pedidos/*/con-transportista",
+                                        "/api/pedidos/*/enviado")
+                    .hasAnyRole(ADMIN, COMERCIO)
                 .requestMatchers(PATCH, "/api/pedidos/*/asignar/*").hasRole(ADMIN)
                 .requestMatchers(PATCH, "/api/pedidos/*/retirar",
                                         "/api/pedidos/*/iniciar-viaje",
@@ -160,6 +163,7 @@ public class SecurityConfig {
                 // ───────── Repartidores ─────────
                 .requestMatchers("/repartidores/**").hasRole(ADMIN)
                 .requestMatchers("/repartidor/**").hasRole(REPARTIDOR)
+                .requestMatchers("/transportistas/**").hasRole(ADMIN)
 
                 // Notificaciones propias del usuario autenticado.
                 .requestMatchers("/notificaciones/**").authenticated()

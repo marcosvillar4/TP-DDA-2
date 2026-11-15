@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class ResolverEstadoPedido {
 
     private final EstadoCreado estadoCreado;
+    private final EstadoConTransportista estadoConTransportista;
     private final EstadoListoParaRetirar estadoListoParaRetirar;
     private final EstadoAsignado estadoAsignado;
     private final EstadoRetirado estadoRetirado;
@@ -19,6 +20,7 @@ public class ResolverEstadoPedido {
     public IEstadoPedido resolver(EstadoPedido estado) {
         return switch (estado) {
             case CREADO -> estadoCreado;
+            case CON_TRANSPORTISTA -> estadoConTransportista;
             case LISTO_PARA_RETIRAR -> estadoListoParaRetirar;
             case ASIGNADO -> estadoAsignado;
             case RETIRADO -> estadoRetirado;

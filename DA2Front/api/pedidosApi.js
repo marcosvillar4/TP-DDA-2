@@ -62,6 +62,18 @@ export function marcarListoParaRetirar(pedidoId) {
   });
 }
 
+export function marcarConTransportista(pedidoId) {
+  return request(`/api/pedidos/${pedidoId}/con-transportista`, {
+    method: "PATCH",
+  });
+}
+
+export function marcarEnviado(pedidoId) {
+  return request(`/api/pedidos/${pedidoId}/enviado`, {
+    method: "PATCH",
+  });
+}
+
 export function marcarRetirado(pedidoId) {
   return request(`/api/pedidos/${pedidoId}/retirar`, {
     method: "PATCH",

@@ -59,4 +59,6 @@ public interface PedidosRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> findFirstByRepartidorIdAndEstadoIn(Long repartidorId, List<EstadoPedido> estados);
 
     boolean existsByRepartidorIdAndEstadoIn(Long repartidorId, List<EstadoPedido> estados);
+
+    boolean existsByTransportistaIdAndEstadoIn(Long transportistaId, List<EstadoPedido> estados);
 }

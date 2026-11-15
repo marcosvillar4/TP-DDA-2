@@ -4,16 +4,8 @@ import { useComercioDetail } from '../../hooks/useComercioDetail';
 import BadgeComercio from './components/BadgeComercio';
 import BadgeEstado from '../pedidos/components/BadgeEstado'; // Reuse for recent orders
 import { labelEstadoComercio } from './utils/comercioEstado';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 import './styles/ComercioDetail.css';
-
-// EstadoPedido del backend → etiqueta que entiende BadgeEstado.
-const ESTADO_PEDIDO_LABEL = {
-  CREADO: 'Pendiente',
-  ASIGNADO: 'Preparando',
-  EN_CAMINO: 'En tránsito',
-  ENTREGADO: 'Entregado',
-  CANCELADO: 'Cancelado',
-};
 
 const PEDIDOS_RECIENTES = 10;
 
@@ -190,7 +182,7 @@ export default function ComercioDetail({ propio = false }) {
                     <tr key={p.id}>
                       <td className="col-id-small">#{p.id}</td>
                       <td>{p.direccionDestino}</td>
-                      <td><BadgeEstado estado={ESTADO_PEDIDO_LABEL[p.estado] ?? p.estado} /></td>
+                      <td><BadgeEstado estado={p.estado} estadoLabel={labelEstadoPedido(p.estado, p.estadoLabel)} /></td>
                       <td>{p.repartidorNombre ?? '—'}</td>
                     </tr>
                   ))}

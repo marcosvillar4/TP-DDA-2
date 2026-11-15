@@ -1,5 +1,6 @@
 package com.example.DA2Back.pedidos.dto;
 
+import com.example.DA2Back.pedidos.dato.TipoEnvio;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,4 +19,5 @@ public class CrearPedidoDTO {
     private String direccionDestino;
     private String direccionOrigen;
     private java.util.List<DetallePedidoDTO> detalles;
+    private TipoEnvio tipoEnvio;
 }

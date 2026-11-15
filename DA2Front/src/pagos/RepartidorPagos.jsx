@@ -3,6 +3,7 @@ import { Wallet, CheckCircle2 } from 'lucide-react';
 import { getMisCobros } from '../../api/pagosApi';
 import { formatMoneda } from '../pedidos/utils/formatMoneda';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 import BadgeEstadoPago from './components/BadgeEstadoPago';
 import './styles/Pagos.css';
 
@@ -101,7 +102,7 @@ export default function RepartidorPagos() {
                   <td className="pagos-col-id">LOG-{p.pedidoId}</td>
                   <td>{p.comercioNombre || `Comercio ${p.comercioId}`}</td>
                   <td>{p.direccionDestino}</td>
-                  <td><BadgeEstado estado={p.pedidoEstado} /></td>
+                  <td><BadgeEstado estado={p.pedidoEstado} estadoLabel={labelEstadoPedido(p.pedidoEstado, p.pedidoEstadoLabel)} /></td>
                   <td className="pagos-col-monto">{formatMoneda(p.monto)}</td>
                   <td>
                     <BadgeEstadoPago estado={p.estado} vista="repartidor" />

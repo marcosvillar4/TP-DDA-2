@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ESTADOS_PEDIDO } from '../utils/pedidoEstado';
+import { ESTADOS_PEDIDO, labelEstadoPedido } from '../utils/pedidoEstado';
 import '../styles/PedidosRecientes.css';
 
 const CANTIDAD = 7;
@@ -50,7 +50,7 @@ export default function PedidosRecientes({ pedidos = [], mostrarComercio = false
                 <td>{p.direccionDestino}</td>
                 <td>
                   <span className={`pedido-badge ${ESTADOS_PEDIDO[p.estado]?.badge ?? ''}`}>
-                    {ESTADOS_PEDIDO[p.estado]?.label ?? p.estado}
+                    {labelEstadoPedido(p.estado, p.estadoLabel)}
                   </span>
                 </td>
                 <td>{p.repartidorNombre ?? '—'}</td>

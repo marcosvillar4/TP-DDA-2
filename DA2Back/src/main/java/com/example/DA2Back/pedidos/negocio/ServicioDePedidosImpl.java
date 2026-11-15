@@ -20,6 +20,7 @@ import com.example.DA2Back.producto.dato.ProductoRepository;
 import com.example.DA2Back.pedidos.dto.DetallePedidoDTO;
 import com.example.DA2Back.pedidos.dato.Pedido;
 import com.example.DA2Back.pedidos.dato.PedidosRepository;
+import com.example.DA2Back.pedidos.dato.TipoEnvio;
 import com.example.DA2Back.pedidos.dto.CrearPedidoDTO;
 import com.example.DA2Back.pedidos.dto.HistorialEstadoDTO;
 import com.example.DA2Back.pedidos.dto.PedidoResponseDTO;
@@ -31,6 +32,7 @@ import com.example.DA2Back.notificacion.negocio.NotificacionService;
 import com.example.DA2Back.cotizacion.dto.CotizacionDTO;
 import com.example.DA2Back.cotizacion.negocio.ServicioDeCotizacion;
 import com.example.DA2Back.pedidos.negocio.evento.PedidoListoParaRetirarEvent;
+import com.example.DA2Back.transportista.negocio.ServicioDeTransportistas;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
@@ -74,6 +76,7 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
     private final NotificacionService notificacionService;
     private final ApplicationEventPublisher eventPublisher;
     private final ServicioDeCotizacion cotizacionService;
+    private final ServicioDeTransportistas transportistaService;
 
     // -------------------------------------------------------------------------
     // Creación
@@ -142,7 +145,12 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .cotizacionEstimada(cotizacion.estimada())
                 .fechaCreacion(LocalDateTime.now())
                 .estado(EstadoPedido.CREADO)
+                .tipoEnvio(dto.getTipoEnvio() == null ? TipoEnvio.LOGIRED : dto.getTipoEnvio())
                 .build();
+
+        if (pedido.getTipoEnvio() == TipoEnvio.EXTERNO) {
+            transportistaService.asignarParaPedido(pedido);
+        }
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
             for (DetallePedidoDTO d : dto.getDetalles()) {
@@ -266,12 +274,55 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         Pedido pedido = buscarPedidoParaTransicion(id);
         alcance.validarPedido(pedido);
         validarDepositoDelComercio(pedido.getComercioId(), pedido.getDepositoId());
+        if (pedido.getTipoEnvio() == TipoEnvio.EXTERNO) {
+            throw new IllegalStateException(
+                    "Los envíos externos deben marcarse CON_TRANSPORTISTA antes de enviarse");
+        }
         resolverEstado.resolver(pedido.getEstado()).marcarListoParaRetirar(pedido);
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.LISTO_PARA_RETIRAR);
         // Dispara el proceso asincronico: tras el commit se publica en la cola de ActiveMQ
         // y un consumidor asigna automaticamente un repartidor disponible.
-        eventPublisher.publishEvent(new PedidoListoParaRetirarEvent(pedido.getId()));
+        if (pedido.getTipoEnvio() != TipoEnvio.EXTERNO) {
+            eventPublisher.publishEvent(new PedidoListoParaRetirarEvent(pedido.getId()));
+        }
+        return toResponseDTO(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO marcarConTransportista(Long id, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        alcance.validarPedido(pedido);
+        if (pedido.getTipoEnvio() != TipoEnvio.EXTERNO) {
+            throw new IllegalStateException("La transición CON_TRANSPORTISTA solo aplica a envíos externos");
+        }
+        if (pedido.getTransportista() == null || pedido.getCodigoEnvio() == null
+                || pedido.getCodigoSeguimiento() == null) {
+            throw new IllegalStateException("El envío externo no tiene transportista ni códigos asignados");
+        }
+        resolverEstado.resolver(pedido.getEstado()).marcarConTransportista(pedido);
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.CON_TRANSPORTISTA);
+        return toResponseDTO(pedido);
+    }
+
+    @Override
+    @Transactional
+    public PedidoResponseDTO marcarEnviado(Long id, Usuario usuario) {
+        var alcance = accesoPedidos.resolver(usuario, Rol.ADMIN, Rol.COMERCIO);
+        Pedido pedido = buscarPedidoParaTransicion(id);
+        alcance.validarPedido(pedido);
+        if (pedido.getTipoEnvio() != TipoEnvio.EXTERNO) {
+            throw new IllegalStateException("La transición enviado solo aplica a envíos externos");
+        }
+        resolverEstado.resolver(pedido.getEstado()).marcarEnviado(pedido);
+        pedidosRepository.save(pedido);
+        registrarHistorial(pedido, EstadoPedido.ENTREGADO);
+        if (transportistaService != null) {
+            transportistaService.liberarSiCorresponde(pedido);
+        }
         return toResponseDTO(pedido);
     }
 
@@ -424,6 +475,9 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
         pedidosRepository.save(pedido);
         registrarHistorial(pedido, EstadoPedido.CANCELADO);
         liberarRepartidorSiCorresponde(pedido);
+        if (transportistaService != null) {
+            transportistaService.liberarSiCorresponde(pedido);
+        }
         return toResponseDTO(pedido);
     }
 
@@ -553,6 +607,11 @@ public class ServicioDePedidosImpl implements ServicioDePedidos {
                 .duracionEstimadaMin(pedido.getDuracionEstimadaMin())
                 .costoEnvio(pedido.getCostoEnvio())
                 .cotizacionEstimada(pedido.getCotizacionEstimada())
+                .tipoEnvio(pedido.getTipoEnvio() == null ? TipoEnvio.LOGIRED : pedido.getTipoEnvio())
+                .transportistaId(pedido.getTransportista() == null ? null : pedido.getTransportista().getId())
+                .transportistaEmpresa(pedido.getTransportista() == null ? null : pedido.getTransportista().getEmpresa())
+                .codigoEnvio(pedido.getCodigoEnvio())
+                .codigoSeguimiento(pedido.getCodigoSeguimiento())
                 .build();
     }
 

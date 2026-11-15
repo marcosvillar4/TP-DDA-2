@@ -1,6 +1,7 @@
 package com.example.DA2Back.pedidos.dto;
 
 import com.example.DA2Back.pedidos.dato.EstadoPedido;
+import com.example.DA2Back.pedidos.dato.TipoEnvio;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,4 +35,9 @@ public class PedidoResponseDTO {
     private Integer duracionEstimadaMin;
     private java.math.BigDecimal costoEnvio;
     private Boolean cotizacionEstimada;
+    private TipoEnvio tipoEnvio;
+    private Long transportistaId;
+    private String transportistaEmpresa;
+    private String codigoEnvio;
+    private String codigoSeguimiento;
 }

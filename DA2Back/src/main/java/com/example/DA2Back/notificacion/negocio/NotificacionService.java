@@ -46,13 +46,14 @@ public class NotificacionService {
         if (usuario == null) {
             return;
         }
-        String mensaje = "El pedido #" + pedido.getId() + " cambió a estado " + estado + ".";
+        String estadoLabel = labelEstado(estado);
+        String mensaje = "El pedido #" + pedido.getId() + " cambió a estado " + estadoLabel + ".";
 
         guardar(usuario, TipoNotificacion.ACTUALIZACION_PEDIDO, CanalNotificacion.APP,
-                "Actualización de pedido", mensaje, pedido.getId(), true, null);
+                "Actualización de pedido", mensaje, pedido.getId(), estado, true, null);
         guardar(usuario, TipoNotificacion.ACTUALIZACION_PEDIDO, CanalNotificacion.EMAIL,
                 "Actualización del pedido #" + pedido.getId(), mensaje, pedido.getId(),
-                false, usuario.getEmail());
+                estado, false, usuario.getEmail());
     }
 
     @Transactional
@@ -177,7 +178,7 @@ public class NotificacionService {
 
     private void guardar(Usuario usuario, TipoNotificacion tipo, CanalNotificacion canal,
                          String titulo, String mensaje, Long referenciaId,
-                         boolean enviada, String destinatarioEmail) {
+                         EstadoPedido estadoPedido, boolean enviada, String destinatarioEmail) {
         Notificacion notificacion = new Notificacion();
         notificacion.setUsuario(usuario);
         notificacion.setTipo(tipo);
@@ -185,11 +186,19 @@ public class NotificacionService {
         notificacion.setTitulo(titulo);
         notificacion.setMensaje(mensaje);
         notificacion.setReferenciaId(referenciaId);
+        notificacion.setEstadoPedido(estadoPedido);
         notificacion.setLeida(canal != CanalNotificacion.APP);
         notificacion.setEnviada(enviada);
         notificacion.setDestinatarioEmail(destinatarioEmail);
         notificacion.setFechaCreacion(LocalDateTime.now());
         notificacionRepository.save(notificacion);
+    }
+
+    private void guardar(Usuario usuario, TipoNotificacion tipo, CanalNotificacion canal,
+                         String titulo, String mensaje, Long referenciaId,
+                         boolean enviada, String destinatarioEmail) {
+        guardar(usuario, tipo, canal, titulo, mensaje, referenciaId, null,
+                enviada, destinatarioEmail);
     }
 
     private void validarUsuario(Usuario usuario) {
@@ -203,7 +212,22 @@ public class NotificacionService {
                 .id(n.getId()).tipo(n.getTipo()).canal(n.getCanal())
                 .titulo(n.getTitulo()).mensaje(n.getMensaje())
                 .referenciaId(n.getReferenciaId()).leida(n.isLeida())
+                .estado(n.getEstadoPedido())
+                .estadoLabel(n.getEstadoPedido() == null ? null : labelEstado(n.getEstadoPedido()))
                 .enviada(n.isEnviada()).fechaCreacion(n.getFechaCreacion()).build();
+    }
+
+    private String labelEstado(EstadoPedido estado) {
+        return switch (estado) {
+            case CREADO -> "Pedido creado";
+            case CON_TRANSPORTISTA -> "Retirado por transportista";
+            case LISTO_PARA_RETIRAR -> "Listo para retirar";
+            case ASIGNADO -> "Repartidor asignado";
+            case RETIRADO -> "Pedido retirado";
+            case EN_CAMINO -> "Pedido en camino";
+            case ENTREGADO -> "Pedido entregado";
+            case CANCELADO -> "Pedido cancelado";
+        };
     }
 
     private String valorOrDefecto(Object valor) {

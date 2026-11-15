@@ -3,6 +3,7 @@ package com.example.DA2Back.pedidos.dato;
 /** Estados auditados, incluidos los que ya no pertenecen al ciclo operativo. */
 public enum EstadoHistoricoPedido {
     CREADO,
+    CON_TRANSPORTISTA,
     LISTO_PARA_RETIRAR,
     ASIGNADO,
     RETIRADO,

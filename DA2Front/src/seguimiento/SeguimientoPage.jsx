@@ -4,9 +4,10 @@ import { MapPin, CheckCircle2, Store } from 'lucide-react';
 import { getPedidoById } from '../../api/pedidosApi';
 import { getComercios } from '../../api/inventarioApi';
 import BadgeEstado from '../pedidos/components/BadgeEstado';
+import { labelEstadoPedido } from '../dashboard/utils/pedidoEstado';
 import './styles/SeguimientoPage.css';
 
-const STEPS_ORDER = ['CREADO', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO', 'ENTREGADO'];
+const STEPS_ORDER = ['CREADO', 'CON_TRANSPORTISTA', 'LISTO_PARA_RETIRAR', 'ASIGNADO', 'RETIRADO', 'EN_CAMINO', 'ENTREGADO'];
 
 export default function SeguimientoPage() {
   const { id } = useParams();
@@ -69,6 +70,7 @@ export default function SeguimientoPage() {
 
     switch (pedido.estado) {
       case 'CREADO': statusColorClass = 'status-amber'; break;
+      case 'CON_TRANSPORTISTA': statusColorClass = 'status-blue'; break;
       case 'LISTO_PARA_RETIRAR': statusColorClass = 'status-orange'; break;
       case 'EN_CAMINO': statusColorClass = 'status-violet'; break;
       case 'ENTREGADO': statusColorClass = 'status-green'; break;
@@ -82,7 +84,7 @@ export default function SeguimientoPage() {
     historialUI = (pedido.historial || []).map((h, i) => {
       const isCurrent = i === 0;
       return {
-        estado: h.estado,
+        estadoLabel: labelEstadoPedido(h.estado, h.estadoLabel),
         fecha: new Date(h.fechaHora).toLocaleString(),
         ubicacion: 'Sistema',
         status: isCurrent ? 'current' : 'completed'
@@ -155,7 +157,7 @@ export default function SeguimientoPage() {
                 </span>
               </div>
               <div className="status-info-right">
-                <BadgeEstado estado={pedido.estado} />
+                <BadgeEstado estado={pedido.estado} estadoLabel={labelEstadoPedido(pedido.estado, pedido.estadoLabel)} />
                 {pedido.estado !== 'CANCELADO' && (
                   <span className="status-step-text">Paso {currentStepIndex} de 4</span>
                 )}
@@ -202,7 +204,7 @@ export default function SeguimientoPage() {
                     </div>
                     <div className="history-content">
                       <div className="history-header">
-                        <span className="history-status-name">{step.estado}</span>
+                        <span className="history-status-name">{step.estadoLabel}</span>
                         {step.status === 'current' && <span className="history-badge-actual">ACTUAL</span>}
                       </div>
                       {step.fecha && <span className="history-date">{step.fecha}</span>}
@@ -257,8 +259,6 @@ export default function SeguimientoPage() {
     </div>
   );
 }
-
-
 
 
 

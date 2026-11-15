@@ -129,6 +129,11 @@ export default function AlertasPage() {
                       <span className="notificacion-message">
                         {notificacion.mensaje}
                       </span>
+                      {notificacion.estadoLabel && (
+                        <span className="notificacion-date">
+                          Estado: {notificacion.estadoLabel}
+                        </span>
+                      )}
                       <span className="notificacion-date">
                         {config.label} · {formatoFecha(notificacion.fechaCreacion)}
                       </span>
