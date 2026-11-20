@@ -3,8 +3,8 @@ import { Panel } from "./Panel";
 import { PerfilComercio } from "./perfil/PerfilComercio";
 import { PerfilRepartidor } from "./perfil/PerfilRepartidor";
 import { PerfilDeposito } from "./perfil/PerfilDeposito";
-import { ComercioDepositosPanel } from "./perfil/ComercioDepositosPanel";
-import { CamposComercio, CamposRepartidor, CamposDeposito } from "./perfil/PerfilCampos";
+import { ComercioDepositosPanel } from "./perfil/Comerciodepositospanel";
+import { CamposComercio, CamposRepartidor, CamposDeposito } from "./perfil/Perfilcampos";
 
 /**
  * Registro rol -> sección. Para sumar un rol: su vista, sus campos de edición y una

@@ -1,0 +1,31 @@
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # Headers de seguridad (criterio SEC). No usar add_header dentro de location:
+    # anularia estos.
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org; font-src 'self' data:; connect-src 'self' ${API_ORIGIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    # HSTS solo tiene efecto sobre HTTPS: habilitarlo cuando se agregue TLS delante (proxy).
+    # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Assets con hash de Vite: cache largo.
+    location /assets/ {
+        expires 1y;
+        try_files $uri =404;
+    }
+
+    # SPA (react-router): cualquier ruta cae en index.html.
+    location / {
+        try_files $uri /index.html;
+    }
+}

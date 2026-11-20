@@ -1,0 +1,265 @@
+# ---------------------------------------------------------------------------
+# CI - LogiRed (criterio G3: compila, corre TODAS las pruebas y el analisis estatico).
+# Se ejecuta en push a main, en tags v* (p. ej. v1.0-testing), en PRs y a demanda.
+# Jobs en paralelo para respetar el limite de 15 min del pipeline.
+#
+# Configuracion en GitHub (Settings > Secrets and variables > Actions):
+#   secret   SONAR_TOKEN             token de SonarCloud (obligatorio en main/tags)
+#   variable SONAR_ORGANIZATION      organizacion en SonarCloud
+#   variable SONAR_PROJECT_KEY       clave del proyecto en SonarCloud
+#   variable PIT_ENFORCE=true        (opcional) hace bloqueante el mutation score >= 60%
+# ---------------------------------------------------------------------------
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "17"
+  NODE_VERSION: "22"
+
+jobs:
+  # ------------------------------------------------------------------ backend
+  backend:
+    name: Backend - build, tests, cobertura, Sonar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    defaults:
+      run:
+        working-directory: DA2Back
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Sonar necesita el historial para atribuir codigo nuevo
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      - name: Compilar, tests y gate de cobertura (negocio >=80% lineas, >=70% ramas)
+        run: mvn -B -ntp verify
+      - name: Verificar configuracion de Sonar
+        if: github.event_name != 'pull_request' && env.SONAR_TOKEN == ''
+        run: |
+          echo "::error::Falta el secret SONAR_TOKEN: sin analisis estatico no se cumple G3."
+          exit 1
+      - name: SonarCloud (espera el Quality Gate)
+        if: env.SONAR_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          mvn -B -ntp org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.qualitygate.wait=true
+      - name: Publicar reportes (informe de ejecucion)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-reportes
+          path: |
+            DA2Back/target/surefire-reports
+            DA2Back/target/site/jacoco
+          retention-days: 30
+
+  # ------------------------------------------------------------------- flaky
+  flaky-check:
+    name: Backend - suite x3 sin tests inestables
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: DA2Back
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      - name: Correr la suite 3 veces seguidas
+        run: |
+          for i in 1 2 3; do
+            mvn -B -ntp -Djacoco.skip=true test || true
+            python3 ../.github/scripts/test_results.py target/surefire-reports "run$i.txt"
+          done
+      - name: Comparar corridas (deben ser identicas y sin fallos)
+        run: |
+          diff run1.txt run2.txt && diff run2.txt run3.txt || {
+            echo "::error::Resultados distintos entre corridas: hay tests inestables."; exit 1; }
+          if grep -q "FAIL" run1.txt; then
+            echo "::error::Hay tests fallados."; grep FAIL run1.txt; exit 1; fi
+
+  # ---------------------------------------------------------------- mutation
+  mutation:
+    name: Backend - mutation score (PIT)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Informativo hasta definir la variable PIT_ENFORCE=true (umbral: 60%).
+    continue-on-error: ${{ vars.PIT_ENFORCE != 'true' }}
+    defaults:
+      run:
+        working-directory: DA2Back
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      - name: PIT sobre el paquete de negocio
+        run: mvn -B -ntp -Pmutation -Djacoco.skip=true test-compile org.pitest:pitest-maven:mutationCoverage
+      - name: Publicar reporte PIT
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reporte
+          path: DA2Back/target/pit-reports
+          retention-days: 30
+
+  # ---------------------------------------------------------------- frontend
+  frontend:
+    name: Frontend - lint, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: DA2Front
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: DA2Front/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  # ----------------------------------------------------------------- secretos
+  secrets-scan:
+    name: Seguridad - secretos en el historial (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # TODOS los commits (criterio G6)
+      - name: gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --config .gitleaks.toml --redact --verbose --exit-code 1
+
+  # ------------------------------------------------------------- dependencias
+  dependency-scan:
+    name: Seguridad - dependencias (Trivy SCA)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy (0 CVE criticas/altas sin mitigacion en .trivyignore)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "1"
+
+  # ------------------------------------------------------------ docker + smoke
+  docker-smoke:
+    name: Docker - levanta el stack desde cero y smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: "docker compose up (G1 - maximo 15 min, un unico comando)"
+        run: |
+          start=$(date +%s)
+          docker compose up -d --build --wait --wait-timeout 600
+          elapsed=$(( $(date +%s) - start ))
+          echo "Stack levantado en ${elapsed}s"
+          [ "$elapsed" -le 900 ] || { echo "::error::Supera los 15 min exigidos por G1"; exit 1; }
+      - name: Smoke - login del admin y frontend con headers de seguridad
+        run: |
+          code=000
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /tmp/login.json -w '%{http_code}' -X POST http://localhost:8081/auth/login \
+              -H 'Content-Type: application/json' \
+              -d '{"email":"admin@da2back.com","password":"admin123"}') || true
+            [ "$code" = 200 ] && break
+            sleep 2
+          done
+          [ "$code" = 200 ] || { echo "::error::Login admin devolvio $code"; exit 1; }
+          grep -q '"token"' /tmp/login.json
+          curl -fsS http://localhost:3000/ | grep -q 'id="root"'
+          curl -sI http://localhost:3000/ | grep -iq 'content-security-policy'
+          curl -sI http://localhost:3000/ | grep -iq 'x-content-type-options'
+      - name: Resiliencia - se apaga y se vuelve a levantar el broker
+        run: |
+          docker compose stop activemq
+          sleep 10
+          docker compose start activemq
+          docker compose up -d --wait --wait-timeout 120 activemq
+          sleep 10
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8081/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"admin@da2back.com","password":"admin123"}')
+          [ "$code" = 200 ] || { echo "::error::El backend no se recupero tras reiniciar el broker ($code)"; exit 1; }
+          [ "$(docker inspect -f '{{.State.Running}}' "$(docker compose ps -q backend)")" = true ]
+      # Opcionales: se ejecutan solo si existen los archivos en el repo.
+      - name: API - coleccion Postman con Newman
+        if: hashFiles('postman/*.json') != ''
+        run: |
+          for f in postman/*collection*.json; do
+            npx --yes newman run "$f" --env-var baseUrl=http://localhost:8081 --reporters cli,junit --reporter-junit-export newman-results.xml
+          done
+      - name: Carga - k6 (50 VUs, 5 min, p95 < 500 ms) segun perf/load.js
+        if: hashFiles('perf/load.js') != ''
+        uses: grafana/setup-k6-action@v1
+      - name: Carga - ejecutar k6
+        if: hashFiles('perf/load.js') != ''
+        run: k6 run -e BASE_URL=http://localhost:8081 perf/load.js
+      - name: Logs del stack (si fallo)
+        if: failure()
+        run: docker compose logs --no-color > compose.log
+      - name: Publicar logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-logs
+          path: compose.log
+      - name: Bajar el stack
+        if: always()
+        run: docker compose down -v
+
+  # ------------------------------------------------------------ resumen (gate)
+  ci-ok:
+    name: CI - resultado global
+    if: always()
+    needs: [backend, flaky-check, mutation, frontend, secrets-scan, dependency-scan, docker-smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Falla si algun job fallo o se cancelo
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

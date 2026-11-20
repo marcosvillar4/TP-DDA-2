@@ -1,0 +1,96 @@
+# ---------------------------------------------------------------------------
+# LogiRed - stack completo con UN solo comando:   docker compose up --build
+#   mysql     -> base de datos real (volumen persistente)
+#   activemq  -> broker real (persistente): NO se usa el embebido de la app
+#   backend   -> Spring Boot (API REST, JWT, JMS)        http://localhost:8081
+#   frontend  -> React/Vite servido por nginx            http://localhost:3000
+# Los valores por defecto son SOLO para demo/desarrollo. Para otros valores:
+# copiar .env.example a .env (el .env esta en .gitignore).
+# ---------------------------------------------------------------------------
+name: logired
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-logired}
+      MYSQL_USER: ${DB_USERNAME:-logired}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-logired-demo-pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root-demo-pass}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3307}:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  activemq:
+    image: apache/activemq-classic:${ACTIVEMQ_VERSION:-6.1.7}
+    restart: unless-stopped
+    volumes:
+      # Store persistente (KahaDB): los mensajes sobreviven a un reinicio del broker.
+      - activemq-data:/opt/apache-activemq/data
+    ports:
+      # Consola web (admin/admin por defecto) solo accesible desde esta maquina.
+      - "127.0.0.1:${ACTIVEMQ_CONSOLE_PORT:-8161}:8161"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/61616"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./DA2Back
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+    environment:
+      # "dev" carga el seed de datos de demo (comercios, depositos, productos, repartidores;
+      # clave admin123). Para arrancar sin seed: SPRING_PROFILES_ACTIVE= (vacio) en .env.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE-dev}
+      # Las variables SPRING_* pisan al perfil dev (que por defecto usa H2 en memoria).
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-logired}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-logired}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-logired-demo-pass}
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Broker externo (contenedor activemq) en lugar del embebido.
+      APP_MENSAJERIA_BROKER_EMBEBIDO: "false"
+      SPRING_ACTIVEMQ_BROKERURL: "tcp://activemq:61616?jms.redeliveryPolicy.maximumRedeliveries=10&jms.redeliveryPolicy.initialRedeliveryDelay=2000&jms.redeliveryPolicy.redeliveryDelay=2000"
+      JWT_SECRET: ${JWT_SECRET:-demo-only-jwt-secret-change-me-0123456789abcdef}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-admin123}
+      # local = sin red (Haversine). Para OpenStreetMap: MAPAS_PROVEEDOR=osm
+      MAPAS_PROVEEDOR: ${MAPAS_PROVEEDOR:-local}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "${BACKEND_PORT:-8081}:8081"
+
+  frontend:
+    build:
+      context: ./DA2Front
+      args:
+        # URL del API vista desde el NAVEGADOR (no desde la red de Docker).
+        VITE_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8081}
+    restart: unless-stopped
+    environment:
+      API_ORIGIN: ${PUBLIC_API_URL:-http://localhost:8081}
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:8080"
+
+volumes:
+  mysql-data:
+  activemq-data:

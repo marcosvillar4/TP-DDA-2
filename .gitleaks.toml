@@ -1,0 +1,16 @@
+# Escaneo de secretos (criterio G6). Extiende las reglas por defecto.
+# Solo se permiten fixtures de test y plantillas con valores de ejemplo.
+# NO agregar aqui application.properties ni el historial: si hay un hallazgo real,
+# se rota la credencial y se purga del historial.
+title = "LogiRed gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixtures de test y plantillas de ejemplo"
+paths = [
+  '''DA2Back/src/test/resources/.*''',
+  '''\.env\.example$''',
+  '''package-lock\.json$''',
+]

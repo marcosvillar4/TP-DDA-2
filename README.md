@@ -1,95 +1,64 @@
-# LogiRed
+# LogiRed — TP Desarrollo de Aplicaciones II
 
-Proyecto de Desarrollo de Aplicaciones II (UADE): gestion logistica de comercios,
-depositos, productos, inventario, pedidos y entregas de ultima milla.
+Monorepo: `DA2Back` (Spring Boot 4 / Java 17), `DA2Front` (React + Vite), `docs/`.
 
-## Requisitos y estructura
+## Levantar todo (un solo comando)
 
-- `DA2Back`: Spring Boot, Spring Security/JWT, JPA, MySQL y ActiveMQ/JMS.
-- `DA2Front`: React, Vite, Leaflet y SweetAlert2.
-- `docs`: seguridad y procedimientos de migracion.
-- Java objetivo 17, validado con Temurin 21; Maven mediante `mvnw.cmd`.
-- Node.js 22 y npm; instalar dependencias con `npm ci`.
+Requisitos: Docker Engine 24+ con Compose v2 (`docker compose version`). No hace falta Java, Node ni MySQL.
 
-## Backend local
-
-Copiar `DA2Back/src/main/resources/application-example.properties` a
-`application.properties` en el mismo directorio. Este ultimo esta ignorado por Git.
-Configurar localmente `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` y
-`JWT_EXPIRATION` (milisegundos). No versionar sus valores.
-
-En MySQL existente usar `JPA_DDL_AUTO=validate`. La plantilla del equipo tiene
-`update` como fallback: no usarlo para reparar esquemas sin revisar sus cambios.
-La migración estructural ya se aplicó en la base local `marketplace`; no repetirla.
-Para otra instalación con esquema anterior, leer
-[`docs/migracion-marketplace/README.md`](docs/migracion-marketplace/README.md).
-El perfil `dev` usa H2 y activa datos de demostracion: no combinarlo con datos reales.
-
-El broker ActiveMQ puede ser embebido segun `app.mensajeria.*`. Al marcar un pedido
-listo, JMS puede asignar automaticamente un repartidor disponible. La toma
-voluntaria reutiliza la misma operacion transaccional de asignacion.
-Para evitar correos configurar `MAIL_HOST=false`; para mapas sin red,
-`MAPAS_PROVEEDOR=local`. Las opciones SMTP y mapas estan en la plantilla.
-
-Desde PowerShell, con variables cargadas y esquema previamente validado:
-
-```powershell
-cd DA2Back
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081 --spring.jpa.hibernate.ddl-auto=validate"
+```bash
+git clone <url-del-repo> && cd <repo>
+docker compose up --build
 ```
 
-El seeder crea un ADMIN si no existe: revisar sus parametros antes del arranque.
-Los archivos personales de VS Code no se distribuyen. Detener servidores con Ctrl+C.
+Primer arranque: ~5–10 min (descarga de imágenes y compilación). Cuando termina:
 
-## Frontend
+| Servicio | URL | Notas |
+|---|---|---|
+| Frontend | http://localhost:3000 | React servido por nginx |
+| API REST | http://localhost:8081 | Spring Boot |
+| Consola ActiveMQ | http://localhost:8161 | `admin` / `admin`, solo desde esta máquina |
+| MySQL | `127.0.0.1:3307` | usuario/clave en `.env` (o valores demo) |
 
-```powershell
-cd DA2Front
-npm ci
-npm run dev
+**Usuarios de demo** (perfil `dev`, clave `admin123`): `admin@da2back.com` (ADMIN) y `urbanshoes@da2back.com` (COMERCIO), entre otros cargados por el seed.
+
+Componentes: MySQL 8.4 (volumen persistente), ActiveMQ Classic **en contenedor propio** y persistente (el broker embebido de la app queda desactivado), backend y frontend.
+
+> El proyecto no tiene servicios SOAP externos ni mocks: si se agregan, deben sumarse como servicios en `docker-compose.yml` para cumplir G1.
+
+### Configuración opcional
+
+Copiar `.env.example` a `.env` (ignorado por Git) para cambiar claves, puertos, `MAPAS_PROVEEDOR` (`local` por defecto, sin red; `osm` usa OpenStreetMap) o el correo SMTP. **No commitear secretos.**
+
+### Comandos útiles
+
+```bash
+docker compose logs -f backend      # logs
+docker compose stop activemq        # simular caída del broker
+docker compose start activemq       # recuperarlo
+docker compose down                 # bajar (conserva datos)
+docker compose down -v              # bajar y borrar datos
 ```
 
-Frontend habitual: `http://localhost:5173`; API: `http://localhost:8081`.
-El cliente compartido admite `VITE_API_BASE_URL` en `.env.local`; algunos clientes
-legados conservan la URL local fija. Nunca poner secretos en variables `VITE_*`.
+## Pruebas y CI
 
-## Pruebas aisladas
+El pipeline (`.github/workflows/ci.yml`) corre en cada push a `main`, tag `v*` y PR:
 
-Detener el backend de desarrollo antes de compilar para evitar reinicios de DevTools.
-La suite predeterminada usa H2 en memoria; no usar `dev` ni overrides de datasource
-que apunten a bases reales. Se recomienda forzar las propiedades de aislamiento
-del [informe de cierre](docs/auditoria-segunda-etapa-2026-11-05.md) al ejecutar la suite en un entorno personalizado.
+| Job | Qué verifica |
+|---|---|
+| `backend` | compilación, todos los tests, cobertura JaCoCo (negocio ≥80% líneas / ≥70% ramas), SonarCloud + Quality Gate |
+| `flaky-check` | la suite 3 veces: resultados idénticos y sin fallos |
+| `mutation` | PIT sobre el paquete de negocio (umbral 60%; bloqueante con la variable `PIT_ENFORCE=true`) |
+| `frontend` | `npm run lint`, `npm test`, `npm run build` |
+| `secrets-scan` | gitleaks sobre todo el historial (G6) |
+| `dependency-scan` | Trivy: 0 CVE críticas/altas sin mitigación (`.trivyignore`) |
+| `docker-smoke` | `docker compose up` desde cero ≤15 min, login, headers de seguridad, caída y recuperación del broker; Newman y k6 si existen `postman/*.json` y `perf/load.js` |
 
-```powershell
-cd DA2Back
-.\mvnw.cmd test "-Dspring.mail.host=false" "-Dapp.mapas.proveedor=local"
+Configurar en GitHub: secret `SONAR_TOKEN`; variables `SONAR_ORGANIZATION` y `SONAR_PROJECT_KEY`.
+
+Local, sin Docker:
+
+```bash
+cd DA2Back && ./mvnw verify                   # tests + cobertura + gate
+cd DA2Front && npm ci && npm run lint && npm test && npm run build
 ```
-
-`SecurityCriteriaMySqlIT` es opt-in y fija exclusivamente `marketplace_security_test`.
-Configuracion: [`docs/seguridad/SEC-W04-W05.md`](docs/seguridad/SEC-W04-W05.md).
-
-```powershell
-cd DA2Front
-npm test
-npm run lint
-npm run build
-```
-
-Los tests frontend usan el runner nativo de Node y no sustituyen una prueba de
-navegador. La política de rutas y los helpers de presentación también tienen pruebas.
-El informe de cierre registra por separado pruebas, build y lint global.
-Resultados y pendientes actuales: [informe de cierre](docs/auditoria-segunda-etapa-2026-11-05.md).
-Los documentos compartidos contienen resúmenes depurados, sin evidencias privadas.
-
-## Ciclo de pedidos
-
-`CREADO -> LISTO_PARA_RETIRAR -> ASIGNADO -> RETIRADO -> EN_CAMINO -> ENTREGADO`.
-Se cancela desde CREADO, LISTO_PARA_RETIRAR, ASIGNADO o RETIRADO, no desde EN_CAMINO
-ni estados finales. Crear descuenta stock; cancelar lo restituye una sola vez.
-Si faltan datos para restituir stock consistentemente, la cancelacion se rechaza.
-El repartidor opera mediante `/repartidor/me/**`; asignacion, retiro, viaje y
-entrega genericos son administrativos. El backend aplica roles y ownership.
-
-La revocación de la credencial SMTP expuesta en el historial sigue pendiente.
-No habilitar correo con esa credencial ni introducirla en archivos versionados.
-Los scripts SQL son manuales y no idempotentes; consultar su procedimiento antes de ejecutarlos.
