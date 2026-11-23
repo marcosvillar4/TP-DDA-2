@@ -97,7 +97,7 @@ class EmailNotificationSenderTest {
         assertEquals("Asunto " + tipo, enviado.getSubject());
         assertEquals("destino@mail.com", enviado.getAllRecipients()[0].toString());
         assertEquals("no-reply@logired.test", enviado.getFrom()[0].toString());
-        String html = extraerHtml(enviado);
+        String html = htmlDe(enviado);
         assertNotNull(html);
         assertTrue(html.contains("Asunto " + tipo), "el titulo se inserta en la plantilla");
         assertTrue(html.contains("Cuerpo del mensaje"), "el mensaje se inserta en la plantilla");
@@ -116,7 +116,7 @@ class EmailNotificationSenderTest {
 
         ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(captor.capture());
-        String html = extraerHtml(captor.getValue());
+        String html = htmlDe(captor.getValue());
         assertFalse(html.contains("<script>alert"), "no debe quedar HTML ejecutable del usuario");
         assertTrue(html.contains("&lt;script&gt;alert(&#39;x&#39;)&lt;/script&gt;"));
         assertTrue(html.contains("Linea 1<br>Linea 2 &amp; &quot;comillas&quot;"));
@@ -131,7 +131,7 @@ class EmailNotificationSenderTest {
 
         ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(captor.capture());
-        assertFalse(extraerHtml(captor.getValue()).contains("{{mensaje}}"));
+        assertFalse(htmlDe(captor.getValue()).contains("{{mensaje}}"));
         assertTrue(n.isEnviada());
     }
 
@@ -175,6 +175,12 @@ class EmailNotificationSenderTest {
         n.setDestinatarioEmail("destino@mail.com");
         n.setEnviada(false);
         return n;
+    }
+
+    /** Un MimeMessage sin enviar no tiene los Content-Type hasta saveChanges(): se llama antes de recorrerlo. */
+    private static String htmlDe(MimeMessage mensaje) throws Exception {
+        mensaje.saveChanges();
+        return extraerHtml(mensaje);
     }
 
     private static String extraerHtml(Part parte) throws Exception {
