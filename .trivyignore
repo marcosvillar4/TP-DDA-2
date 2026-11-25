@@ -1,0 +1,3 @@
+# CVEs aceptadas, UNA POR LINEA, con justificacion obligatoria (criterio: "mitigacion documentada").
+# Formato:
+#   CVE-AAAA-NNNN   # motivo / mitigacion / fecha de revision
