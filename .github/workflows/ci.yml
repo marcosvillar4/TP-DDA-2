@@ -170,10 +170,11 @@ jobs:
 
   
   # ------------------------------------------------------------- dependencias
+  
   dependency-scan:
     name: Seguridad - dependencias (Trivy SCA)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     env:
       TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
@@ -182,11 +183,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Preparar Java y recuperar la caché de Maven
+      - name: Configurar Java y caché Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # Resolver dependencias antes de que Trivy analice los POM
+      - name: Resolver dependencias Maven
+        working-directory: DA2Back
+        run: mvn -B -ntp -DskipTests dependency:resolve
+
+      # Instalar Trivy
       - name: Instalar Trivy
         uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
         with:
           version: v0.76.2
 
+      # Análisis SCA
       - name: Trivy (0 CVE criticas/altas sin mitigacion en .trivyignore)
         run: |
           trivy --version
