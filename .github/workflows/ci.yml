@@ -168,36 +168,36 @@ jobs:
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
           ./gitleaks detect --source . --config .gitleaks.toml --redact --verbose --exit-code 1
 
-  # ------------------------------------------------------------- dependencias
   
-dependency-scan:
-  name: Seguridad - dependencias (Trivy SCA)
-  runs-on: ubuntu-latest
-  timeout-minutes: 10
+  # ------------------------------------------------------------- dependencias
+  dependency-scan:
+    name: Seguridad - dependencias (Trivy SCA)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
-  env:
-    TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
-    TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db,ghcr.io/aquasecurity/trivy-java-db
+    env:
+      TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
+      TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db,ghcr.io/aquasecurity/trivy-java-db
 
-  steps:
-    - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Instalar Trivy
-      uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
-      with:
-        version: v0.76.2
+      - name: Instalar Trivy
+        uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
+        with:
+          version: v0.76.2
 
-    - name: Trivy (0 CVE criticas/altas sin mitigacion en .trivyignore)
-      run: |
-        trivy --version
-        trivy fs \
-          --scanners vuln \
-          --severity CRITICAL,HIGH \
-          --ignore-unfixed \
-          --ignorefile .trivyignore \
-          --exit-code 1 \
-          --no-progress \
-          
+      - name: Trivy (0 CVE criticas/altas sin mitigacion en .trivyignore)
+        run: |
+          trivy --version
+          trivy fs \
+            --scanners vuln \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --ignorefile .trivyignore \
+            --exit-code 1 \
+            --no-progress \
+            .
 
   # ------------------------------------------------------------ docker + smoke
   docker-smoke:
