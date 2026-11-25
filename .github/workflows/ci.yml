@@ -197,7 +197,7 @@ dependency-scan:
           --ignorefile .trivyignore \
           --exit-code 1 \
           --no-progress \
-          .
+          
 
   # ------------------------------------------------------------ docker + smoke
   docker-smoke:
