@@ -173,18 +173,22 @@ jobs:
     name: Seguridad - dependencias (Trivy SCA)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Si el log dice que la version de Trivy es muy vieja para la base de datos, subir este valor.
+      TRIVY_VERSION: "0.58.1"
+      # Espejo alternativo: ghcr.io limita descargas anonimas (error TOOMANYREQUESTS).
+      TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
+      TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db,ghcr.io/aquasecurity/trivy-java-db
     steps:
       - uses: actions/checkout@v4
+      - name: Instalar Trivy (binario fijado por version)
+        run: |
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar -xz trivy
+          ./trivy --version
       - name: Trivy (0 CVE criticas/altas sin mitigacion en .trivyignore)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          trivyignores: .trivyignore
-          exit-code: "1"
+        run: >
+          ./trivy fs --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed
+          --ignorefile .trivyignore --exit-code 1 --no-progress .
 
   # ------------------------------------------------------------ docker + smoke
   docker-smoke:

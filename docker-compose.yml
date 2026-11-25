@@ -68,7 +68,7 @@ services:
       # Broker externo (contenedor activemq) en lugar del embebido.
       APP_MENSAJERIA_BROKER_EMBEBIDO: "false"
       SPRING_ACTIVEMQ_BROKERURL: "tcp://activemq:61616?jms.redeliveryPolicy.maximumRedeliveries=10&jms.redeliveryPolicy.initialRedeliveryDelay=2000&jms.redeliveryPolicy.redeliveryDelay=2000"
-      JWT_SECRET: ${JWT_SECRET:-demo-only-jwt-secret-change-me-0123456789abcdef}
+      JWT_SECRET: ${JWT_SECRET:-demo-only-jwt-secret-change-me-0123456789abcdef}  # gitleaks:allow (valor de demo publico, no es un secreto real)
       ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-admin123}
       # local = sin red (Haversine). Para OpenStreetMap: MAPAS_PROVEEDOR=osm
       MAPAS_PROVEEDOR: ${MAPAS_PROVEEDOR:-local}
