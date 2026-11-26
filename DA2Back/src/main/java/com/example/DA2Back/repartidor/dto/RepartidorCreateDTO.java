@@ -12,4 +12,5 @@ public class RepartidorCreateDTO {
     private Long usuarioId;
     private String patente;
     private String zona;
+    private String vehiculo;
 }

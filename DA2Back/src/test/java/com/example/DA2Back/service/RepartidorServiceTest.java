@@ -85,7 +85,6 @@ class RepartidorServiceTest {
                 .apellido("Ruiz")
                 .DNI("30111222")
                 .telefono("+54 11 5555-1111")
-                .vehiculo("Moto")
                 .rol(Rol.REPARTIDOR)
                 .estado(EstadoUsuario.VALIDADO)
                 .build();
@@ -176,7 +175,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar creación si el usuario repartidor no está validado")
+    @DisplayName("Debe rechazar creaciÃƒÆ’Ã‚Â³n si el usuario repartidor no estÃƒÆ’Ã‚Â¡ validado")
     void crearRepartidor_usuarioNoValidado() {
         RepartidorCreateDTO dto = createDTO();
         usuarioRepartidor.setEstado(EstadoUsuario.EN_EVALUACION);
@@ -258,7 +257,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar baja lógica si tiene pedido activo")
+    @DisplayName("Debe rechazar baja lÃƒÆ’Ã‚Â³gica si tiene pedido activo")
     void desactivarRepartidor_conPedidoActivo() {
         repartidor.setEstado(EstadoRepartidor.EN_ENTREGA);
 
@@ -273,7 +272,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe realizar baja lógica si no tiene pedido activo")
+    @DisplayName("Debe realizar baja lÃƒÆ’Ã‚Â³gica si no tiene pedido activo")
     void desactivarRepartidor() {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         when(repartidorRepository.save(any(Repartidor.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -285,7 +284,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe delegar asignación administrativa a Pedidos")
+    @DisplayName("Debe delegar asignaciÃƒÆ’Ã‚Â³n administrativa a Pedidos")
     void asignarPedido_valido() {
         when(repartidorRepository.findById(10L)).thenReturn(Optional.of(repartidor));
         
@@ -592,7 +591,7 @@ class RepartidorServiceTest {
     void obtenerPedidosDisponibles_repartidorDisponible() {
         var pedidoListo = com.example.DA2Back.pedidos.dto.PedidoResponseDTO.builder()
                 .id(70L)
-                .direccionDestino("Av. Córdoba 123")
+                .direccionDestino("Av. CÃƒÆ’Ã‚Â³rdoba 123")
                 .estado(EstadoPedido.LISTO_PARA_RETIRAR)
                 .build();
 
@@ -633,7 +632,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar consulta de pedidos disponibles si el perfil está inactivo")
+    @DisplayName("Debe rechazar consulta de pedidos disponibles si el perfil estÃƒÆ’Ã‚Â¡ inactivo")
     void obtenerPedidosDisponibles_repartidorInactivo() {
         repartidor.setActivo(false);
         when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
@@ -644,7 +643,7 @@ class RepartidorServiceTest {
     }
 
     @Test
-    @DisplayName("Debe rechazar consulta de pedidos disponibles si el repartidor no está DISPONIBLE")
+    @DisplayName("Debe rechazar consulta de pedidos disponibles si el repartidor no estÃƒÆ’Ã‚Â¡ DISPONIBLE")
     void obtenerPedidosDisponibles_repartidorNoDisponible() {
         repartidor.setEstado(EstadoRepartidor.NO_DISPONIBLE);
         when(repartidorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(repartidor));
@@ -689,6 +688,7 @@ class RepartidorServiceTest {
         dto.setUsuarioId(1L);
         dto.setPatente("ABC123");
         dto.setZona("Palermo");
+        dto.setVehiculo("Moto");
         return dto;
     }
 
@@ -696,6 +696,7 @@ class RepartidorServiceTest {
         RepartidorUpdateDTO dto = new RepartidorUpdateDTO();
         dto.setPatente("XYZ999");
         dto.setZona("Belgrano");
+        dto.setVehiculo("Moto");
         return dto;
     }
 
@@ -707,7 +708,6 @@ class RepartidorServiceTest {
                 .apellido("Apellido " + id)
                 .DNI("3000000" + id)
                 .telefono("+54 11 5555-000" + id)
-                .vehiculo(rol == Rol.REPARTIDOR ? "Moto" : null)
                 .rol(rol)
                 .estado(estado)
                 .build();

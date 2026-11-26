@@ -35,9 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * SEC-W06 (OWASP A01:2025 Control de Acceso / ASVS 5.0):
- * La autorización se valida en el servidor en cada request; ocultar un botón no cuenta.
- * Un usuario con permisos insuficientes que conoce la URL o manipuló el cliente
- * envía la petición HTTP directa hacia el endpoint protegido y recibe 403 Forbidden.
+ * La autorizaciÃ³n se valida en el servidor en cada request; ocultar un botÃ³n no cuenta.
+ * Un usuario con permisos insuficientes que conoce la URL o manipulÃ³ el cliente
+ * envÃ­a la peticiÃ³n HTTP directa hacia el endpoint protegido y recibe 403 Forbidden.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -75,8 +75,8 @@ class SecW06AutorizacionServidorIntegrationTest {
         Comercio comercioA = crearComercio(usuarioComercioA, "CUIT-A-" + sufijo);
         comercioB = crearComercio(usuarioComercioB, "CUIT-B-" + sufijo);
 
-        crearDeposito(comercioA, usuarioDepositoA, "Depósito A");
-        depositoB = crearDeposito(comercioB, usuarioDepositoB, "Depósito B");
+        crearDeposito(comercioA, usuarioDepositoA, "DepÃ³sito A");
+        depositoB = crearDeposito(comercioB, usuarioDepositoB, "DepÃ³sito B");
 
         productoB = productoRepository.save(new Producto(
                 null, "SKU-B-" + sufijo, "Producto B", "Desc B", "General", EstadoProducto.ACTIVO, comercioB));
@@ -139,7 +139,7 @@ class SecW06AutorizacionServidorIntegrationTest {
                         .content(createBody))
                 .andExpect(status().isForbidden());
 
-        // Verifica que el producto de Comercio B no sufrió alteraciones
+        // Verifica que el producto de Comercio B no sufriÃ³ alteraciones
         Producto intacto = productoRepository.findById(productoB.getId()).orElseThrow();
         assertEquals("Producto B", intacto.getNombre());
         assertEquals(EstadoProducto.ACTIVO, intacto.getEstado());
@@ -162,7 +162,7 @@ class SecW06AutorizacionServidorIntegrationTest {
     }
 
     @Test
-    @DisplayName("SEC-W06: Depósito A no puede modificar los datos del Depósito B manipulando la URL")
+    @DisplayName("SEC-W06: DepÃ³sito A no puede modificar los datos del DepÃ³sito B manipulando la URL")
     void secW06_depositoNoPuedeModificarOtroDeposito() throws Exception {
         String body = """
                 {
@@ -177,7 +177,7 @@ class SecW06AutorizacionServidorIntegrationTest {
                         .content(body))
                 .andExpect(status().isForbidden());
 
-        assertEquals("Depósito B", depositoRepository.findById(depositoB.getId()).orElseThrow().getNombre());
+        assertEquals("DepÃ³sito B", depositoRepository.findById(depositoB.getId()).orElseThrow().getNombre());
     }
 
     @Test
@@ -222,7 +222,7 @@ class SecW06AutorizacionServidorIntegrationTest {
     private Deposito crearDeposito(Comercio comercio, Usuario encargado, String nombre) {
         Deposito d = new Deposito();
         d.setNombre(nombre);
-        d.setDireccion("Av. Depósito 100");
+        d.setDireccion("Av. DepÃ³sito 100");
         d.setComercio(comercio);
         d.setUsuarioId(encargado.getId());
         return depositoRepository.save(d);

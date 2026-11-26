@@ -1,15 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthUser } from "../../hooks/useAuthUser";
 import { Sidebar } from "./components/Sidebar";
 import { Topbar } from "./components/Topbar";
 import { getNavItemsForRole } from "./navConfig";
+import { aplicarTema } from "../theme/tema";
 import "./styles/DashboardLayout.css";
 
 export default function DashboardLayout() {
   const user = useAuthUser();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    aplicarTema(user?.tema);
+  }, [user?.tema]);
 
   if (!user) {
     return <Navigate to="/" replace />;

@@ -187,7 +187,6 @@ class RepartidorCicloEntregaIntegrationTest {
                 .apellido("Perfil")
                 .DNI("DNI-" + UUID.randomUUID())
                 .telefono("1100000000")
-                .vehiculo("Moto")
                 .rol(Rol.REPARTIDOR)
                 .estado(EstadoUsuario.VALIDADO)
                 .build());
@@ -197,7 +196,7 @@ class RepartidorCicloEntregaIntegrationTest {
     }
 
     @Test
-    @DisplayName("Dos entregas concurrentes no duplican transición ni historial")
+    @DisplayName("Dos entregas concurrentes no duplican transiciÃ³n ni historial")
     void entregaConcurrenteNoDuplicaTransicion() throws Exception {
         Repartidor repartidor = guardarRepartidor("entrega-concurrente", true, EstadoRepartidor.EN_ENTREGA);
         Pedido pedido = guardarPedido("entrega-concurrente", EstadoPedido.EN_CAMINO, repartidor);
@@ -261,7 +260,6 @@ class RepartidorCicloEntregaIntegrationTest {
                 .apellido(sufijo)
                 .DNI("DNI-" + UUID.randomUUID())
                 .telefono("1100000000")
-                .vehiculo("Moto")
                 .rol(Rol.REPARTIDOR)
                 .estado(EstadoUsuario.VALIDADO)
                 .build());

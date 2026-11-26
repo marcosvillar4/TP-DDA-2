@@ -397,11 +397,13 @@ public class RepartidorService implements IRepartidorService {
         if (dto.getUsuarioId() == null) {
             throw new IllegalArgumentException("El usuario es obligatorio");
         }
+        normalizarObligatorio(dto.getVehiculo(), "El vehículo es obligatorio");
         normalizarObligatorio(dto.getPatente(), "La patente es obligatoria");
         normalizarObligatorio(dto.getZona(), "La zona es obligatoria");
     }
 
     private void validarCamposActualizacion(RepartidorUpdateDTO dto) {
+        normalizarObligatorio(dto.getVehiculo(), "El vehículo es obligatorio");
         normalizarObligatorio(dto.getPatente(), "La patente es obligatoria");
         normalizarObligatorio(dto.getZona(), "La zona es obligatoria");
     }

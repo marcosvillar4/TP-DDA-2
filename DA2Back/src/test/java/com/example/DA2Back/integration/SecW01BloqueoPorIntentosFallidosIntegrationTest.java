@@ -53,7 +53,7 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
         for (int i = 1; i < MAX_INTENTOS; i++) {
             login(email, "incorrecta-" + i)
                     .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.message").value("Email o contraseña incorrectos"));
+                    .andExpect(jsonPath("$.message").value("Email o contraseÃ±a incorrectos"));
             assertEquals(EstadoUsuario.VALIDADO, estadoDe(email),
                     "La cuenta no debe bloquearse antes del intento " + MAX_INTENTOS);
         }
@@ -61,14 +61,14 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
         // El intento X bloquea la cuenta
         login(email, "incorrecta-final")
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada por intentos fallidos consecutivos"));
+                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada por intentos fallidos consecutivos"));
         assertEquals(EstadoUsuario.BLOQUEADO, estadoDe(email),
                 "SEC-W01: tras " + MAX_INTENTOS + " intentos fallidos la cuenta debe quedar BLOQUEADA");
 
-        // Aun con la contraseña correcta, la cuenta bloqueada no puede iniciar sesión
+        // Aun con la contraseÃ±a correcta, la cuenta bloqueada no puede iniciar sesiÃ³n
         login(email, PASSWORD)
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada y no se puede iniciar sesión"));
+                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada y no se puede iniciar sesiÃ³n"));
     }
 
     @Test
@@ -86,7 +86,7 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
 
-        // X-1 nuevos fallos no alcanzan para bloquear (el contador volvió a cero)
+        // X-1 nuevos fallos no alcanzan para bloquear (el contador volviÃ³ a cero)
         for (int i = 1; i < MAX_INTENTOS; i++) {
             login(email, "incorrecta-bis-" + i).andExpect(status().isUnauthorized());
         }
@@ -114,12 +114,12 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
     }
 
     @Test
-    @DisplayName("SEC-W01: El email se normaliza (mayúsculas/espacios) al contar intentos fallidos")
+    @DisplayName("SEC-W01: El email se normaliza (mayÃºsculas/espacios) al contar intentos fallidos")
     void secW01_emailSeNormalizaAlContarIntentos() throws Exception {
         String email = "secw01.normaliza@logired.com";
         crearUsuario(email, "39000005", EstadoUsuario.VALIDADO);
 
-        // 3 fallos con el email exacto + 2 con variantes de mayúsculas/espacios: todos suman al mismo contador
+        // 3 fallos con el email exacto + 2 con variantes de mayÃºsculas/espacios: todos suman al mismo contador
         login(email, "incorrecta").andExpect(status().isUnauthorized());
         login(email, "incorrecta").andExpect(status().isUnauthorized());
         login(email, "incorrecta").andExpect(status().isUnauthorized());
@@ -139,7 +139,7 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
 
         login(email, PASSWORD)
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada y no se puede iniciar sesión"));
+                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada y no se puede iniciar sesiÃ³n"));
         login(email, "incorrecta")
                 .andExpect(status().isUnauthorized());
 

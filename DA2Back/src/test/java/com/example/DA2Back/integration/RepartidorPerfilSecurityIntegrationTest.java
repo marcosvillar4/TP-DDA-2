@@ -137,7 +137,7 @@ class RepartidorPerfilSecurityIntegrationTest {
     }
 
     @Test
-    @DisplayName("REPARTIDOR no puede usar endpoint administrativo de asignación con repartidorId arbitrario")
+    @DisplayName("REPARTIDOR no puede usar endpoint administrativo de asignaciÃ³n con repartidorId arbitrario")
     void repartidorNoPuedeUsarAsignacionAdministrativa() throws Exception {
         mockMvc.perform(patch("/api/pedidos/1/asignar/99")
                         .header("Authorization", "Bearer " + repartidorToken))
@@ -164,7 +164,7 @@ class RepartidorPerfilSecurityIntegrationTest {
     }
 
     @Test
-    @DisplayName("REPARTIDOR no puede usar endpoints genéricos de ciclo de entrega")
+    @DisplayName("REPARTIDOR no puede usar endpoints genÃ©ricos de ciclo de entrega")
     void repartidorNoPuedeUsarEndpointsGenericosDeCicloEntrega() throws Exception {
         for (String endpoint : java.util.List.of(
                 "/api/pedidos/1/retirar",

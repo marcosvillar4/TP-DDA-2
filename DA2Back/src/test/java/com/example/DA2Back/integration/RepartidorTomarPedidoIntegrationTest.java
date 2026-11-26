@@ -139,7 +139,7 @@ class RepartidorTomarPedidoIntegrationTest {
     }
 
     @Test
-    @DisplayName("Dos repartidores no pueden tomar simultáneamente el mismo pedido")
+    @DisplayName("Dos repartidores no pueden tomar simultÃ¡neamente el mismo pedido")
     void dosRepartidoresNoPuedenTomarMismoPedido() throws Exception {
         Repartidor repartidorA = guardarRepartidor("concurrente-a");
         Repartidor repartidorB = guardarRepartidor("concurrente-b");
@@ -166,7 +166,7 @@ class RepartidorTomarPedidoIntegrationTest {
     }
 
     @Test
-    @DisplayName("Un repartidor no puede tomar dos pedidos simultáneamente")
+    @DisplayName("Un repartidor no puede tomar dos pedidos simultÃ¡neamente")
     void unRepartidorNoPuedeTomarDosPedidosSimultaneamente() throws Exception {
         Repartidor repartidor = guardarRepartidor("dos-pedidos");
         Pedido pedidoA = guardarPedido("pedido-a", EstadoPedido.LISTO_PARA_RETIRAR, null);
@@ -241,7 +241,6 @@ class RepartidorTomarPedidoIntegrationTest {
                 .apellido(sufijo)
                 .DNI("DNI-" + UUID.randomUUID())
                 .telefono("1100000000")
-                .vehiculo("Moto")
                 .rol(Rol.REPARTIDOR)
                 .estado(EstadoUsuario.VALIDADO)
                 .build());

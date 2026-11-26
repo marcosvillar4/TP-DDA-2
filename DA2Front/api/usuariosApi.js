@@ -101,3 +101,14 @@ export async function actualizarPerfilAdmin(id, dto) {
   }
   return handleResponse(response, "No se pudieron guardar los datos del perfil.");
 }
+
+export function getMiUsuario() {
+  return request("/usuarios/me");
+}
+
+export function actualizarMiTema(tema) {
+  return request("/usuarios/me/tema", {
+    method: "PATCH",
+    body: JSON.stringify({ tema }),
+  });
+}

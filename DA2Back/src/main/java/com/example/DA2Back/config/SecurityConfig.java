@@ -100,6 +100,7 @@ public class SecurityConfig {
                 // ───────── Usuarios ─────────
                 .requestMatchers("/usuarios/admin/**").hasRole(ADMIN)
                 .requestMatchers(GET, "/usuarios/me").authenticated()
+                .requestMatchers(PATCH, "/usuarios/me/tema").authenticated()
 
                 // ───────── Comercios ─────────
                 .requestMatchers(GET, "/comercios/me").hasAnyRole(ADMIN, COMERCIO)

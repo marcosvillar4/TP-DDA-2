@@ -14,7 +14,7 @@
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   border-radius: 0.5rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
 }
 
@@ -106,7 +106,7 @@
 .producto-form select:focus,
 .producto-form textarea:focus {
   border-color: var(--color-navy);
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
 }
 

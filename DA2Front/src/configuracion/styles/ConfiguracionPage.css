@@ -1,0 +1,93 @@
+.config-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.config-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-slate-200);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.config-card-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-slate-800);
+}
+
+.config-card-text {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--color-slate-500);
+}
+
+.config-temas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.config-tema {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1rem;
+  text-align: left;
+  color: var(--color-slate-700);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-slate-200);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.config-tema:hover:not(:disabled) {
+  border-color: var(--color-slate-400);
+}
+
+.config-tema:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.config-tema-activo {
+  border-color: var(--color-navy);
+  background-color: var(--color-slate-50);
+  color: var(--color-navy);
+}
+
+.config-tema-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.config-tema-desc {
+  font-size: 0.8rem;
+  color: var(--color-slate-500);
+}
+
+.config-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 0;
+}
+
+.config-datos dt {
+  font-size: 0.75rem;
+  color: var(--color-slate-500);
+}
+
+.config-datos dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-slate-800);
+}

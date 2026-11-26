@@ -63,7 +63,7 @@
   padding: 0.625rem 1rem;
   border: 1px solid var(--color-slate-200);
   border-radius: 0.5rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   font-size: 0.875rem;
   color: var(--color-slate-700);
   outline: none;
@@ -81,7 +81,7 @@
   top: calc(100% + 0.375rem);
   left: 0;
   width: 180px;
-  background-color: #fff;
+  background-color: var(--color-surface);
   border: 1px solid var(--color-slate-200);
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -163,7 +163,7 @@
 }
 
 .pedido-card {
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);

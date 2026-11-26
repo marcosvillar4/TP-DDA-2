@@ -55,7 +55,7 @@
   grid-template-columns: auto 1fr;
   gap: 0.25rem 0.75rem;
   align-items: center;
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   padding: 1rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -109,7 +109,7 @@
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
-  background-color: #fff;
+  background-color: var(--color-surface);
   padding: 1rem;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -148,7 +148,7 @@
 .repartidores-select {
   min-width: 180px;
   padding: 0.625rem 2.25rem 0.625rem 1rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .repartidores-search-input:focus,
@@ -165,7 +165,7 @@
 }
 
 .repartidores-table-card {
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);

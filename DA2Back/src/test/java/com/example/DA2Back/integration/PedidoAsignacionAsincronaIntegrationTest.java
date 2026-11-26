@@ -172,7 +172,7 @@ class PedidoAsignacionAsincronaIntegrationTest {
         Usuario usuario = usuarioRepository.save(Usuario.builder()
                 .email("repartidor." + UUID.randomUUID() + "@test.com")
                 .password("test").nombre("Repartidor").apellido("Async")
-                .DNI("DNI-" + UUID.randomUUID()).telefono("1100000000").vehiculo("Moto")
+                .DNI("DNI-" + UUID.randomUUID()).telefono("1100000000")
                 .rol(Rol.REPARTIDOR).estado(EstadoUsuario.VALIDADO).build());
         return repartidorRepository.save(Repartidor.builder()
                 .usuarioId(usuario.getId())

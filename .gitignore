@@ -22,3 +22,5 @@ HELP.md
 .vscode/
 *.iml
 .DS_Store
+DA2Back/src/main/resources/application.properties
+/DA2Back/.settings

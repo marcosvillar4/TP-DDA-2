@@ -1,12 +1,23 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { VEHICULO_LABELS } from "../../usuarios/utils/usuarioLabels";
 import "../styles/RepartidorFormModal.css";
 
 const initialForm = {
   usuarioId: "",
+  vehiculo: "",
   patente: "",
   zona: "",
 };
+
+function formDesdeRepartidor(repartidor) {
+  return {
+    usuarioId: repartidor.usuarioId || "",
+    vehiculo: repartidor.vehiculo || "",
+    patente: repartidor.patente || "",
+    zona: repartidor.zona || "",
+  };
+}
 
 export default function RepartidorFormModal({
   open,
@@ -17,21 +28,15 @@ export default function RepartidorFormModal({
   onClose,
   onSubmit,
 }) {
-  const [form, setForm] = useState(() => open && mode === "edit" && repartidor ? {
-    usuarioId: repartidor.usuarioId || "",
-    patente: repartidor.patente || "",
-    zona: repartidor.zona || "",
-  } : initialForm);
+  const [form, setForm] = useState(() =>
+    open && mode === "edit" && repartidor ? formDesdeRepartidor(repartidor) : initialForm
+  );
 
   const [origen, setOrigen] = useState({ open, mode, repartidor });
   if (origen.open !== open || origen.mode !== mode || origen.repartidor !== repartidor) {
     setOrigen({ open, mode, repartidor });
     if (open && mode === "edit" && repartidor) {
-      setForm({
-        usuarioId: repartidor.usuarioId || "",
-        patente: repartidor.patente || "",
-        zona: repartidor.zona || "",
-      });
+      setForm(formDesdeRepartidor(repartidor));
     } else if (open) {
       setForm(initialForm);
     }
@@ -53,6 +58,7 @@ export default function RepartidorFormModal({
     event.preventDefault();
 
     const payload = {
+      vehiculo: form.vehiculo,
       patente: form.patente.trim(),
       zona: form.zona.trim(),
     };
@@ -66,6 +72,7 @@ export default function RepartidorFormModal({
 
   const title = mode === "edit" ? "Editar repartidor" : "Nuevo repartidor";
   const usuarioActual = mode === "edit" ? repartidor : usuarioSeleccionado;
+  const vehiculoEsLibre = form.vehiculo && !(form.vehiculo in VEHICULO_LABELS);
 
   return (
     <div className="repartidor-modal-backdrop" role="presentation">
@@ -120,12 +127,27 @@ export default function RepartidorFormModal({
                 <span>Teléfono</span>
                 <strong>{usuarioActual.telefono || "—"}</strong>
               </div>
-              <div>
-                <span>Vehículo</span>
-                <strong>{usuarioActual.vehiculo || "—"}</strong>
-              </div>
             </div>
           )}
+
+          <label className="repartidor-field repartidor-field-full">
+            <span>Vehículo *</span>
+            <select
+              name="vehiculo"
+              value={form.vehiculo}
+              onChange={handleChange}
+              required
+              disabled={saving}
+            >
+              <option value="">Seleccionar vehículo...</option>
+              {vehiculoEsLibre && <option value={form.vehiculo}>{form.vehiculo}</option>}
+              {Object.entries(VEHICULO_LABELS).map(([valor, label]) => (
+                <option key={valor} value={valor}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="repartidor-field">
             <span>Patente *</span>

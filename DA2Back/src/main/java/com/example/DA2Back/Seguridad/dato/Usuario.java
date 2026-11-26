@@ -1,5 +1,6 @@
 package com.example.DA2Back.Seguridad.dato;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
@@ -55,10 +57,6 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private String telefono;
 
-    /** Solo aplica a usuarios con rol REPARTIDOR. Null para el resto. */
-    @Column
-    private String vehiculo;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
@@ -68,9 +66,33 @@ public class Usuario implements UserDetails {
     @Builder.Default
     private EstadoUsuario estado = EstadoUsuario.EN_EVALUACION;
 
+    /** Se completa sola al insertar. Null en usuarios anteriores a este campo. */
+    @Column(name = "fecha_creacion", updatable = false)
+    private LocalDateTime fechaCreacion;
+
+    /** Preferencia de apariencia de la interfaz. Por defecto CLARO. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tema", length = 10)
+    @Builder.Default
+    private TemaInterfaz tema = TemaInterfaz.CLARO;
+
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Notificacion> notificaciones;
 
+    @PrePersist
+    void alCrear() {
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
+        }
+        if (tema == null) {
+            tema = TemaInterfaz.CLARO;
+        }
+    }
+
+    /** Usuarios previos a la columna pueden tener null: se tratan como CLARO. */
+    public TemaInterfaz getTema() {
+        return tema == null ? TemaInterfaz.CLARO : tema;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

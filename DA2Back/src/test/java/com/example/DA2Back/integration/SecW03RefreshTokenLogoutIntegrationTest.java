@@ -51,7 +51,7 @@ class SecW03RefreshTokenLogoutIntegrationTest {
             usuarioRepository.save(Usuario.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
-                    .nombre("Nicolás")
+                    .nombre("NicolÃ¡s")
                     .apellido("SecW03")
                     .DNI("39888777")
                     .telefono("1144556677")
@@ -64,14 +64,14 @@ class SecW03RefreshTokenLogoutIntegrationTest {
     @Test
     @DisplayName("SEC-W03: Tras POST /logout, intentar renovar con el refresh token anterior devuelve 401 Unauthorized")
     void secW03_trasLogoutRefreshTokenQuedaRevocadoYDevuelve401() throws Exception {
-        // 1. DADO: Un usuario autenticado con una sesión activa (login emite token + refreshToken)
+        // 1. DADO: Un usuario autenticado con una sesiÃ³n activa (login emite token + refreshToken)
         JsonNode loginJson = hacerLogin();
         String accessTokenInicial = loginJson.get("token").asText();
         String refreshToken = loginJson.get("refreshToken").asText();
 
         assertNotNull(accessTokenInicial, "SEC-W03: El login debe emitir un access token JWT");
         assertNotNull(refreshToken, "SEC-W03: El login debe emitir un refresh token");
-        assertFalse(refreshToken.isBlank(), "SEC-W03: El refresh token no debe estar vacío");
+        assertFalse(refreshToken.isBlank(), "SEC-W03: El refresh token no debe estar vacÃ­o");
 
         String payloadRefresh = """
                 {
@@ -79,12 +79,12 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                 }
                 """.formatted(refreshToken);
 
-        // 2. CUANDO: Ejecuta la acción de cierre de sesión (POST /logout)
+        // 2. CUANDO: Ejecuta la acciÃ³n de cierre de sesiÃ³n (POST /logout)
         mockMvc.perform(post("/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payloadRefresh))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensaje").value("Sesión cerrada correctamente. El refresh token ha sido revocado."));
+                .andExpect(jsonPath("$.mensaje").value("SesiÃ³n cerrada correctamente. El refresh token ha sido revocado."));
 
         // 3. ENTONCES: Intenta renovar token con el refresh token anterior y recibe 401 Unauthorized
         mockMvc.perform(post("/auth/refresh")
@@ -92,11 +92,11 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                         .content(payloadRefresh))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
-                .andExpect(jsonPath("$.message").value("Refresh token inválido, revocado o vencido"));
+                .andExpect(jsonPath("$.message").value("Refresh token invÃ¡lido, revocado o vencido"));
     }
 
     @Test
-    @DisplayName("SEC-W03: Tras POST /auth/logout, el endpoint /refresh también rechaza con 401 Unauthorized")
+    @DisplayName("SEC-W03: Tras POST /auth/logout, el endpoint /refresh tambiÃ©n rechaza con 401 Unauthorized")
     void secW03_trasAuthLogoutRefreshTokenQuedaRevocado() throws Exception {
         JsonNode loginJson = hacerLogin();
         String refreshToken = loginJson.get("refreshToken").asText();
@@ -111,7 +111,7 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payloadRefresh))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensaje").value("Sesión cerrada correctamente. El refresh token ha sido revocado."));
+                .andExpect(jsonPath("$.mensaje").value("SesiÃ³n cerrada correctamente. El refresh token ha sido revocado."));
 
         mockMvc.perform(post("/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -121,7 +121,7 @@ class SecW03RefreshTokenLogoutIntegrationTest {
     }
 
     @Test
-    @DisplayName("SEC-W03: Un refresh token válido emite nuevos tokens y rota (revoca) el refresh token usado")
+    @DisplayName("SEC-W03: Un refresh token vÃ¡lido emite nuevos tokens y rota (revoca) el refresh token usado")
     void secW03_rotacionDeRefreshTokenRevocaElAnterior() throws Exception {
         JsonNode loginJson = hacerLogin();
         String refreshTokenOriginal = loginJson.get("refreshToken").asText();
@@ -144,7 +144,7 @@ class SecW03RefreshTokenLogoutIntegrationTest {
         JsonNode refreshJson = objectMapper.readTree(refreshResult.getResponse().getContentAsString());
         String nuevoRefreshToken = refreshJson.get("refreshToken").asText();
         assertNotEquals(refreshTokenOriginal, nuevoRefreshToken,
-                "SEC-W03: La rotación debe emitir un refresh token distinto al anterior");
+                "SEC-W03: La rotaciÃ³n debe emitir un refresh token distinto al anterior");
 
         // Reutilizar el refresh token ya rotado debe ser rechazado con 401
         mockMvc.perform(post("/auth/refresh")

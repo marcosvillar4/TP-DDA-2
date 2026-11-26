@@ -1,7 +1,10 @@
 package com.example.DA2Back.Seguridad.dto;
 
-import com.example.DA2Back.Seguridad.dato.Rol;
+import java.time.LocalDateTime;
+
 import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
+import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.TemaInterfaz;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +23,8 @@ public class UsuarioResponseDTO {
     private String email;
     private String telefono;
     private String dni;
-    private String vehiculo;
     private Rol rol;
     private EstadoUsuario estado;
+    private LocalDateTime fechaCreacion;
+    private TemaInterfaz tema;
 }

@@ -109,8 +109,8 @@ class ProductoSecurityIntegrationTest {
                 {
                   "sku": "TEST-001",
                   "nombre": "Mouse Logitech M170",
-                  "descripcion": "Mouse inalámbrico para uso administrativo",
-                  "categoria": "Periféricos",
+                  "descripcion": "Mouse inalÃ¡mbrico para uso administrativo",
+                  "categoria": "PerifÃ©ricos",
                   "comercioId": 999
                 }
                 """;
@@ -159,8 +159,8 @@ class ProductoSecurityIntegrationTest {
         String body = """
                 {
                   "nombre": "Mouse Logitech M170",
-                  "descripcion": "Mouse inalámbrico para uso administrativo",
-                  "categoria": "Periféricos"
+                  "descripcion": "Mouse inalÃ¡mbrico para uso administrativo",
+                  "categoria": "PerifÃ©ricos"
                 }
                 """;
 

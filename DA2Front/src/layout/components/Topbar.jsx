@@ -4,6 +4,7 @@ import { Bell, LogOut } from "lucide-react";
 import { getCantidadNotificacionesNoLeidas } from "../../../api/notificacionesApi";
 import { logoutRequest } from "../../../api/authApi";
 import { ROLE_LABELS } from "../navConfig";
+import { aplicarTema } from "../../theme/tema"
 import "../styles/Topbar.css";
 
 export function Topbar({ user, title }) {
@@ -40,6 +41,7 @@ export function Topbar({ user, title }) {
     await logoutRequest(refreshToken);
     localStorage.removeItem("logired_token");
     localStorage.removeItem("logired_user");
+    aplicarTema("CLARO");
     navigate("/");
   }
 

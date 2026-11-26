@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Suite de integración end-to-end de LogiRed — adaptada para main.
+ * Suite de integraciÃ³n end-to-end de LogiRed â€” adaptada para main.
  *
  * Ejecuta sobre base de datos H2 en memoria (perfil "test") con el contexto
  * Spring completo. Los tests corren en orden y comparten estado de instancia
@@ -230,14 +230,14 @@ class LogiRedIntegrationTest {
     }
 
     // ==================================================================
-    // 3. PEDIDOS — CRUD con token JWT
+    // 3. PEDIDOS â€” CRUD con token JWT
     // ==================================================================
 
     @Test
     @Order(5)
     @DisplayName("POST /api/pedidos crea un pedido en estado PENDIENTE_COTIZACION (HTTP 201)")
     void crearPedido_conToken_devuelve201() throws Exception {
-        assertNotNull(tokenJwt, "Requiere token — ejecutar test de login primero");
+        assertNotNull(tokenJwt, "Requiere token â€” ejecutar test de login primero");
 
         String body = String.format("""
                 {

@@ -2,6 +2,7 @@ package com.example.DA2Back.Seguridad;
 
 import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.TemaInterfaz;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.RegistroComercioDTO;
@@ -61,20 +62,18 @@ class UsuarioFactoryTest {
         assertEquals("Paz", u.getApellido());
         assertEquals("30111222", u.getDNI());
         assertEquals("1155556666", u.getTelefono());
-        assertNull(u.getVehiculo());
+        assertEquals(TemaInterfaz.CLARO, u.getTema());
     }
 
     @Test
-    @DisplayName("Registro de repartidor conserva el vehiculo en el usuario")
+    @DisplayName("Registro de repartidor: usuario REPARTIDOR EN_EVALUACION (el vehiculo vive en el perfil)")
     void crearDesdeRegistro_repartidor() {
         RegistroRepartidorDTO dto = new RegistroRepartidorDTO();
         base(dto, Rol.REPARTIDOR);
-        dto.setVehiculo("Moto 150cc");
 
         Usuario u = factory.crearDesdeRegistro(dto);
 
         assertEquals(Rol.REPARTIDOR, u.getRol());
-        assertEquals("Moto 150cc", u.getVehiculo());
         assertEquals(EstadoUsuario.EN_EVALUACION, u.getEstado());
     }
 

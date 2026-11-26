@@ -1,6 +1,7 @@
 package com.example.DA2Back.Seguridad.dto;
 
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.TemaInterfaz;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class LoginResponseDTO {
     private String apellido;
     private String email;
     private Rol rol;
+    private TemaInterfaz tema;
 }

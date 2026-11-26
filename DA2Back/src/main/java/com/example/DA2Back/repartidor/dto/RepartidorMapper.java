@@ -12,6 +12,7 @@ public final class RepartidorMapper {
     public static Repartidor toEntity(RepartidorCreateDTO dto, Long usuarioId) {
         return Repartidor.builder()
                 .usuarioId(usuarioId)
+                .vehiculo(normalizar(dto.getVehiculo()))
                 .patente(normalizar(dto.getPatente()).toUpperCase())
                 .zona(normalizar(dto.getZona()))
                 .estado(EstadoRepartidor.DISPONIBLE)
@@ -20,6 +21,7 @@ public final class RepartidorMapper {
     }
 
     public static void applyUpdate(Repartidor repartidor, RepartidorUpdateDTO dto) {
+        repartidor.setVehiculo(normalizar(dto.getVehiculo()));
         repartidor.setPatente(normalizar(dto.getPatente()));
         repartidor.setZona(normalizar(dto.getZona()));
     }
@@ -39,7 +41,7 @@ public final class RepartidorMapper {
                 .nombreCompleto(nombreCompleto)
                 .email(usuario.getEmail())
                 .telefono(usuario.getTelefono())
-                .vehiculo(usuario.getVehiculo())
+                .vehiculo(repartidor.getVehiculo())
                 .patente(repartidor.getPatente())
                 .zona(repartidor.getZona())
                 .estado(repartidor.getEstado())
@@ -56,7 +58,6 @@ public final class RepartidorMapper {
                 .nombreCompleto(nombreCompleto(usuario))
                 .email(usuario.getEmail())
                 .telefono(usuario.getTelefono())
-                .vehiculo(usuario.getVehiculo())
                 .build();
     }
 

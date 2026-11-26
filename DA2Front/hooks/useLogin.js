@@ -39,6 +39,7 @@ export function useLogin() {
           apellido: data.apellido,
           email: data.email,
           rol: data.rol,
+          tema: data.tema,
         })
       );
 

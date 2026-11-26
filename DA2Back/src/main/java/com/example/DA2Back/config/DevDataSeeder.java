@@ -194,7 +194,7 @@ public class DevDataSeeder implements CommandLineRunner {
         Usuario usuario = usuarioRepository.findByEmail(s.email()).orElse(null);
         if (usuario == null) {
             usuario = usuarioRepository.save(nuevoUsuario(s.email(), hash, s.nombre(), s.apellido(),
-                    s.dni(), s.telefono(), null, Rol.COMERCIO));
+                    s.dni(), s.telefono(), Rol.COMERCIO));
         }
         final Long usuarioId = usuario.getId();
         Comercio existente = comercioRepository.findByUsuarioId(usuarioId).orElse(null);
@@ -242,7 +242,7 @@ public class DevDataSeeder implements CommandLineRunner {
         Usuario usuario = usuarioRepository.findByEmail(d.email()).orElse(null);
         if (usuario == null) {
             usuario = usuarioRepository.save(nuevoUsuario(d.email(), hash, d.nombre(), d.apellido(),
-                    d.dni(), d.telefono(), null, Rol.DEPOSITO));
+                    d.dni(), d.telefono(), Rol.DEPOSITO));
         }
         Deposito deposito = depositoRepository.findByUsuarioId(usuario.getId()).orElse(null);
         boolean depositoNuevo = deposito == null;
@@ -272,10 +272,11 @@ public class DevDataSeeder implements CommandLineRunner {
         Usuario usuario = usuarioRepository.findByEmail(s.email()).orElse(null);
         if (usuario == null) {
             usuario = usuarioRepository.save(nuevoUsuario(s.email(), hash, s.nombre(), s.apellido(),
-                    s.dni(), s.telefono(), s.vehiculo(), Rol.REPARTIDOR));
+                    s.dni(), s.telefono(), Rol.REPARTIDOR));
         }
         if (repartidorRepository.findByUsuarioId(usuario.getId()).isPresent()) return false;
         Repartidor r = new Repartidor();
+        r.setVehiculo(s.vehiculo());
         r.setPatente(s.patente());
         r.setZona(s.zona());
         r.setEstado(s.estado());
@@ -286,7 +287,7 @@ public class DevDataSeeder implements CommandLineRunner {
     }
 
     private static Usuario nuevoUsuario(String email, String hash, String nombre, String apellido, String dni,
-                                        String telefono, String vehiculo, Rol rol) {
+                                        String telefono, Rol rol) {
         return Usuario.builder()
                 .email(email)
                 .password(hash)
@@ -294,7 +295,6 @@ public class DevDataSeeder implements CommandLineRunner {
                 .apellido(apellido)
                 .DNI(dni)
                 .telefono(telefono)
-                .vehiculo(vehiculo)
                 .rol(rol)
                 .estado(EstadoUsuario.VALIDADO)
                 .build();

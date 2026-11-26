@@ -11,4 +11,5 @@ public class RepartidorUpdateDTO {
 
     private String patente;
     private String zona;
+    private String vehiculo;
 }

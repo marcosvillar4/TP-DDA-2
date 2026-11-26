@@ -32,7 +32,7 @@ public class PerfilRepartidorAdmin implements IPerfilAdmin {
             RepartidorResponseDTO r = repartidorService.obtenerPorUsuarioId(usuario.getId());
             return Optional.of(PerfilRepartidorAdminDTO.builder()
                     .id(r.getId())
-                    .vehiculo(usuario.getVehiculo())
+                    .vehiculo(r.getVehiculo())
                     .patente(r.getPatente())
                     .zona(r.getZona())
                     .estado(r.getEstado())
@@ -48,16 +48,14 @@ public class PerfilRepartidorAdmin implements IPerfilAdmin {
     public void actualizar(Usuario usuario, ActualizarPerfilAdminDTO dto) {
         ActualizarPerfilRepartidorAdminDTO datos = validarTipo(dto);
         RepartidorResponseDTO actual = repartidorService.obtenerPorUsuarioId(usuario.getId());
- 
+
         // RepartidorService.actualizar solo normaliza con trim(); las mayúsculas de la
         // patente se resuelven acá para no depender de cambios en ese módulo.
         RepartidorUpdateDTO cambios = new RepartidorUpdateDTO();
+        cambios.setVehiculo(datos.getVehiculo().trim());
         cambios.setPatente(datos.getPatente().trim().toUpperCase());
         cambios.setZona(datos.getZona().trim());
         repartidorService.actualizar(actual.getId(), cambios);
- 
-        // El vehículo no pertenece a Repartidor sino a Usuario.
-        usuario.setVehiculo(datos.getVehiculo());
     }
  
     private ActualizarPerfilRepartidorAdminDTO validarTipo(ActualizarPerfilAdminDTO dto) {

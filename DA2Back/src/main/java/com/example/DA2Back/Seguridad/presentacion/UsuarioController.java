@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.DA2Back.Seguridad.dto.ActualizarTemaDTO;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
 import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
@@ -33,6 +34,14 @@ public class UsuarioController {
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponseDTO> obtenerMiPerfil(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.obtenerPorEmail(authentication.getName()));
+    }
+
+    /** Cambia la preferencia de tema (claro/oscuro) del usuario autenticado. */
+    @PatchMapping("/me/tema")
+    public ResponseEntity<UsuarioResponseDTO> actualizarMiTema(
+            Authentication authentication,
+            @Valid @RequestBody ActualizarTemaDTO dto) {
+        return ResponseEntity.ok(usuarioService.actualizarTema(authentication.getName(), dto.getTema()));
     }
 
     @GetMapping("/admin/all")

@@ -37,13 +37,13 @@
 .repartidor-btn-outline {
   border: 1px solid var(--color-slate-200);
   color: var(--color-slate-700);
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .repartidor-btn-danger {
   border: 1px solid var(--color-red);
   color: var(--color-red);
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .repartidor-btn-outline:disabled,
@@ -98,7 +98,7 @@
 }
 
 .repartidor-card {
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   padding: 1.25rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);

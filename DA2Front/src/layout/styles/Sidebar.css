@@ -4,7 +4,7 @@
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: var(--color-navy);
+  background-color: var(--color-sidebar);
   color: #fff;
   display: flex;
   flex-direction: column;

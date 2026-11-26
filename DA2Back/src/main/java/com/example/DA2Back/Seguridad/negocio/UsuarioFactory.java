@@ -35,13 +35,7 @@ public class UsuarioFactory {
                     "Los depósitos no se auto-registran: los da de alta un comercio desde su panel");
         }
 
-        Usuario.UsuarioBuilder builder = construirUsuarioBase(dto, dto.getRol());
-
-        if (dto instanceof RegistroRepartidorDTO repartidorDTO) {
-            builder.vehiculo(repartidorDTO.getVehiculo());
-        }
-
-        return builder.build();
+        return construirUsuarioBase(dto, dto.getRol()).build();
     }
 
     /**
@@ -68,9 +62,8 @@ public class UsuarioFactory {
     }
 
     /**
-     * Crea la entidad de dominio asociada al usuario recién registrado
-     * (Comercio o Repartidor pendiente). El vehículo permanece en Usuario;
-     * patente y zona se conservan en el perfil operativo inactivo. Los depósitos no
+     * Crea la entidad de dominio asociada al usuario recién registrado (Comercio o Repartidor pendiente). 
+     * Vehículo, patente y zona se conservan en el perfil operativo inactivo. Los depósitos no
      * pasan por acá: los crea un comercio (ver UsuarioServiceImpl).
      */
     public void crearEntidadRelacionada(RegisterDTO dto, Long usuarioId) {
@@ -107,7 +100,8 @@ public class UsuarioFactory {
 
     private RepartidorCreateDTO mapearRepartidor(RegistroRepartidorDTO dto, Long usuarioId) {
         RepartidorCreateDTO d = new RepartidorCreateDTO();
-        d.setUsuarioId(usuarioId); 
+        d.setUsuarioId(usuarioId);
+        d.setVehiculo(dto.getVehiculo());
         d.setPatente(dto.getPatente());
         d.setZona(dto.getZona());
         return d;

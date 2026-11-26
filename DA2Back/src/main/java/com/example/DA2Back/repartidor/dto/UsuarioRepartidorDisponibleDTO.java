@@ -17,5 +17,4 @@ public class UsuarioRepartidorDisponibleDTO {
     private String nombreCompleto;
     private String email;
     private String telefono;
-    private String vehiculo;
 }

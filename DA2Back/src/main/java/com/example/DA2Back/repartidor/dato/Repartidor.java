@@ -43,4 +43,7 @@ public class Repartidor {
     @Column(nullable = false)
     @Builder.Default
     private boolean activo = true;
+
+    @Column
+    private String vehiculo;
 }

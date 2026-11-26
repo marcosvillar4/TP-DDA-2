@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.example.DA2Back.deposito.dto.AsociarDepositoDTO;
 import com.example.DA2Back.deposito.dto.DepositoResponseDTO;
+import com.example.DA2Back.Seguridad.dato.TemaInterfaz;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
 import com.example.DA2Back.Seguridad.dto.CambiarPasswordAdminDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
@@ -32,4 +33,5 @@ public interface IUsuarioService {
     boolean existePorId(Long id);
     UsuarioAdminDetalleDTO obtenerDetalleAdmin(Long id);
     UsuarioAdminDetalleDTO actualizarPerfilAdmin(Long id, ActualizarPerfilAdminDTO dto);
+    UsuarioResponseDTO actualizarTema(String email, TemaInterfaz tema);
 }

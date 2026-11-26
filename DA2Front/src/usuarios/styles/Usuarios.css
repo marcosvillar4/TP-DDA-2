@@ -48,7 +48,7 @@
 }
 
 .u-btn-ghost {
-  background: white;
+  background: var(--color-surface);
   border-color: var(--color-slate-200);
   color: var(--color-slate-700);
 }
@@ -77,7 +77,7 @@
 }
 
 .u-btn-danger-ghost {
-  background: white;
+  background: var(--color-surface);
   border-color: var(--color-red-light);
   color: var(--color-red);
 }
@@ -144,7 +144,7 @@
   padding: 16px 18px;
   border: 1px solid var(--color-slate-200);
   border-radius: var(--u-radius);
-  background: white;
+  background: var(--color-surface);
   box-shadow: var(--u-shadow);
   font: inherit;
   text-align: left;
@@ -266,7 +266,7 @@
   padding: 10px 12px;
   border: 1px solid var(--color-slate-200);
   border-radius: 10px;
-  background: white;
+  background: var(--color-surface);
   font-size: 14px;
   color: var(--color-slate-800);
 }
@@ -291,7 +291,7 @@
   overflow: hidden;
   border: 1px solid var(--color-slate-200);
   border-radius: var(--u-radius);
-  background: white;
+  background: var(--color-surface);
   box-shadow: var(--u-shadow);
 }
 
@@ -404,7 +404,7 @@
 
 .btn-ver {
   border: 1px solid var(--color-slate-200);
-  background: white;
+  background: var(--color-surface);
   color: var(--color-navy);
 }
 
@@ -534,7 +534,7 @@
   padding: 48px 24px;
   border: 1px solid var(--color-slate-200);
   border-radius: var(--u-radius);
-  background: white;
+  background: var(--color-surface);
   text-align: center;
 }
 
@@ -621,7 +621,7 @@
   padding: 22px 24px;
   border: 1px solid var(--color-slate-200);
   border-radius: var(--u-radius);
-  background: white;
+  background: var(--color-surface);
   box-shadow: var(--u-shadow);
 }
 
@@ -694,7 +694,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: white;
+  background: var(--color-surface);
   color: var(--color-amber-dark);
 }
 
@@ -732,7 +732,7 @@
 .detalle-panel {
   border: 1px solid var(--color-slate-200);
   border-radius: var(--u-radius);
-  background: white;
+  background: var(--color-surface);
   box-shadow: var(--u-shadow);
 }
 
@@ -846,7 +846,7 @@
   padding: 2px 10px;
   border: 1.5px solid var(--color-slate-700);
   border-radius: 6px;
-  background: white;
+  background: var(--color-surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
   font-weight: 700;
@@ -894,7 +894,7 @@
 .detalle-form select:focus {
   outline: none;
   border-color: var(--color-navy);
-  background: white;
+  background: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
 }
 

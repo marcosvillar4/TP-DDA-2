@@ -1,5 +1,5 @@
 .stepper-container {
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -45,12 +45,12 @@
   justify-content: center;
   align-items: flex-start;
   padding-top: 0.125rem;
-  background-color: #fff; /* covers the line */
+  background-color: var(--color-surface); /* covers the line */
 }
 
 .step-icon-completed {
   color: var(--color-green);
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 50%;
 }
 

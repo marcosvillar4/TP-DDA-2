@@ -47,7 +47,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   padding: 1rem;
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -82,7 +82,7 @@
 
 .comercios-search-input:focus {
   border-color: var(--color-navy);
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
 }
 
@@ -90,7 +90,7 @@
   padding: 0.625rem 2.25rem 0.625rem 1rem;
   border: 1px solid var(--color-slate-200);
   border-radius: 0.5rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   font-size: 0.875rem;
   color: var(--color-slate-700);
   outline: none;
@@ -122,7 +122,7 @@
 }
 
 .comercios-table-card {
-  background-color: #fff;
+  background-color: var(--color-surface);
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
   overflow: hidden;
@@ -250,7 +250,7 @@
   justify-content: space-between;
   padding: 1rem;
   border-top: 1px solid var(--color-slate-200);
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .pagination-info {

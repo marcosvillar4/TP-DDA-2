@@ -192,7 +192,7 @@ export default function PedidoForm() {
         <ArrowLeft size={16} /> Volver a Pedidos
       </button>
 
-      <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <h2 style={{ marginTop: 0, marginBottom: '1.5rem', color: 'var(--color-slate-800)' }}>Nuevo Pedido</h2>
         
         <form onSubmit={handleSubmit}>
@@ -314,7 +314,7 @@ export default function PedidoForm() {
               ) : (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {detalles.map(d => (
-                    <li key={d.productoId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.375rem', border: '1px solid var(--color-slate-200)' }}>
+                    <li key={d.productoId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', backgroundColor: 'var(--color-surface)', borderRadius: '0.375rem', border: '1px solid var(--color-slate-200)' }}>
                       <div>
                         <span style={{ display: 'block', fontWeight: '500', fontSize: '0.875rem' }}>{d.nombre}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--color-slate-500)' }}>Cant: {d.cantidad}</span>
@@ -345,7 +345,7 @@ export default function PedidoForm() {
               style={{
                 padding: '0.5rem 1rem', borderRadius: '0.375rem',
                 border: '1px solid var(--color-slate-300)',
-                background: 'white', color: 'var(--color-slate-600)',
+                background: 'var(--color-surface)', color: 'var(--color-slate-600)',
                 cursor: 'pointer'
               }}
             >

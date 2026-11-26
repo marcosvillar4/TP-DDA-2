@@ -53,8 +53,7 @@ class PerfilAdminStrategiesTest {
     @Mock private IDeposito depositoService;
     @Mock private IRepartidorService repartidorService;
 
-    private final Usuario usuario = Usuario.builder().id(10L).estado(EstadoUsuario.VALIDADO).vehiculo("Moto").build();
-
+    private final Usuario usuario = Usuario.builder().id(10L).estado(EstadoUsuario.VALIDADO).build();
     // ───────────── COMERCIO ─────────────
 
     @Test
@@ -181,7 +180,7 @@ class PerfilAdminStrategiesTest {
     void repartidor_obtener() {
         PerfilRepartidorAdmin estrategia = new PerfilRepartidorAdmin(repartidorService);
         when(repartidorService.obtenerPorUsuarioId(10L)).thenReturn(RepartidorResponseDTO.builder()
-                .id(2L).patente("AB123CD").zona("CABA").estado(EstadoRepartidor.DISPONIBLE).activo(true).build());
+            .id(2L).vehiculo("Moto").patente("AB123CD").zona("CABA").estado(EstadoRepartidor.DISPONIBLE).activo(true).build());
 
         PerfilRepartidorAdminDTO perfil = (PerfilRepartidorAdminDTO) estrategia.obtener(usuario).orElseThrow();
 
@@ -210,7 +209,7 @@ class PerfilAdminStrategiesTest {
         verify(repartidorService).actualizar(org.mockito.ArgumentMatchers.eq(2L), captor.capture());
         assertEquals("AB123CD", captor.getValue().getPatente());
         assertEquals("Palermo", captor.getValue().getZona());
-        assertEquals("Bicicleta", usuario.getVehiculo());
+        assertEquals("Bicicleta", captor.getValue().getVehiculo());
         assertThrows(IllegalArgumentException.class,
                 () -> estrategia.actualizar(usuario, new ActualizarPerfilComercioAdminDTO()));
     }

@@ -94,9 +94,9 @@ class SecW02TokenAccesoIntegrationTest {
         long iat = payload.get("iat").asLong();
         long exp = payload.get("exp").asLong();
 
-        assertTrue(exp > iat, "SEC-W02: el token debe tener una expiración posterior a su emisión");
+        assertTrue(exp > iat, "SEC-W02: el token debe tener una expiraciÃ³n posterior a su emisiÃ³n");
         assertTrue(exp - iat <= 15 * 60,
-                "SEC-W02: el access token debe vivir como máximo 900 s, pero vive " + (exp - iat) + " s");
+                "SEC-W02: el access token debe vivir como mÃ¡ximo 900 s, pero vive " + (exp - iat) + " s");
     }
 
     @Test
@@ -140,7 +140,7 @@ class SecW02TokenAccesoIntegrationTest {
 
         mockMvc.perform(get(ENDPOINT_ADMIN).header("Authorization", "Bearer " + alterado))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Token de acceso inválido"));
+                .andExpect(jsonPath("$.message").value("Token de acceso invÃ¡lido"));
     }
 
     @Test
@@ -149,7 +149,7 @@ class SecW02TokenAccesoIntegrationTest {
         String original = loginYObtenerToken();
         String[] partes = original.split("\\.");
 
-        // Se cambia un carácter del medio de la firma (el último puede ser solo relleno de bits).
+        // Se cambia un carÃ¡cter del medio de la firma (el Ãºltimo puede ser solo relleno de bits).
         char[] firma = partes[2].toCharArray();
         int medio = firma.length / 2;
         firma[medio] = firma[medio] == 'A' ? 'B' : 'A';
@@ -179,7 +179,7 @@ class SecW02TokenAccesoIntegrationTest {
         String payload = base64Url("{\"sub\":\"" + EMAIL + "\",\"rol\":\"ROLE_COMERCIO\","
                 + "\"iat\":" + ahora + ",\"exp\":" + (ahora + 600) + "}");
 
-        // Variantes habituales del ataque: sin firma, y con distintas grafías de "none".
+        // Variantes habituales del ataque: sin firma, y con distintas grafÃ­as de "none".
         String[] ataques = {
                 header + "." + payload + ".",
                 base64Url("{\"alg\":\"None\",\"typ\":\"JWT\"}") + "." + payload + ".",
@@ -207,18 +207,18 @@ class SecW02TokenAccesoIntegrationTest {
     void secW02_sinTokenRecibe401() throws Exception {
         mockMvc.perform(get(ENDPOINT_PROTEGIDO))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Se requiere autenticación"));
+                .andExpect(jsonPath("$.message").value("Se requiere autenticaciÃ³n"));
     }
 
     @Test
-    @DisplayName("SEC-W02: Un token válido sin permisos sigue recibiendo 403 (no se confunde con 401)")
+    @DisplayName("SEC-W02: Un token vÃ¡lido sin permisos sigue recibiendo 403 (no se confunde con 401)")
     void secW02_tokenValidoSinPermisosSigueSiendo403() throws Exception {
         mockMvc.perform(get(ENDPOINT_ADMIN).header("Authorization", "Bearer " + loginYObtenerToken()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("SEC-W02: Un token vencido en el header no impide hacer login (endpoint público)")
+    @DisplayName("SEC-W02: Un token vencido en el header no impide hacer login (endpoint pÃºblico)")
     void secW02_tokenVencidoNoBloqueaEndpointsPublicos() throws Exception {
         String vencido = construirToken(EMAIL, Rol.COMERCIO, claveCorrecta(),
                 new Date(System.currentTimeMillis() - 20 * 60_000L),

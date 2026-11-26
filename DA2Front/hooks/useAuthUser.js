@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
 
+function leerUsuario() {
+  try {
+    const raw = localStorage.getItem("logired_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useAuthUser() {
-  const [user, setUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem("logired_user");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(leerUsuario);
 
   useEffect(() => {
     function syncFromStorage() {
-      try {
-        const raw = localStorage.getItem("logired_user");
-        setUser(raw ? JSON.parse(raw) : null);
-      } catch {
-        setUser(null);
-      }
+      setUser(leerUsuario());
     }
 
     window.addEventListener("storage", syncFromStorage);
-    return () => window.removeEventListener("storage", syncFromStorage);
+    window.addEventListener("logired:usuario-actualizado", syncFromStorage);
+    return () => {
+      window.removeEventListener("storage", syncFromStorage);
+      window.removeEventListener("logired:usuario-actualizado", syncFromStorage);
+    };
   }, []);
 
   return user;

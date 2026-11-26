@@ -95,7 +95,8 @@ public class AuthServiceImpl implements IAuthService {
                 usuario.getNombre(),
                 usuario.getApellido(),
                 usuario.getEmail(),
-                usuario.getRol()
+                usuario.getRol(),
+                usuario.getTema()
         );
     }
 }

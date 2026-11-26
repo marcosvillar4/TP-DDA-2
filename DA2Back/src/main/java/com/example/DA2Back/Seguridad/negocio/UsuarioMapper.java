@@ -18,7 +18,8 @@ public class UsuarioMapper {
                 .email(usuario.getEmail())
                 .telefono(usuario.getTelefono())
                 .dni(usuario.getDNI())
-                .vehiculo(usuario.getVehiculo())
+                .fechaCreacion(usuario.getFechaCreacion())
+                .tema(usuario.getTema())
                 .rol(usuario.getRol())
                 .estado(usuario.getEstado())
                 .build();

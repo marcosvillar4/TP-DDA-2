@@ -61,7 +61,7 @@
   gap: 0.5rem;
   padding: 3rem 1rem;
   border-radius: 0.75rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: var(--color-slate-400);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
@@ -79,7 +79,7 @@
 
 .misdep-card {
   border-radius: 0.75rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
@@ -138,7 +138,7 @@
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   border-radius: 0.5rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
 }
 
@@ -242,7 +242,7 @@
 
 .misdep-form input:focus {
   border-color: var(--color-navy);
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(22, 34, 63, 0.1);
 }
 
@@ -269,7 +269,7 @@
 
 .misdep-btn-cancel {
   border: 1px solid var(--color-slate-200);
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: var(--color-slate-700);
 }
 

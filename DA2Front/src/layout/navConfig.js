@@ -29,6 +29,7 @@ import DepositosPage from "../depositos/DepositosPage";
 import MisDepositosPage from "../depositos/MisDepositosPage";
 import AlertasPage from "../alertas/AlertasPage";
 import PagosPage from "../pagos/PagosPage";
+import ConfiguracionPage from "../configuracion/ConfiguracionPage";
 
 import { PERMISOS_RUTA } from "./routePermissions";
 export { ROLES } from "./routePermissions";
@@ -172,6 +173,7 @@ export const NAV_ITEMS = [
     path: "/configuracion",
     icon: Settings,
     roles: PERMISOS_RUTA["/configuracion"],
+    element: ConfiguracionPage,
   },
 ];
 

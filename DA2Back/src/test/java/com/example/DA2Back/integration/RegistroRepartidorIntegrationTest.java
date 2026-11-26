@@ -73,7 +73,7 @@ class RegistroRepartidorIntegrationTest {
     @Test void registroPendienteConservaDatosSinHabilitarOperaciones() throws Exception {
         Usuario usuario = registrar();
         Repartidor perfil = perfil(usuario);
-        assertEquals("Moto ficticia", usuario.getVehiculo());
+        assertEquals("Moto ficticia", perfil.getVehiculo());
         assertEquals("Zona ficticia", perfil.getZona());
         assertNotNull(perfil.getPatente());
         assertFalse(perfil.isActivo());
@@ -116,7 +116,7 @@ class RegistroRepartidorIntegrationTest {
         login(usuarios.findById(usuario.getId()).orElseThrow(), 401);
         mvc.perform(patch("/repartidores/{id}/activar", original.getId()).header("Authorization", admin))
                 .andExpect(status().isConflict());
-        // El contrato actual de State de Usuario responde 400 ante una transición inválida.
+        // El contrato actual de State de Usuario responde 400 ante una transiciÃ³n invÃ¡lida.
         mvc.perform(patch("/usuarios/admin/{id}/validar", usuario.getId()).header("Authorization", admin))
                 .andExpect(status().isBadRequest());
     }

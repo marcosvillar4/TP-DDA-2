@@ -64,7 +64,7 @@
 
 .producto-button-ghost {
   border-color: var(--color-slate-200);
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: var(--color-slate-700);
 }
 

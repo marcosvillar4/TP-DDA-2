@@ -16,6 +16,7 @@ import com.example.DA2Back.comercio.negocio.IComercio;
 import com.example.DA2Back.Seguridad.dato.Usuario;
 import com.example.DA2Back.Seguridad.dato.EstadoUsuario;
 import com.example.DA2Back.Seguridad.dato.Rol;
+import com.example.DA2Back.Seguridad.dato.TemaInterfaz;
 import com.example.DA2Back.repartidor.negocio.IRepartidorService;
 import com.example.DA2Back.Seguridad.dato.UsuarioRepository;
 import com.example.DA2Back.Seguridad.dto.ActualizarUsuarioAdminDTO;
@@ -215,6 +216,15 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuarioRepository.save(usuario); // el vehículo del repartidor vive en Usuario
  
         return armarDetalleAdmin(usuario);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO actualizarTema(String email, TemaInterfaz tema) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + email));
+        usuario.setTema(tema);
+        return UsuarioMapper.toResponseDTO(usuarioRepository.save(usuario));
     }
  
     private UsuarioAdminDetalleDTO armarDetalleAdmin(Usuario usuario) {
