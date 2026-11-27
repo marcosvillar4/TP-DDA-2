@@ -40,6 +40,10 @@ public class ControlIntentosLoginService {
     @Value("${security.login.max-intentos-fallidos:5}")
     private int maxIntentosFallidos = 5;
 
+    /** B3: ventana de espera en segundos informada en Retry-After al alcanzar el límite (default 900 = 15 min). */
+    @Value("${security.login.retry-after-seconds:900}")
+    private long retryAfterSeconds = 900L;
+
     /**
      * Estado en memoria del componente: email normalizado -> cantidad de
      * intentos fallidos consecutivos. Es la razon por la que este
@@ -50,6 +54,10 @@ public class ControlIntentosLoginService {
     private final UsuarioRepository usuarioRepository;
     private final ResolverEstadoUsuario resolverEstadoUsuario;
     private final NotificacionService notificacionService;
+
+    public long getRetryAfterSeconds() {
+        return retryAfterSeconds;
+    }
 
     /**
      * Registra un intento de login fallido para el email dado.
@@ -62,7 +70,7 @@ public class ControlIntentosLoginService {
                 .computeIfAbsent(clave, e -> new AtomicInteger(0))
                 .incrementAndGet();
 
-        log.info("Intento de login fallido para '{}' ({}/{})", clave, intentos, maxIntentosFallidos);
+        log.info("Intento de login fallido para '{}' ({}/{})", enmascararEmail(clave), intentos, maxIntentosFallidos);
 
         if (intentos >= maxIntentosFallidos) {
             bloquearCuenta(clave);
@@ -95,16 +103,32 @@ public class ControlIntentosLoginService {
                 usuarioRepository.save(usuario);
                 notificacionService.notificarActualizacionEstadoUsuario(usuario);
                 log.warn("Usuario '{}' bloqueado automaticamente tras {} intentos fallidos de login",
-                        email, maxIntentosFallidos);
+                        enmascararEmail(email), maxIntentosFallidos);
             } catch (TransicionInvalidaException ex) {
                 // La cuenta ya esta bloqueada, rechazada o en un estado que no
                 // admite bloqueo (ej. EN_EVALUACION): no hay nada mas que hacer.
-                log.info("No se pudo bloquear automaticamente a '{}': {}", email, ex.getMessage());
+                log.info("No se pudo bloquear automaticamente a '{}': {}",
+                        enmascararEmail(email), ex.getMessage());
             }
         });
     }
 
     private String normalizar(String email) {
         return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    /**
+     * B9: enmascara el email antes de escribirlo en logs para no exponer PII en texto plano.
+     */
+    public static String enmascararEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "***";
+        }
+        String limpio = email.trim();
+        int at = limpio.indexOf('@');
+        if (at <= 0 || at == limpio.length() - 1) {
+            return "***";
+        }
+        return limpio.charAt(0) + "***" + limpio.substring(at);
     }
 }

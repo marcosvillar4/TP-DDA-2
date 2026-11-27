@@ -17,6 +17,7 @@ import com.example.DA2Back.Seguridad.dto.LoginResponseDTO;
 import com.example.DA2Back.Seguridad.dto.RegisterDTO;
 import com.example.DA2Back.Seguridad.dto.UsuarioResponseDTO;
 import com.example.DA2Back.Seguridad.excepcion.CredencialesInvalidasException;
+import com.example.DA2Back.Seguridad.excepcion.DemasiadosIntentosException;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +58,9 @@ public class AuthServiceImpl implements IAuthService {
             // Contraseña incorrecta: cuenta como intento fallido.
             boolean recienBloqueado = controlIntentosLoginService.registrarIntentoFallido(email);
             if (recienBloqueado) {
-                throw new CredencialesInvalidasException("La cuenta está bloqueada por intentos fallidos consecutivos");
+                throw new DemasiadosIntentosException(
+                        "La cuenta está bloqueada por intentos fallidos consecutivos",
+                        controlIntentosLoginService.getRetryAfterSeconds());
             }
             throw new CredencialesInvalidasException("Email o contraseña incorrectos");
 

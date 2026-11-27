@@ -80,11 +80,40 @@ class JwtServiceTest {
     void rechazaTokenVencido() {
         JwtService jwt = servicio(QUINCE_MIN_MS);
         String vencido = Jwts.builder()
+                .issuer(JwtService.DEFAULT_ISSUER)
                 .subject(usuario.getEmail())
                 .issuedAt(new Date(System.currentTimeMillis() - 20 * 60_000L))
                 .expiration(new Date(System.currentTimeMillis() - 60_000L))
                 .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()))
                 .compact();
         assertThrows(io.jsonwebtoken.ExpiredJwtException.class, () -> jwt.isTokenValid(vencido, usuario));
+    }
+
+    @Test
+    @DisplayName("B4: generateToken emite el claim iss y el parser rechaza iss incorrecto o ausente")
+    void validaClaimIssuer() {
+        JwtService jwt = servicio(QUINCE_MIN_MS);
+        String tokenValido = jwt.generateToken(usuario);
+        assertEquals(JwtService.DEFAULT_ISSUER, jwt.extractIssuer(tokenValido));
+        assertEquals(JwtService.DEFAULT_ISSUER, jwt.getIssuer());
+
+        String issuerIncorrecto = Jwts.builder()
+                .issuer("otro-emisor")
+                .subject(usuario.getEmail())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60_000L))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()))
+                .compact();
+        assertThrows(io.jsonwebtoken.IncorrectClaimException.class,
+                () -> jwt.isTokenValid(issuerIncorrecto, usuario));
+
+        String sinIssuer = Jwts.builder()
+                .subject(usuario.getEmail())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60_000L))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()))
+                .compact();
+        assertThrows(io.jsonwebtoken.MissingClaimException.class,
+                () -> jwt.isTokenValid(sinIssuer, usuario));
     }
 }

@@ -3,6 +3,7 @@ package com.example.DA2Back.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -173,6 +174,23 @@ public class GlobalExceptionHandler {
             com.example.DA2Back.Seguridad.excepcion.RefreshTokenInvalidoException.class})
     public ResponseEntity<Map<String, Object>> handleCredencialesInvalidas(RuntimeException ex) {
         return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    /**
+     * B3 / SEC-W01: Límite de intentos fallidos alcanzado → 429 Too Many Requests + Retry-After.
+     */
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    public ResponseEntity<Map<String, Object>> handleDemasiadosIntentos(DemasiadosIntentosException ex) {
+        HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+        return ResponseEntity.status(status)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(Map.of(
+                        "timestamp", Instant.now().toString(),
+                        "status", status.value(),
+                        "error", status.getReasonPhrase(),
+                        "message", ex.getMessage() != null ? ex.getMessage() : "Demasiados intentos",
+                        "retryAfterSeconds", ex.getRetryAfterSeconds()
+                ));
     }
 
     // -------------------------------------------------------------------------

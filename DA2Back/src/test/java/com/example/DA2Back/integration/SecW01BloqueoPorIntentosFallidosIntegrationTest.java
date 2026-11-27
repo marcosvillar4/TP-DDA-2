@@ -2,6 +2,7 @@ package com.example.DA2Back.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,22 +54,24 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
         for (int i = 1; i < MAX_INTENTOS; i++) {
             login(email, "incorrecta-" + i)
                     .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.message").value("Email o contraseÃ±a incorrectos"));
+                    .andExpect(jsonPath("$.message").value("Email o contraseña incorrectos"));
             assertEquals(EstadoUsuario.VALIDADO, estadoDe(email),
                     "La cuenta no debe bloquearse antes del intento " + MAX_INTENTOS);
         }
 
-        // El intento X bloquea la cuenta
+        // El intento X bloquea la cuenta y responde 429 Too Many Requests con Retry-After (B3 / SEC-W01)
         login(email, "incorrecta-final")
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada por intentos fallidos consecutivos"));
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "900"))
+                .andExpect(jsonPath("$.status").value(429))
+                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada por intentos fallidos consecutivos"));
         assertEquals(EstadoUsuario.BLOQUEADO, estadoDe(email),
                 "SEC-W01: tras " + MAX_INTENTOS + " intentos fallidos la cuenta debe quedar BLOQUEADA");
 
-        // Aun con la contraseÃ±a correcta, la cuenta bloqueada no puede iniciar sesiÃ³n
+        // Aun con la contraseña correcta, la cuenta bloqueada no puede iniciar sesión
         login(email, PASSWORD)
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada y no se puede iniciar sesiÃ³n"));
+                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada y no se puede iniciar sesión"));
     }
 
     @Test
@@ -104,9 +107,12 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
         crearUsuario(atacado, "39000003", EstadoUsuario.VALIDADO);
         crearUsuario(otro, "39000004", EstadoUsuario.VALIDADO);
 
-        for (int i = 1; i <= MAX_INTENTOS; i++) {
+        for (int i = 1; i < MAX_INTENTOS; i++) {
             login(atacado, "incorrecta-" + i).andExpect(status().isUnauthorized());
         }
+        login(atacado, "incorrecta-" + MAX_INTENTOS)
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "900"));
 
         assertEquals(EstadoUsuario.BLOQUEADO, estadoDe(atacado));
         assertEquals(EstadoUsuario.VALIDADO, estadoDe(otro));
@@ -126,7 +132,9 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
         assertEquals(EstadoUsuario.VALIDADO, estadoDe(email));
 
         login(" " + email.toUpperCase() + " ", "incorrecta").andExpect(status().isUnauthorized());
-        login(email.toUpperCase(), "incorrecta").andExpect(status().isUnauthorized());
+        login(email.toUpperCase(), "incorrecta")
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "900"));
 
         assertEquals(EstadoUsuario.BLOQUEADO, estadoDe(email));
     }
@@ -139,7 +147,7 @@ class SecW01BloqueoPorIntentosFallidosIntegrationTest {
 
         login(email, PASSWORD)
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("La cuenta estÃ¡ bloqueada y no se puede iniciar sesiÃ³n"));
+                .andExpect(jsonPath("$.message").value("La cuenta está bloqueada y no se puede iniciar sesión"));
         login(email, "incorrecta")
                 .andExpect(status().isUnauthorized());
 

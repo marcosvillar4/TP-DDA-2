@@ -103,6 +103,7 @@ class RepartidorServiceTest {
         repartidor = Repartidor.builder()
                 .id(10L)
                 .usuarioId(usuarioRepartidor.getId())
+                .vehiculo("Moto")
                 .patente("ABC123")
                 .zona("Palermo")
                 .estado(EstadoRepartidor.DISPONIBLE)

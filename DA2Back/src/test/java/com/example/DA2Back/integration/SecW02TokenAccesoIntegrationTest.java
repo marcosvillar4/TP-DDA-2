@@ -65,6 +65,9 @@ class SecW02TokenAccesoIntegrationTest {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.issuer:logired-api}")
+    private String issuer;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -140,7 +143,7 @@ class SecW02TokenAccesoIntegrationTest {
 
         mockMvc.perform(get(ENDPOINT_ADMIN).header("Authorization", "Bearer " + alterado))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Token de acceso invÃ¡lido"));
+                .andExpect(jsonPath("$.message").value("Token de acceso inválido"));
     }
 
     @Test
@@ -207,7 +210,7 @@ class SecW02TokenAccesoIntegrationTest {
     void secW02_sinTokenRecibe401() throws Exception {
         mockMvc.perform(get(ENDPOINT_PROTEGIDO))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Se requiere autenticaciÃ³n"));
+                .andExpect(jsonPath("$.message").value("Se requiere autenticación"));
     }
 
     @Test
@@ -231,6 +234,51 @@ class SecW02TokenAccesoIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("B4 / SEC-W02: El token emitido en el login incluye el claim iss configurado")
+    void b4_tokenEmitidoIncluyeClaimIssuer() throws Exception {
+        String token = loginYObtenerToken();
+        JsonNode payload = decodificarPayload(token);
+
+        assertEquals(issuer, payload.path("iss").asText(),
+                "B4: el access token emitido debe incluir el claim iss configurado");
+    }
+
+    @Test
+    @DisplayName("B4 / SEC-W02: Un token con issuer incorrecto recibe 401 Unauthorized")
+    void b4_tokenConIssuerIncorrectoRecibe401() throws Exception {
+        String conIssuerInvalido = Jwts.builder()
+                .issuer("emisor-externo-no-confiable")
+                .subject(EMAIL)
+                .claim("rol", "ROLE_" + Rol.COMERCIO.name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 5 * 60_000L))
+                .signWith(claveCorrecta())
+                .compact();
+
+        mockMvc.perform(get(ENDPOINT_PROTEGIDO).header("Authorization", "Bearer " + conIssuerInvalido))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Token de acceso inválido"));
+    }
+
+    @Test
+    @DisplayName("B4 / SEC-W02: Un token sin claim iss recibe 401 Unauthorized")
+    void b4_tokenSinClaimIssuerRecibe401() throws Exception {
+        String sinIssuer = Jwts.builder()
+                .subject(EMAIL)
+                .claim("rol", "ROLE_" + Rol.COMERCIO.name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 5 * 60_000L))
+                .signWith(claveCorrecta())
+                .compact();
+
+        mockMvc.perform(get(ENDPOINT_PROTEGIDO).header("Authorization", "Bearer " + sinIssuer))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Token de acceso inválido"));
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private String loginYObtenerToken() throws Exception {
@@ -248,6 +296,7 @@ class SecW02TokenAccesoIntegrationTest {
 
     private String construirToken(String email, Rol rol, SecretKey clave, Date emitido, Date vence) {
         return Jwts.builder()
+                .issuer(issuer)
                 .subject(email)
                 .claim("rol", "ROLE_" + rol.name())
                 .issuedAt(emitido)

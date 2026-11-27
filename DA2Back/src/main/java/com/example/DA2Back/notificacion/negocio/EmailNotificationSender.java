@@ -57,8 +57,8 @@ public class EmailNotificationSender {
             notificacionRepository.save(notificacion);
             log.info("Correo enviado para la notificación {}", notificacion.getId());
         } catch (MessagingException | RuntimeException exception) {
-            log.error("No se pudo enviar la notificación {} a {}. Quedará pendiente para reintento.",
-                    notificacion.getId(), notificacion.getDestinatarioEmail(), exception);
+            log.error("No se pudo enviar la notificación {}. Quedará pendiente para reintento. Causa: {}",
+                    notificacion.getId(), exception.getMessage());
         }
     }
 

@@ -79,12 +79,12 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                 }
                 """.formatted(refreshToken);
 
-        // 2. CUANDO: Ejecuta la acciÃ³n de cierre de sesiÃ³n (POST /logout)
+        // 2. CUANDO: Ejecuta la acción de cierre de sesión (POST /logout)
         mockMvc.perform(post("/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payloadRefresh))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensaje").value("SesiÃ³n cerrada correctamente. El refresh token ha sido revocado."));
+                .andExpect(jsonPath("$.mensaje").value("Sesión cerrada correctamente. El refresh token ha sido revocado."));
 
         // 3. ENTONCES: Intenta renovar token con el refresh token anterior y recibe 401 Unauthorized
         mockMvc.perform(post("/auth/refresh")
@@ -92,11 +92,11 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                         .content(payloadRefresh))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
-                .andExpect(jsonPath("$.message").value("Refresh token invÃ¡lido, revocado o vencido"));
+                .andExpect(jsonPath("$.message").value("Refresh token inválido, revocado o vencido"));
     }
 
     @Test
-    @DisplayName("SEC-W03: Tras POST /auth/logout, el endpoint /refresh tambiÃ©n rechaza con 401 Unauthorized")
+    @DisplayName("SEC-W03: Tras POST /auth/logout, el endpoint /refresh también rechaza con 401 Unauthorized")
     void secW03_trasAuthLogoutRefreshTokenQuedaRevocado() throws Exception {
         JsonNode loginJson = hacerLogin();
         String refreshToken = loginJson.get("refreshToken").asText();
@@ -111,7 +111,7 @@ class SecW03RefreshTokenLogoutIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payloadRefresh))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mensaje").value("SesiÃ³n cerrada correctamente. El refresh token ha sido revocado."));
+                .andExpect(jsonPath("$.mensaje").value("Sesión cerrada correctamente. El refresh token ha sido revocado."));
 
         mockMvc.perform(post("/refresh")
                         .contentType(MediaType.APPLICATION_JSON)

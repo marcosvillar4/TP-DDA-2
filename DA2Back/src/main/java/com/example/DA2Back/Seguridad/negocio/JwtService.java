@@ -23,15 +23,21 @@ public class JwtService {
     /** SEC-W02: vigencia maxima permitida del access token (15 minutos). */
     public static final long MAX_EXPIRATION_MS = 15L * 60 * 1000;
 
+    /** B4: emisor esperado del access token (claim iss). */
+    public static final String DEFAULT_ISSUER = "logired-api";
+
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    @Value("${jwt.issuer:" + DEFAULT_ISSUER + "}")
+    private String issuer = DEFAULT_ISSUER;
+
     /**
-     * SEC-W02: garantiza que ningun access token viva mas de 15 minutos,
-     * aunque jwt.expiration (o la variable JWT_EXPIRATION) pida un valor mayor.
+     * SEC-W02 / B4: garantiza que ningun access token viva mas de 15 minutos
+     * y que el issuer este definido.
      */
     @PostConstruct
     void validarExpiracion() {
@@ -43,15 +49,23 @@ public class JwtService {
                     expiration, MAX_EXPIRATION_MS);
             expiration = MAX_EXPIRATION_MS;
         }
+        if (issuer == null || issuer.isBlank()) {
+            throw new IllegalStateException("jwt.issuer no puede estar vacío");
+        }
     }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
+    public String getIssuer() {
+        return issuer;
+    }
+
     public String generateToken(UserDetails userDetails) {
 
         return Jwts.builder()
+                .issuer(issuer)
                 .subject(userDetails.getUsername())
                 .claim(
                         "rol",
@@ -72,6 +86,10 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
+    }
+
+    public String extractIssuer(String token) {
+        return extractAllClaims(token).getIssuer();
     }
 
     public boolean isTokenValid(
@@ -97,6 +115,7 @@ public class JwtService {
 
         return Jwts.parser()
                 .verifyWith(getSigningKey())
+                .requireIssuer(issuer)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

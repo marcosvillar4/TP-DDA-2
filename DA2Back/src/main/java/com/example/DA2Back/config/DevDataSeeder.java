@@ -183,8 +183,8 @@ public class DevDataSeeder implements CommandLineRunner {
         for (RepartidorSeed seed : REPARTIDORES) {
             if (sembrarRepartidor(seed, hash)) repartidoresNuevos++;
         }
-        log.info("Datos de prueba: {} comercios y {} repartidores nuevos (clave de todas las cuentas: {})",
-                comerciosNuevos, repartidoresNuevos, PASSWORD);
+        log.info("Datos de prueba: {} comercios y {} repartidores nuevos",
+                comerciosNuevos, repartidoresNuevos);
     }
 
     // ---------------------------------------------------------------- comercio

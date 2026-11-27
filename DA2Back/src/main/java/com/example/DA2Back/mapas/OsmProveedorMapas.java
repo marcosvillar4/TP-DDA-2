@@ -78,7 +78,7 @@ public class OsmProveedorMapas implements ProveedorMapas {
             Coordenada c = new Coordenada(lat, lon);
             return c.esValida() ? Optional.of(c) : Optional.empty();
         } catch (Exception e) {
-            log.warn("Nominatim no pudo geocodificar '{}': {}", direccion, e.toString());
+            log.warn("Nominatim no pudo geocodificar la dirección solicitada: {}", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
@@ -145,7 +145,7 @@ public class OsmProveedorMapas implements ProveedorMapas {
         try {
             HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (resp.statusCode() != 200) {
-                log.warn("Respuesta {} de {}", resp.statusCode(), url);
+                log.warn("Respuesta HTTP {} del proveedor de mapas", resp.statusCode());
                 return Optional.empty();
             }
             return Optional.of(resp.body());

@@ -1,6 +1,7 @@
 package com.example.DA2Back.config;
 
 import com.example.DA2Back.Seguridad.excepcion.CredencialesInvalidasException;
+import com.example.DA2Back.Seguridad.excepcion.DemasiadosIntentosException;
 import com.example.DA2Back.Seguridad.excepcion.RefreshTokenInvalidoException;
 import com.example.DA2Back.Seguridad.excepcion.RecursoNoEncontradoException;
 import com.example.DA2Back.Seguridad.excepcion.TransicionInvalidaException;
@@ -121,5 +122,18 @@ class GlobalExceptionHandlerStatusTest {
     void transicionUsuario_400() {
         assertEquals(HttpStatus.BAD_REQUEST,
                 handler.handleTransicionInvalida(new TransicionInvalidaException("x")).getStatusCode());
+    }
+
+    @Test
+    @DisplayName("B3: Demasiados intentos -> 429 Too Many Requests con cabecera Retry-After")
+    void demasiadosIntentos_429() {
+        ResponseEntity<Map<String, Object>> r =
+                handler.handleDemasiadosIntentos(new DemasiadosIntentosException("bloqueado", 900));
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, r.getStatusCode());
+        assertEquals("900", r.getHeaders().getFirst("Retry-After"));
+        assertEquals(429, r.getBody().get("status"));
+        assertEquals("bloqueado", r.getBody().get("message"));
+        assertEquals(900L, r.getBody().get("retryAfterSeconds"));
     }
 }

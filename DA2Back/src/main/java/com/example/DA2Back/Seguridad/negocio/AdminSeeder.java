@@ -64,7 +64,7 @@ public class AdminSeeder implements CommandLineRunner {
         }
 
         if (usuarioRepository.existsByEmail(adminEmail)) {
-            log.warn("No se creó el admin: ya existe un usuario con el email {}", adminEmail);
+            log.warn("No se creó el admin: ya existe un usuario con el email configurado");
             return;
         }
 
